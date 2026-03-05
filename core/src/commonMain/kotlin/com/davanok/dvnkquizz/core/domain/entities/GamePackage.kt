@@ -9,6 +9,7 @@ data class GamePackage(
     val id: Uuid = Uuid.random(),
     @SerialName("created_at") val createdAt: String? = null,
     val title: String,
+    val description: String,
     @SerialName("author_id") val authorId: Uuid? = null,
     val difficulty: Int = 1,
     @SerialName("is_public") val isPublic: Boolean = false

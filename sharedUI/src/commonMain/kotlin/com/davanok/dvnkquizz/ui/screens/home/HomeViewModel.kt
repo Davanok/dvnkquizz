@@ -3,7 +3,6 @@ package com.davanok.dvnkquizz.ui.screens.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import com.davanok.dvnkquizz.core.domain.repositories.GameSessionRepository
 import com.davanok.dvnkquizz.core.domain.usecases.HostGameUseCase
 import com.davanok.dvnkquizz.core.domain.usecases.JoinGameUseCase
 import dev.zacsweers.metro.AppScope
