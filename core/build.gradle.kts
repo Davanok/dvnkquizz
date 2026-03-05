@@ -44,6 +44,8 @@ kotlin {
             implementation(libs.kotlinx.datetime)
 
             implementation(libs.bundles.supabase)
+
+            implementation(libs.androidx.paging.common)
         }
 
         commonTest.dependencies {

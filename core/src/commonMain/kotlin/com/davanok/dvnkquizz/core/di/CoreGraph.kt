@@ -9,8 +9,11 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.realtime.Realtime
+import io.github.jan.supabase.realtime.realtime
 import io.github.jan.supabase.storage.Storage
+import io.github.jan.supabase.storage.storage
 
 interface CoreGraph {
     @Provides
@@ -28,4 +31,13 @@ interface CoreGraph {
     @Provides
     @SingleIn(AppScope::class)
     fun provideAuth(supabase: SupabaseClient): Auth = supabase.auth
+    @Provides
+    @SingleIn(AppScope::class)
+    fun providePostgres(supabase: SupabaseClient): Postgrest = supabase.postgrest
+    @Provides
+    @SingleIn(AppScope::class)
+    fun provideRealtime(supabase: SupabaseClient): Realtime = supabase.realtime
+    @Provides
+    @SingleIn(AppScope::class)
+    fun provideStorage(supabase: SupabaseClient): Storage = supabase.storage
 }
