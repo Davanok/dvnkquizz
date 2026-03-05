@@ -43,13 +43,7 @@ kotlin {
             implementation(libs.multiplatformSettings)
             implementation(libs.kotlinx.datetime)
 
-            implementation(libs.supabase.auth)
-            implementation(libs.supabase.postgrest)
-            implementation(libs.supabase.realtime)
-            implementation(libs.supabase.storage)
-
-            implementation(libs.ktor.core)
-            implementation(libs.ktor.client.cio)
+            implementation(libs.bundles.supabase)
         }
 
         commonTest.dependencies {
