@@ -1,6 +1,7 @@
 package com.davanok.dvnkquizz.di
 
 import android.content.Context
+import com.davanok.dvnkquizz.ui.di.AppGraph
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides

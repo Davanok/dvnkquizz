@@ -1,9 +1,12 @@
 package com.davanok.dvnkquizz
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import com.davanok.dvnkquizz.theme.AppTheme
-import com.davanok.dvnkquizz.ui.screens.lobby.LobbyScreen
+import androidx.compose.ui.Modifier
+import com.davanok.dvnkquizz.ui.navigation.AppNavDisplay
+import com.davanok.dvnkquizz.ui.navigation.Route
+import com.davanok.dvnkquizz.ui.theme.AppTheme
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
 import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
@@ -16,7 +19,10 @@ class AppClass(
     operator fun invoke(onThemeChanged: (Boolean) -> Unit = {}) =
         CompositionLocalProvider(LocalMetroViewModelFactory provides metroViewModel) {
             AppTheme(onThemeChanged) {
-                LobbyScreen()
+                AppNavDisplay(
+                    startDestination = Route.Home,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
 }

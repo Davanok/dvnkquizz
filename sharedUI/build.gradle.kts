@@ -46,6 +46,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime)
             implementation(libs.compose.nav3)
+            implementation(libs.androidx.lifecycle.viewmodel.nav3)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.coil)
             implementation(libs.coil.network.ktor)
@@ -55,6 +56,9 @@ kotlin {
 
             api(libs.metrox.viewmodel)
             api(libs.metrox.viewmodel.compose)
+
+            implementation(libs.androidx.paging.common)
+            implementation(libs.androidx.paging.compose)
 
             api(project(":core"))
         }

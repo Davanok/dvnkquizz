@@ -1,4 +1,4 @@
-package com.davanok.dvnkquizz.di
+package com.davanok.dvnkquizz.ui.di
 
 import androidx.lifecycle.ViewModel
 import dev.zacsweers.metro.AppScope

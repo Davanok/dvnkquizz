@@ -1,4 +1,4 @@
-package com.davanok.dvnkquizz.di
+package com.davanok.dvnkquizz.ui.di
 
 import com.davanok.dvnkquizz.AppClass
 import com.davanok.dvnkquizz.core.di.CoreGraph

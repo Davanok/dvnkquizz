@@ -1,4 +1,4 @@
-package com.davanok.dvnkquizz.theme
+package com.davanok.dvnkquizz.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
