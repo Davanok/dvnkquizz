@@ -10,4 +10,7 @@ sealed interface Route : NavKey {
     data object Home : Route
     @Serializable
     data class Lobby(val sessionId: Uuid) : Route
+
+    @Serializable
+    data class Game(val sessionId: Uuid) : Route
 }

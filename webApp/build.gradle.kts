@@ -22,7 +22,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.metrox.viewmodel)
-            implementation(project(":sharedUI"))
+            api(project(":sharedUI"))
         }
     }
 }

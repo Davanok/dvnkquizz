@@ -110,7 +110,9 @@ fun LobbyScreen(
                     // Host Action / Player Status
                     if (state.isHost) {
                         Button(
-                            onClick = { viewModel.startGame() },
+                            onClick = {
+                                viewModel.startGame()
+                                      },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             enabled = state.participants.size > 1 // Require at least 2 players
                         ) {

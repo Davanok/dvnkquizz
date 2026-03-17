@@ -1,5 +1,6 @@
 package com.davanok.dvnkquizz.core.di
 
+import co.touchlab.kermit.Logger
 import com.davanok.dvnkquizz.core.BuildConfig
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Provides
@@ -40,4 +41,7 @@ interface CoreGraph {
     @Provides
     @SingleIn(AppScope::class)
     fun provideStorage(supabase: SupabaseClient): Storage = supabase.storage
+    @Provides
+    @SingleIn(AppScope::class)
+    fun provideLogger(): Logger = Logger
 }

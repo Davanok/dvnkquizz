@@ -3,8 +3,7 @@ package com.davanok.dvnkquizz.ui.screens.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import com.davanok.dvnkquizz.core.domain.usecases.HostGameUseCase
-import com.davanok.dvnkquizz.core.domain.usecases.JoinGameUseCase
+import com.davanok.dvnkquizz.core.domain.usecases.StartGameUseCase
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -18,8 +17,7 @@ import kotlin.uuid.Uuid
 @ViewModelKey(HomeViewModel::class)
 @ContributesIntoMap(AppScope::class)
 class HomeViewModel(
-    private val joinGameUseCase: JoinGameUseCase,
-    private val hostGameUseCase: HostGameUseCase
+    private val startGameUseCase: StartGameUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<HomeScreenUiState>(HomeScreenUiState.Idle)
     val uiState = _uiState.asStateFlow()
@@ -33,7 +31,7 @@ class HomeViewModel(
 
         viewModelScope.launch {
             _uiState.value = HomeScreenUiState.Loading
-            joinGameUseCase.joinGame(inviteCode.uppercase(), nickname)
+            startGameUseCase.joinGame(inviteCode.uppercase(), nickname)
                 .onSuccess { sessionId ->
                     _uiState.value = HomeScreenUiState.Idle
                     onSuccess(sessionId)
@@ -48,7 +46,7 @@ class HomeViewModel(
     fun onCreateGame(packageId: Uuid, nickname: String, onSuccess: (Uuid) -> Unit) {
         viewModelScope.launch {
             _uiState.value = HomeScreenUiState.Loading
-            hostGameUseCase.createSession(packageId, nickname)
+            startGameUseCase.createGame(packageId, nickname)
                 .onSuccess {
                     onSuccess(it.sessionId)
                 }

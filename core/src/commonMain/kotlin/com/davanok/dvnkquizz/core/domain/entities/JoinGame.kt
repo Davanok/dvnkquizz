@@ -14,7 +14,7 @@ data class JoinSessionRequest(
 
 @Serializable
 data class JoinSessionResponse(
-    @SerialName("session_id") val sessionId: Uuid,
-    @SerialName("participant_id") val participantId: Uuid,
-    @SerialName("assigned_role") val assignedRole: ParticipantRole
+    @SerialName("o_session_id") val sessionId: Uuid,
+    @SerialName("o_participant_id") val participantId: Uuid,
+    @SerialName("o_assigned_role") val assignedRole: ParticipantRole
 )
