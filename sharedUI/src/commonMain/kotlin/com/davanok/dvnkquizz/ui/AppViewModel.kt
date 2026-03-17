@@ -1,0 +1,78 @@
+package com.davanok.dvnkquizz.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.davanok.dvnkquizz.core.domain.entities.User
+import com.davanok.dvnkquizz.core.domain.repositories.AuthRepository
+import com.davanok.dvnkquizz.ui.navigation.Route
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
+
+@Inject
+@ViewModelKey(AppViewModel::class)
+@ContributesIntoMap(AppScope::class)
+class AppViewModel(
+    private val authRepository: AuthRepository
+): ViewModel() {
+    private val _uiState = MutableStateFlow(AppUiState())
+    val uiState = _uiState.asStateFlow()
+
+    init {
+        observeUser()
+    }
+
+    private fun observeUser() {
+        authRepository
+            .observeUser()
+            .onEach { result ->
+                result.onSuccess { user ->
+                    _uiState.update {
+                        it.copy(
+                            user = user,
+                            errorMessage = null
+                        )
+                    }
+                    handleAuthNavigation(user)
+                }.onFailure { thr ->
+                    _uiState.update {
+                        it.copy(
+                            user = null,
+                            errorMessage = thr.message
+                        )
+                    }
+                }
+            }.launchIn(viewModelScope)
+    }
+
+    private fun handleAuthNavigation(user: User?) {
+        val currentRoute = _uiState.value.backStack.lastOrNull()
+
+        when {
+            user == null || !user.verified -> {
+                if (currentRoute != Route.Auth) {
+                    navigationEventSink(NavigationEvent.Replace(Route.Auth))
+                }
+            }
+            currentRoute == Route.Auth || currentRoute == Route.PlaceHolder -> {
+                navigationEventSink(NavigationEvent.Replace(Route.Home))
+            }
+        }
+    }
+
+    fun navigationEventSink(event: NavigationEvent) = _uiState.update {
+        val backStack = it.backStack.toMutableList()
+        when (event) {
+            NavigationEvent.Back -> backStack.removeLastOrNull()
+            is NavigationEvent.Navigate -> backStack.add(event.route)
+            is NavigationEvent.Replace -> backStack[backStack.lastIndex] = event.route
+        }
+        it.copy(backStack = backStack)
+    }
+}

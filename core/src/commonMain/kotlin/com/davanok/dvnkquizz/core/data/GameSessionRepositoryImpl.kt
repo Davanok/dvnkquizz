@@ -41,7 +41,7 @@ import kotlin.uuid.Uuid
 class GameSessionRepositoryImpl(
     private val auth: Auth,
     private val postgrest: Postgrest,
-    private val log: Logger
+    private val logger: Logger
 ) : GameSessionRepository {
 
     // --- Session Management ---
@@ -50,7 +50,7 @@ class GameSessionRepositoryImpl(
         packageId: Uuid,
         nickname: String
     ): Result<CreateSessionResponse> {
-        log.i { "createSession called: packageId=$packageId nickname=$nickname" }
+        logger.i { "createSession called: packageId=$packageId nickname=$nickname" }
 
         return runCatching {
             postgrest.rpc(
@@ -58,9 +58,9 @@ class GameSessionRepositoryImpl(
                 parameters = CreateSessionRequest(packageId, nickname)
             ).decodeSingle<CreateSessionResponse>()
         }.onSuccess {
-            log.i { "createSession success: inviteCode=${it.inviteCode}" }
+            logger.i { "createSession success: inviteCode=${it.inviteCode}" }
         }.onFailure {
-            log.e(it) { "createSession failed" }
+            logger.e(it) { "createSession failed" }
         }
     }
 
@@ -68,7 +68,7 @@ class GameSessionRepositoryImpl(
         inviteCode: String,
         nickname: String
     ): Result<JoinSessionResponse> {
-        log.i { "joinSession called: inviteCode=$inviteCode nickname=$nickname" }
+        logger.i { "joinSession called: inviteCode=$inviteCode nickname=$nickname" }
 
         return runCatching {
             postgrest.rpc(
@@ -76,9 +76,9 @@ class GameSessionRepositoryImpl(
                 parameters = JoinSessionRequest(inviteCode, nickname)
             ).decodeSingle<JoinSessionResponse>()
         }.onSuccess {
-            log.i { "joinSession success: sessionId=${it.sessionId}" }
+            logger.i { "joinSession success: sessionId=${it.sessionId}" }
         }.onFailure {
-            log.e(it) { "joinSession failed" }
+            logger.e(it) { "joinSession failed" }
         }
     }
 
@@ -86,7 +86,7 @@ class GameSessionRepositoryImpl(
         sessionId: Uuid,
         newStatus: SessionStatus
     ): Result<Unit> {
-        log.i { "updateSessionStatus: sessionId=$sessionId newStatus=$newStatus" }
+        logger.i { "updateSessionStatus: sessionId=$sessionId newStatus=$newStatus" }
 
         return runCatching {
             postgrest.from("game_sessions")
@@ -95,15 +95,15 @@ class GameSessionRepositoryImpl(
                 }
             Unit
         }.onSuccess {
-            log.d { "Session status updated successfully" }
+            logger.d { "Session status updated successfully" }
         }.onFailure {
-            log.e(it) { "updateSessionStatus failed" }
+            logger.e(it) { "updateSessionStatus failed" }
         }
     }
 
     @OptIn(SupabaseExperimental::class)
     override fun observeParticipants(sessionId: Uuid): Flow<Result<List<Participant>>> {
-        log.i { "observeParticipants started for session=$sessionId" }
+        logger.i { "observeParticipants started for session=$sessionId" }
 
         return postgrest.from("participants")
             .selectAsFlow<ParticipantDto, Uuid>(
@@ -111,17 +111,17 @@ class GameSessionRepositoryImpl(
                 filter = FilterOperation("session_id", FilterOperator.EQ, sessionId)
             )
             .map { participants ->
-                log.d { "Participants update received: count=${participants.size}" }
+                logger.d { "Participants update received: count=${participants.size}" }
 
                 participants.map {
                     it.toDomain(auth.currentUserId)
                 }
             }
             .onStart {
-                log.d { "observeParticipants flow started" }
+                logger.d { "observeParticipants flow started" }
             }
             .catch {
-                log.e(it) { "observeParticipants flow error" }
+                logger.e(it) { "observeParticipants flow error" }
                 throw it
             }
             .toResultFLow()
@@ -129,17 +129,17 @@ class GameSessionRepositoryImpl(
 
     @OptIn(SupabaseExperimental::class)
     override fun observeSession(sessionId: Uuid): Flow<Result<GameSession>> {
-        log.i { "observeSession started for session=$sessionId" }
+        logger.i { "observeSession started for session=$sessionId" }
 
         return postgrest.from("game_sessions")
             .selectSingleValueAsFlow(
                 GameSession::id
             ) { GameSession::id eq sessionId }
             .onEach {
-                log.d { "Session update received: $it" }
+                logger.d { "Session update received: $it" }
             }
             .catch {
-                log.e(it) { "observeSession flow error" }
+                logger.e(it) { "observeSession flow error" }
                 throw it
             }
             .toResultFLow()
@@ -147,7 +147,7 @@ class GameSessionRepositoryImpl(
 
     @OptIn(SupabaseExperimental::class)
     override fun observeSessionAnswers(sessionId: Uuid): Flow<Result<List<SessionAnswer>>> {
-        log.i { "observeSessionAnswers started for session=$sessionId" }
+        logger.i { "observeSessionAnswers started for session=$sessionId" }
 
         return postgrest.from("session_answers")
             .selectAsFlow(
@@ -155,10 +155,10 @@ class GameSessionRepositoryImpl(
                 filter = FilterOperation("session_id", FilterOperator.EQ, sessionId)
             )
             .onEach {
-                log.d { "Answers update received: count=${it.size}" }
+                logger.d { "Answers update received: count=${it.size}" }
             }
             .catch {
-                log.e(it) { "observeSessionAnswers flow error" }
+                logger.e(it) { "observeSessionAnswers flow error" }
                 throw it
             }
             .toResultFLow()
@@ -168,7 +168,7 @@ class GameSessionRepositoryImpl(
         sessionId: Uuid,
         questionId: Uuid
     ): Result<Unit> {
-        log.i { "pickQuestion: sessionId=$sessionId questionId=$questionId" }
+        logger.i { "pickQuestion: sessionId=$sessionId questionId=$questionId" }
 
         return runCatching {
             postgrest.rpc(
@@ -180,14 +180,14 @@ class GameSessionRepositoryImpl(
             )
             Unit
         }.onSuccess {
-            log.d { "pickQuestion success" }
+            logger.d { "pickQuestion success" }
         }.onFailure {
-            log.e(it) { "pickQuestion failed" }
+            logger.e(it) { "pickQuestion failed" }
         }
     }
 
     override suspend fun buzzIn(sessionId: Uuid): Result<Uuid> {
-        log.i { "buzzIn called: sessionId=$sessionId" }
+        logger.i { "buzzIn called: sessionId=$sessionId" }
 
         return runCatching {
             postgrest.rpc(
@@ -195,9 +195,9 @@ class GameSessionRepositoryImpl(
                 mapOf("p_session_id" to sessionId)
             ).decodeAs<Uuid>()
         }.onSuccess {
-            log.i { "buzzIn success: participantId=$it" }
+            logger.i { "buzzIn success: participantId=$it" }
         }.onFailure {
-            log.e(it) { "buzzIn failed" }
+            logger.e(it) { "buzzIn failed" }
         }
     }
 
@@ -206,7 +206,7 @@ class GameSessionRepositoryImpl(
         participantId: Uuid,
         isCorrect: Boolean
     ): Result<Unit> {
-        log.i {
+        logger.i {
             "judgeAnswer: sessionId=$sessionId participantId=$participantId isCorrect=$isCorrect"
         }
 
@@ -221,9 +221,9 @@ class GameSessionRepositoryImpl(
             )
             Unit
         }.onSuccess {
-            log.d { "judgeAnswer success" }
+            logger.d { "judgeAnswer success" }
         }.onFailure {
-            log.e(it) { "judgeAnswer failed" }
+            logger.e(it) { "judgeAnswer failed" }
         }
     }
 
@@ -231,7 +231,7 @@ class GameSessionRepositoryImpl(
         sessionId: Uuid,
         roundId: Uuid
     ): Result<List<GameBoardItem>> {
-        log.i { "getSessionBoard: sessionId=$sessionId roundId=$roundId" }
+        logger.i { "getSessionBoard: sessionId=$sessionId roundId=$roundId" }
 
         return runCatching {
             postgrest.rpc(
@@ -242,14 +242,14 @@ class GameSessionRepositoryImpl(
                 )
             ).decodeList<GameBoardItem>()
         }.onSuccess {
-            log.d { "Board loaded: items=${it.size}" }
+            logger.d { "Board loaded: items=${it.size}" }
         }.onFailure {
-            log.e(it) { "getSessionBoard failed" }
+            logger.e(it) { "getSessionBoard failed" }
         }
     }
 
     override suspend fun getActiveQuestion(sessionId: Uuid): Result<Question> {
-        log.i { "getActiveQuestion: sessionId=$sessionId" }
+        logger.i { "getActiveQuestion: sessionId=$sessionId" }
 
         return runCatching {
             postgrest.rpc(
@@ -257,14 +257,14 @@ class GameSessionRepositoryImpl(
                 mapOf("p_session_id" to sessionId)
             ).decodeSingle<Question>()
         }.onSuccess {
-            log.d { "Active question loaded: ${it.id}" }
+            logger.d { "Active question loaded: ${it.id}" }
         }.onFailure {
-            log.e(it) { "getActiveQuestion failed" }
+            logger.e(it) { "getActiveQuestion failed" }
         }
     }
 
     override suspend fun skipQuestion(sessionId: Uuid): Result<Unit> {
-        log.i { "skipQuestion: sessionId=$sessionId" }
+        logger.i { "skipQuestion: sessionId=$sessionId" }
 
         return runCatching {
             postgrest.from("game_sessions")
@@ -273,21 +273,21 @@ class GameSessionRepositoryImpl(
                 }
             Unit
         }.onSuccess {
-            log.d { "Question skipped" }
+            logger.d { "Question skipped" }
         }.onFailure {
-            log.e(it) { "skipQuestion failed" }
+            logger.e(it) { "skipQuestion failed" }
         }
     }
 
     override fun observeFullGameSession(sessionId: Uuid): Flow<Result<FullGameSession>> {
-        log.i { "observeFullGameSession started: sessionId=$sessionId" }
+        logger.i { "observeFullGameSession started: sessionId=$sessionId" }
 
         return combineResultFlow(
             observeSession(sessionId),
             observeParticipants(sessionId),
             observeSessionAnswers(sessionId)
         ) { session, participants, answers ->
-            log.d {
+            logger.d {
                 "FullGameSession update: participants=${participants.size} answers=${answers.size}"
             }
 
@@ -301,14 +301,14 @@ class GameSessionRepositoryImpl(
     }
 
     override fun observeGameSessionStatus(sessionId: Uuid): Flow<Result<GameSessionStatus>> {
-        log.i { "observeFullGameSession started: sessionId=$sessionId" }
+        logger.i { "observeFullGameSession started: sessionId=$sessionId" }
 
         return combineResultFlow(
             observeSession(sessionId),
             observeParticipants(sessionId)
         ) { session, participants ->
 
-            log.d {
+            logger.d {
                 "FullGameSession update: participants=${participants.size}"
             }
 

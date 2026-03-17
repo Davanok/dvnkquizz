@@ -1,6 +1,6 @@
 package com.davanok.dvnkquizz.ui.di
 
-import com.davanok.dvnkquizz.AppClass
+import com.davanok.dvnkquizz.ui.AppClass
 import com.davanok.dvnkquizz.core.di.CoreGraph
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 

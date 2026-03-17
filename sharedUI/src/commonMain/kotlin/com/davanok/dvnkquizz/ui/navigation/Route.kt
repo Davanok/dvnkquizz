@@ -7,6 +7,10 @@ import kotlin.uuid.Uuid
 @Serializable
 sealed interface Route : NavKey {
     @Serializable
+    data object PlaceHolder : Route
+    @Serializable
+    data object Auth : Route
+    @Serializable
     data object Home : Route
     @Serializable
     data class Lobby(val sessionId: Uuid) : Route
