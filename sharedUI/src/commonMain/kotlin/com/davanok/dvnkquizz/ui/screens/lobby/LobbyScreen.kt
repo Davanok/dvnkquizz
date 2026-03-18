@@ -143,7 +143,7 @@ fun PlayerCard(participant: Participant) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = participant.nickname,
+                text = participant.user.nickname,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold
             )

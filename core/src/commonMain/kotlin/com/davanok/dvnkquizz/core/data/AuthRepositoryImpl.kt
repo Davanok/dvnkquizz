@@ -24,8 +24,7 @@ class AuthRepositoryImpl(
 ): AuthRepository {
     private fun UserInfo.toUser() = User(
         id = id.toUuid(),
-        email = email,
-        verified = emailConfirmedAt != null
+        email = email
     )
 
     override fun observeUser(): Flow<Result<User?>> =

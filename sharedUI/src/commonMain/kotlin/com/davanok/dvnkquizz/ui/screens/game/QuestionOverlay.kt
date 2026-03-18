@@ -129,7 +129,7 @@ private fun HostControls(
             }
         } else {
             Text(
-                text = "${buzzedParticipant.nickname} is answering!",
+                text = "${buzzedParticipant.user.nickname} is answering!",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.secondary
             )
@@ -193,7 +193,7 @@ private fun PlayerControls(
                 )
             } else {
                 Text(
-                    text = "${buzzedParticipant.nickname} buzzed in!",
+                    text = "${buzzedParticipant.user.nickname} buzzed in!",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.error,
                     fontWeight = FontWeight.Bold

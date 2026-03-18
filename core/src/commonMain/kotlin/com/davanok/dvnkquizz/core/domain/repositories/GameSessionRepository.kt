@@ -14,8 +14,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlin.uuid.Uuid
 
 interface GameSessionRepository {
-    suspend fun createSession(packageId: Uuid, nickname: String): Result<CreateSessionResponse>
-    suspend fun joinSession(inviteCode: String, nickname: String): Result<JoinSessionResponse>
+    suspend fun createSession(packageId: Uuid): Result<CreateSessionResponse>
+    suspend fun joinSession(inviteCode: String): Result<JoinSessionResponse>
 
     suspend fun updateSessionStatus(sessionId: Uuid, newStatus: SessionStatus): Result<Unit>
 

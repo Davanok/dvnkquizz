@@ -11,9 +11,8 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 @Inject
 @ViewModelKey(AppViewModel::class)
@@ -28,10 +27,10 @@ class AppViewModel(
         observeUser()
     }
 
-    private fun observeUser() {
+    private fun observeUser() = viewModelScope.launch {
         authRepository
             .observeUser()
-            .onEach { result ->
+            .collect { result ->
                 result.onSuccess { user ->
                     _uiState.update {
                         it.copy(
@@ -48,14 +47,14 @@ class AppViewModel(
                         )
                     }
                 }
-            }.launchIn(viewModelScope)
+            }
     }
 
     private fun handleAuthNavigation(user: User?) {
         val currentRoute = _uiState.value.backStack.lastOrNull()
 
         when {
-            user == null || !user.verified -> {
+            user == null -> {
                 if (currentRoute != Route.Auth) {
                     navigationEventSink(NavigationEvent.Replace(Route.Auth))
                 }

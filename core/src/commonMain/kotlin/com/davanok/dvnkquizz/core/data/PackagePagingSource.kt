@@ -3,10 +3,9 @@ package com.davanok.dvnkquizz.core.data
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
-import io.github.jan.supabase.postgrest.Postgrest
 
 class PackagePagingSource(
-    private val postgrest: Postgrest,
+    private val getPage: suspend (query: String, from: Long, count: Int) -> List<GamePackage>,
     private val query: String
 ) : PagingSource<Int, GamePackage>() {
 
@@ -14,16 +13,9 @@ class PackagePagingSource(
         val page = params.key ?: 0
         val pageSize = params.loadSize
         val from = page * pageSize
-        val to = from + pageSize - 1
 
         return runCatching {
-            postgrest.from("game_packages")
-                .select {
-                    if (query.isNotEmpty()) filter { ilike("title", "%$query%") }
-                    filter { eq("is_public", true) }
-                    range(from.toLong(), to.toLong())
-                }
-                .decodeList<GamePackage>()
+            getPage(query, from.toLong(), pageSize)
         }.fold(
             onSuccess = { response ->
                 LoadResult.Page(

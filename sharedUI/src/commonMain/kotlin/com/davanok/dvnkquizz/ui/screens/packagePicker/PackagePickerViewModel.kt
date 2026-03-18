@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
-import com.davanok.dvnkquizz.core.domain.usecases.SearchPackagesUseCase
+import com.davanok.dvnkquizz.core.domain.repositories.GamePackageRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 @ViewModelKey(PackagePickerViewModel::class)
 @ContributesIntoMap(AppScope::class)
 class PackagePickerViewModel(
-    private val searchPackagesUseCase: SearchPackagesUseCase
+    private val packageRepository: GamePackageRepository
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -32,7 +32,7 @@ class PackagePickerViewModel(
     val packages: Flow<PagingData<GamePackage>> = _searchQuery
         .debounce(300L) // Wait for user to stop typing
         .flatMapLatest { query ->
-            searchPackagesUseCase.getPagedPackages(query)
+            packageRepository.getPagedPackages(query)
         }
         .cachedIn(viewModelScope)
 

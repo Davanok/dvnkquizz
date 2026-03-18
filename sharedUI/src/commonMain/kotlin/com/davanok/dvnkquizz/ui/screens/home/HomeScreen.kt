@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -25,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
@@ -41,7 +44,6 @@ fun HomeScreen(
     viewModel: HomeViewModel = metroViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var nickname by remember { mutableStateOf("") }
     var inviteCode by remember { mutableStateOf("") }
     var selectedPackage by remember { mutableStateOf<GamePackage?>(null) }
 
@@ -59,77 +61,120 @@ fun HomeScreen(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
-
-        OutlinedTextField(
-            value = nickname,
-            onValueChange = { nickname = it },
-            label = { Text("Your Nickname") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+        
+        ProfilePart(
+            nickname = state.nickname,
+            onNicknameChange = viewModel::setNickname,
+            submitNickname = viewModel::submitNickname,
+            modifier = Modifier
+        )
+        
+        GamePart(
+            inviteCode = inviteCode,
+            onInviteCodeChange = { inviteCode = it.uppercase() },
+            selectedPackage = selectedPackage,
+            onSelectPackage = { selectedPackage = it },
+            joinEnabled = inviteCode.length == 6,
+            createEnabled = selectedPackage != null,
+            onJoin = {
+                viewModel.onJoinClicked(inviteCode, onNavigateToLobby)
+                     },
+            onCreate = {
+                selectedPackage?.let {
+                    viewModel.onCreateGame(it.id, onNavigateToLobby)
+                }
+                       },
+            modifier = Modifier
         )
 
-        // JOIN SECTION
-        ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Join a Game", style = MaterialTheme.typography.titleMedium)
-                OutlinedTextField(
-                    value = inviteCode,
-                    onValueChange = { inviteCode = it.uppercase() },
-                    label = { Text("Invite Code") },
-                    placeholder = { Text("AB1234") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Button(
-                    onClick = { viewModel.onJoinClicked(nickname, inviteCode, onNavigateToLobby) },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = nickname.isNotBlank() && inviteCode.length >= 4 && state !is HomeScreenUiState.Loading
-                ) {
-                    Text("Join Lobby")
-                }
-            }
-        }
-
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-        // HOST SECTION
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Host New Game", style = MaterialTheme.typography.titleMedium)
-
-            PackagePicker(
-                onPackageSelected = { selectedPackage = it },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            selectedPackage?.let {
-                ListItem(
-                    headlineContent = { Text("Selected: ${it.title}") },
-                    trailingContent = {
-                        IconButton(onClick = { selectedPackage = null }) {
-                            Icon(painterResource(Res.drawable.ic_clear), contentDescription = null)
-                        }
-                    }
-                )
-            }
-
-            Button(
-                onClick = {
-                    val pkgId = selectedPackage?.id ?: Uuid.NIL
-                    viewModel.onCreateGame(pkgId, nickname, onNavigateToLobby)
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = nickname.isNotBlank() && selectedPackage != null,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-            ) {
-                Text("Host with Selected Package")
-            }
-        }
-
-        if (state is HomeScreenUiState.Error) {
+        if (state.errorMessage != null) {
             Text(
-                text = (state as HomeScreenUiState.Error).message,
+                text = state.errorMessage.toString(),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall
             )
+        }
+    }
+}
+
+@Composable
+private fun ProfilePart(
+    nickname: String,
+    onNicknameChange: (String) -> Unit,
+    submitNickname: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        modifier = modifier,
+        value = nickname,
+        onValueChange = onNicknameChange,
+        label = { Text("Your Nickname") },
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { submitNickname() }),
+        singleLine = true
+    )
+}
+
+@Composable
+private fun GamePart(
+    inviteCode: String,
+    onInviteCodeChange: (String) -> Unit,
+    selectedPackage: GamePackage?,
+    onSelectPackage: (GamePackage?) -> Unit,
+    joinEnabled: Boolean,
+    createEnabled: Boolean,
+    onJoin: () -> Unit,
+    onCreate: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(modifier = modifier) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Join a Game", style = MaterialTheme.typography.titleMedium)
+            OutlinedTextField(
+                value = inviteCode,
+                onValueChange = onInviteCodeChange,
+                label = { Text("Invite Code") },
+                placeholder = { Text("AB1234") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Button(
+                onClick = onJoin,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = joinEnabled
+            ) {
+                Text("Join Lobby")
+            }
+        }
+    }
+
+    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Host New Game", style = MaterialTheme.typography.titleMedium)
+
+        PackagePicker(
+            onPackageSelected = onSelectPackage,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        selectedPackage?.let {
+            ListItem(
+                headlineContent = { Text("Selected: ${it.title}") },
+                trailingContent = {
+                    IconButton(onClick = { onSelectPackage(null) }) {
+                        Icon(painterResource(Res.drawable.ic_clear), contentDescription = null)
+                    }
+                }
+            )
+        }
+
+        Button(
+            onClick = onCreate,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = createEnabled,
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+        ) {
+            Text("Host with Selected Package")
         }
     }
 }

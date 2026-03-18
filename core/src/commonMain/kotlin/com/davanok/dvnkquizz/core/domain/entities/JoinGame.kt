@@ -7,12 +7,6 @@ import kotlin.uuid.Uuid
 
 
 @Serializable
-data class JoinSessionRequest(
-    @SerialName("p_invite_code") val inviteCode: String,
-    @SerialName("p_nickname") val nickname: String
-)
-
-@Serializable
 data class JoinSessionResponse(
     @SerialName("o_session_id") val sessionId: Uuid,
     @SerialName("o_participant_id") val participantId: Uuid,

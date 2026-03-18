@@ -1,18 +1,17 @@
 package com.davanok.dvnkquizz.core.data
 
 import co.touchlab.kermit.Logger
-import com.davanok.dvnkquizz.core.domain.entities.CreateSessionRequest
 import com.davanok.dvnkquizz.core.domain.entities.CreateSessionResponse
 import com.davanok.dvnkquizz.core.domain.entities.FullGameSession
 import com.davanok.dvnkquizz.core.domain.entities.GameBoardItem
 import com.davanok.dvnkquizz.core.domain.entities.GameSession
 import com.davanok.dvnkquizz.core.domain.entities.GameSessionStatus
-import com.davanok.dvnkquizz.core.domain.entities.JoinSessionRequest
 import com.davanok.dvnkquizz.core.domain.entities.JoinSessionResponse
 import com.davanok.dvnkquizz.core.domain.entities.Participant
 import com.davanok.dvnkquizz.core.domain.entities.ParticipantDto
 import com.davanok.dvnkquizz.core.domain.entities.Question
 import com.davanok.dvnkquizz.core.domain.entities.SessionAnswer
+import com.davanok.dvnkquizz.core.domain.entities.UserProfile
 import com.davanok.dvnkquizz.core.domain.enums.SessionStatus
 import com.davanok.dvnkquizz.core.domain.repositories.GameSessionRepository
 import com.davanok.dvnkquizz.core.utils.combineResultFlow
@@ -47,15 +46,14 @@ class GameSessionRepositoryImpl(
     // --- Session Management ---
 
     override suspend fun createSession(
-        packageId: Uuid,
-        nickname: String
+        packageId: Uuid
     ): Result<CreateSessionResponse> {
-        logger.i { "createSession called: packageId=$packageId nickname=$nickname" }
+        logger.i { "createSession called: packageId=$packageId" }
 
         return runCatching {
             postgrest.rpc(
                 function = "create_game_session",
-                parameters = CreateSessionRequest(packageId, nickname)
+                parameters = mapOf("p_package_id" to packageId)
             ).decodeSingle<CreateSessionResponse>()
         }.onSuccess {
             logger.i { "createSession success: inviteCode=${it.inviteCode}" }
@@ -65,15 +63,14 @@ class GameSessionRepositoryImpl(
     }
 
     override suspend fun joinSession(
-        inviteCode: String,
-        nickname: String
+        inviteCode: String
     ): Result<JoinSessionResponse> {
-        logger.i { "joinSession called: inviteCode=$inviteCode nickname=$nickname" }
+        logger.i { "joinSession called: inviteCode=$inviteCode" }
 
         return runCatching {
             postgrest.rpc(
                 function = "join_game_session",
-                parameters = JoinSessionRequest(inviteCode, nickname)
+                parameters = mapOf("p_invite_code" to inviteCode)
             ).decodeSingle<JoinSessionResponse>()
         }.onSuccess {
             logger.i { "joinSession success: sessionId=${it.sessionId}" }
@@ -101,9 +98,18 @@ class GameSessionRepositoryImpl(
         }
     }
 
+    private suspend fun getUser(userId: Uuid): UserProfile =
+        postgrest.from("users").select {
+            filter {
+                UserProfile::id eq userId
+            }
+        }.decodeSingle()
+
     @OptIn(SupabaseExperimental::class)
     override fun observeParticipants(sessionId: Uuid): Flow<Result<List<Participant>>> {
         logger.i { "observeParticipants started for session=$sessionId" }
+
+        val cachedUsers = mutableMapOf<Uuid, UserProfile>()
 
         return postgrest.from("participants")
             .selectAsFlow<ParticipantDto, Uuid>(
@@ -113,8 +119,11 @@ class GameSessionRepositoryImpl(
             .map { participants ->
                 logger.d { "Participants update received: count=${participants.size}" }
 
-                participants.map {
-                    it.toDomain(auth.currentUserId)
+                participants.map { participant ->
+                    participant.toDomain(
+                        currentUserId = auth.currentUserId,
+                        user = cachedUsers.getOrPut(participant.id) { getUser(participant.id) }
+                    )
                 }
             }
             .onStart {
