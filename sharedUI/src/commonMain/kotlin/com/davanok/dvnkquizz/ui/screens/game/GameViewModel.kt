@@ -10,6 +10,7 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.uuid.Uuid
 
@@ -34,6 +36,7 @@ class GameViewModel(
 
     init {
         observeSession()
+        startHeartbeat()
     }
 
     private fun observeSession() {
@@ -153,6 +156,13 @@ class GameViewModel(
     fun onJudge(participantId: Uuid, isCorrect: Boolean) {
         viewModelScope.launch {
             repository.judgeAnswer(sessionId, participantId, isCorrect)
+        }
+    }
+
+    private fun startHeartbeat() = viewModelScope.launch {
+        while (this.isActive) {
+            repository.sendHeartbeat(sessionId)
+            delay(repository.HEARTBEAT_TIMEOUT)
         }
     }
 

@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlin.uuid.Uuid
 
 @Inject
@@ -79,6 +78,18 @@ class GameSessionRepositoryImpl(
         }
     }
 
+    override suspend fun sendHeartbeat(sessionId: Uuid): Result<Unit> = runCatching {
+        logger.d { "Sending heartbeat for session: $sessionId" }
+
+        postgrest.rpc(
+            "participant_heartbeat",
+            parameters = mapOf("p_session_id" to sessionId)
+        )
+        Unit
+    }.onFailure {
+        logger.e(it) { "Heartbeat RPC failed" }
+    }
+
     override suspend fun updateSessionStatus(
         sessionId: Uuid,
         newStatus: SessionStatus
@@ -87,7 +98,9 @@ class GameSessionRepositoryImpl(
 
         return runCatching {
             postgrest.from("game_sessions")
-                .update(mapOf("status" to newStatus)) {
+                .update({
+                    GameSession::status setTo newStatus
+                }) {
                     filter { eq("id", sessionId) }
                 }
             Unit
@@ -125,9 +138,6 @@ class GameSessionRepositoryImpl(
                         user = cachedUsers.getOrPut(participant.id) { getUser(participant.id) }
                     )
                 }
-            }
-            .onStart {
-                logger.d { "observeParticipants flow started" }
             }
             .catch {
                 logger.e(it) { "observeParticipants flow error" }
@@ -328,4 +338,6 @@ class GameSessionRepositoryImpl(
             )
         }
     }
+
+    override val HEARTBEAT_TIMEOUT: Long = 30_000
 }

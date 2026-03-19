@@ -2,6 +2,7 @@ package com.davanok.dvnkquizz.ui.screens.lobby
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.touchlab.kermit.Logger
 import com.davanok.dvnkquizz.core.domain.enums.SessionStatus
 import com.davanok.dvnkquizz.core.domain.repositories.GameSessionRepository
 import dev.zacsweers.metro.AppScope
@@ -11,10 +12,12 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.uuid.Uuid
 
@@ -28,6 +31,7 @@ class LobbyViewModel(
 
     init {
         observeLobbyData()
+        startHeartbeat()
     }
 
     private fun observeLobbyData() {
@@ -58,9 +62,17 @@ class LobbyViewModel(
     fun startGame() {
         viewModelScope.launch {
             repository.updateSessionStatus(sessionId, SessionStatus.IN_PROGRESS)
-                .onFailure {
+                .onFailure { thr ->
+                    Logger.w(thr) { "Failed to start game" }
                     _uiState.update { it.copy(errorMessage = "Failed to start game.") }
                 }
+        }
+    }
+
+    private fun startHeartbeat() = viewModelScope.launch {
+        while (this.isActive) {
+            repository.sendHeartbeat(sessionId)
+            delay(repository.HEARTBEAT_TIMEOUT)
         }
     }
 

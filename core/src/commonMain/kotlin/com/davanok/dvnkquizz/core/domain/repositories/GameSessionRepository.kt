@@ -17,6 +17,7 @@ interface GameSessionRepository {
     suspend fun createSession(packageId: Uuid): Result<CreateSessionResponse>
     suspend fun joinSession(inviteCode: String): Result<JoinSessionResponse>
 
+    suspend fun sendHeartbeat(sessionId: Uuid): Result<Unit>
     suspend fun updateSessionStatus(sessionId: Uuid, newStatus: SessionStatus): Result<Unit>
 
     fun observeParticipants(sessionId: Uuid): Flow<Result<List<Participant>>>
@@ -32,4 +33,6 @@ interface GameSessionRepository {
 
     fun observeFullGameSession(sessionId: Uuid): Flow<Result<FullGameSession>>
     fun observeGameSessionStatus(sessionId: Uuid): Flow<Result<GameSessionStatus>>
+
+    val HEARTBEAT_TIMEOUT: Long
 }
