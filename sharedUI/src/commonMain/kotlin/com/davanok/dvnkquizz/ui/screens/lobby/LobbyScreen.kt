@@ -17,6 +17,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -33,13 +35,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.davanok.dvnkquizz.core.domain.entities.Participant
 import com.davanok.dvnkquizz.core.domain.enums.ParticipantRole
 import com.davanok.dvnkquizz.core.domain.enums.SessionStatus
+import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.ic_arrow_back
+import org.jetbrains.compose.resources.painterResource
 import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LobbyScreen(
-    modifier: Modifier = Modifier,
     onNavigateToGame: (Uuid) -> Unit,
+    navigateBack: () -> Unit,
     viewModel: LobbyViewModel
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -52,9 +57,21 @@ fun LobbyScreen(
     }
 
     Scaffold(
-        modifier = modifier,
+        modifier = Modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(title = { Text("Game Lobby") })
+            TopAppBar(
+                title = { Text("Game Lobby") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = navigateBack
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_arrow_back),
+                            contentDescription = "back"
+                        )
+                    }
+                }
+            )
         }
     ) { paddingValues ->
         Box(

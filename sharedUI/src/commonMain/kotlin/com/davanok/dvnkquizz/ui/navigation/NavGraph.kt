@@ -34,20 +34,19 @@ fun AppNavDisplay(
             }
             entry<Route.Home> {
                 HomeScreen(
-                    onNavigateToLobby = { sessionId ->
-                        val route = Route.Lobby(sessionId)
-                        navigate(route)
-                    }
+                    onNavigateToLobby = { sessionId -> navigate(Route.Lobby(sessionId)) }
                 )
             }
             entry<Route.Lobby> { (sessionId) ->
                 LobbyScreen(
                     onNavigateToGame = { replace(Route.Game(it)) },
+                    navigateBack = back,
                     viewModel = assistedMetroViewModel<LobbyViewModel, LobbyViewModel.Factory>(key = sessionId.toString()) { create(sessionId) }
                 )
             }
             entry<Route.Game> { (sessionId) ->
                 GameScreen(
+                    navigateBack = back,
                     viewModel = assistedMetroViewModel<GameViewModel, GameViewModel.Factory>(key = sessionId.toString()) { create(sessionId) }
                 )
             }
