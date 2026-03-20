@@ -1,16 +1,108 @@
 package com.davanok.dvnkquizz.ui.screens.game
 
+import androidx.compose.runtime.Immutable
 import com.davanok.dvnkquizz.core.domain.entities.GameBoardItem
-import com.davanok.dvnkquizz.core.domain.entities.GameSession
 import com.davanok.dvnkquizz.core.domain.entities.Participant
-import com.davanok.dvnkquizz.core.domain.entities.Question
+import kotlin.uuid.Uuid
 
-data class GameScreenUiState(
-    val session: GameSession? = null,
-    val isHost: Boolean = false,
-    val participants: List<Participant> = emptyList(),
-    val board: List<GameBoardItem> = emptyList(),
-    val currentQuestion: Question? = null,
-    val buzzedParticipant: Participant? = null, // Calculated below
-    val errorMessage: String? = null
-)
+@Immutable
+sealed interface GameScreenUiState {
+    val isHost: Boolean
+    val participants: List<Participant>
+    val message: String?
+
+    fun copyState(
+        message: String?
+    ): GameScreenUiState
+
+    data object Loading : GameScreenUiState {
+        override val isHost: Boolean = false
+        override val participants: List<Participant> = emptyList()
+        override val message: String? = null
+
+        override fun copyState(message: String?) = this
+    }
+
+    data class FatalError(override val message: String) : GameScreenUiState {
+        override val isHost = false
+        override val participants: List<Participant> = emptyList()
+
+        override fun copyState(message: String?): GameScreenUiState = this
+    }
+
+    data class Idle(
+        override val isHost: Boolean,
+        override val participants: List<Participant>,
+        override val message: String? = null
+    ) : GameScreenUiState {
+        override fun copyState(message: String?): GameScreenUiState = copy(message = message)
+    }
+
+    data class SelectQuestion(
+        override val isHost: Boolean,
+        override val participants: List<Participant>,
+        override val message: String? = null,
+
+        val board: List<GameBoardItem>
+    ) : GameScreenUiState {
+        override fun copyState(message: String?): GameScreenUiState = copy(message = message)
+    }
+
+    data class Question(
+        override val isHost: Boolean,
+        override val participants: List<Participant>,
+        override val message: String? = null,
+
+        val question: com.davanok.dvnkquizz.core.domain.entities.Question
+    ) : GameScreenUiState {
+        override fun copyState(message: String?): GameScreenUiState = copy(message = message)
+    }
+
+    data class Answering(
+        override val isHost: Boolean,
+        override val participants: List<Participant>,
+        override val message: String? = null,
+
+        val question: com.davanok.dvnkquizz.core.domain.entities.Question,
+        val buzzedParticipant: Participant,
+        val isMe: Boolean
+    ) : GameScreenUiState {
+        override fun copyState(message: String?): GameScreenUiState = copy(message = message)
+    }
+
+    data class Answer(
+        override val isHost: Boolean,
+        override val participants: List<Participant>,
+        override val message: String? = null,
+
+        val question: com.davanok.dvnkquizz.core.domain.entities.Question
+    ) : GameScreenUiState {
+        override fun copyState(message: String?): GameScreenUiState = copy(message = message)
+    }
+
+    data class Results(
+        override val isHost: Boolean,
+        override val participants: List<Participant>,
+        override val message: String? = null
+    ) : GameScreenUiState {
+        override fun copyState(message: String?): GameScreenUiState = copy(message = message)
+    }
+}
+
+sealed interface GameScreenUiEvent {
+    // Control
+    data object NextRound : GameScreenUiEvent
+    data object NextQuestion : GameScreenUiEvent
+
+    // GameBoard
+    data class SelectQuestion(val questionId: Uuid) : GameScreenUiEvent
+
+    // Question
+    data object Buzz : GameScreenUiEvent
+
+    // Answering
+    data class JudgeAnswer(val isCorrect: Boolean) : GameScreenUiEvent
+
+    // Results
+    data object Leave : GameScreenUiEvent
+}

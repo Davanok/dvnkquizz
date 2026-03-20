@@ -72,7 +72,7 @@ class LobbyViewModel(
     private fun startHeartbeat() = viewModelScope.launch {
         while (this.isActive) {
             repository.sendHeartbeat(sessionId)
-            delay(repository.HEARTBEAT_TIMEOUT)
+            delay(repository.HEARTBEAT_TIMEOUT_MS)
         }
     }
 
