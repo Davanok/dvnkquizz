@@ -7,6 +7,7 @@ import com.davanok.dvnkquizz.core.domain.entities.GameSessionStatus
 import com.davanok.dvnkquizz.core.domain.entities.Participant
 import com.davanok.dvnkquizz.core.domain.entities.ParticipantDto
 import com.davanok.dvnkquizz.core.domain.entities.UserProfile
+import com.davanok.dvnkquizz.core.domain.entities.UserProfileDto
 import com.davanok.dvnkquizz.core.domain.repositories.ObserveSessionRepository
 import com.davanok.dvnkquizz.core.utils.combineResultFlow
 import com.davanok.dvnkquizz.core.utils.currentUserId
@@ -33,6 +34,7 @@ import kotlin.uuid.Uuid
 class ObserveSessionRepositoryImpl(
     private val auth: Auth,
     private val postgrest: Postgrest,
+    private val filesSource: FilesSource,
     private val logger: Logger
 ): ObserveSessionRepository {
     private suspend fun getGamePackage(packageId: Uuid): GamePackage =
@@ -41,10 +43,17 @@ class ObserveSessionRepositoryImpl(
                 filter { GamePackage::id eq packageId }
             }.decodeSingle()
 
-    private suspend fun getUser(userId: Uuid): UserProfile =
-        postgrest.from("users").select {
-            filter { UserProfile::id eq userId }
-        }.decodeSingle()
+    private suspend fun getUser(userId: Uuid): UserProfile {
+        val profileDto = postgrest.from("users").select {
+            filter { UserProfileDto::id eq userId }
+        }.decodeSingle<UserProfileDto>()
+
+        val image = profileDto.image?.let { image ->
+            filesSource.fetchSource("profiles", image).getOrNull()
+        }
+
+        return profileDto.toDomain(image = image)
+    }
 
     @OptIn(SupabaseExperimental::class)
     private fun observeParticipants(sessionId: Uuid): Flow<Result<List<Participant>>> {

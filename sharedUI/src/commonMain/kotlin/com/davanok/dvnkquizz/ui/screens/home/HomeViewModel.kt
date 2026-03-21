@@ -3,6 +3,7 @@ package com.davanok.dvnkquizz.ui.screens.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
+import com.davanok.dvnkquizz.core.domain.repositories.AuthRepository
 import com.davanok.dvnkquizz.core.domain.repositories.GameSessionRepository
 import com.davanok.dvnkquizz.core.domain.repositories.UserProfileRepository
 import dev.zacsweers.metro.AppScope
@@ -20,6 +21,7 @@ import kotlin.uuid.Uuid
 @ViewModelKey(HomeViewModel::class)
 @ContributesIntoMap(AppScope::class)
 class HomeViewModel(
+    private val authRepository: AuthRepository,
     private val userProfileRepository: UserProfileRepository,
     private val gameSessionRepository: GameSessionRepository
 ) : ViewModel() {
@@ -114,7 +116,11 @@ class HomeViewModel(
         val currentState = uiState.value
         userProfileRepository.updateProfile(
             nickname = currentState.nickname,
-            image = currentState.image
+            image = null
         )
+    }
+
+    fun logOut() = viewModelScope.launch {
+        authRepository.logOut()
     }
 }

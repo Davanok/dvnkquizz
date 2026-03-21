@@ -116,12 +116,10 @@ class GameProcessRepositoryImpl(
         observeSessionRepository.sendHeartbeat(sessionId)
 
     override suspend fun nextRound(sessionId: Uuid): Result<Unit> = runCatching {
-        postgrest.from("game_sessions")
-            .update({
-                GameSession::currentRoundId setTo TODO()
-            }) {
-                filter { GameSession::id eq sessionId }
-            }
+        postgrest.rpc(
+            "next_round",
+            mapOf("p_session_id" to sessionId)
+        )
     }
 
     override suspend fun nextQuestion(sessionId: Uuid): Result<Unit> = runCatching {

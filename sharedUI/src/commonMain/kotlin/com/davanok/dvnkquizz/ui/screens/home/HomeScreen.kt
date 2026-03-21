@@ -2,9 +2,11 @@ package com.davanok.dvnkquizz.ui.screens.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -30,6 +32,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import co.touchlab.kermit.Logger
+import coil3.compose.AsyncImage
+import com.davanok.dvnkquizz.core.domain.entities.ExternalFile
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
 import com.davanok.dvnkquizz.ui.screens.packagePicker.PackagePicker
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -64,8 +69,10 @@ fun HomeScreen(
         
         ProfilePart(
             nickname = state.nickname,
+            image = state.image,
             onNicknameChange = viewModel::setNickname,
             submitNickname = viewModel::submitNickname,
+            onLogOut = viewModel::logOut,
             modifier = Modifier
         )
         
@@ -100,19 +107,38 @@ fun HomeScreen(
 @Composable
 private fun ProfilePart(
     nickname: String,
+    image: ExternalFile?,
     onNicknameChange: (String) -> Unit,
     submitNickname: () -> Unit,
+    onLogOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    OutlinedTextField(
-        modifier = modifier,
-        value = nickname,
-        onValueChange = onNicknameChange,
-        label = { Text("Your Nickname") },
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        keyboardActions = KeyboardActions(onDone = { submitNickname() }),
-        singleLine = true
-    )
+    Row(modifier = modifier) {
+        if (image != null)
+            AsyncImage(
+                model = image,
+                contentDescription = null,
+                modifier = Modifier.size(100.dp),
+                onError = { e ->
+                    Logger.e(e.result.throwable) { "failed to render profile image" }
+                }
+            )
+
+        OutlinedTextField(
+            value = nickname,
+            onValueChange = onNicknameChange,
+            label = { Text("Your Nickname") },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { submitNickname() }),
+            singleLine = true
+        )
+
+        Button(
+            onClick = onLogOut
+        ) {
+            Text(text = "logout")
+        }
+    }
 }
 
 @Composable
