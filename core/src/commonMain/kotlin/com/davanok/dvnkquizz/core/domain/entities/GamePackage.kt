@@ -3,12 +3,14 @@ package com.davanok.dvnkquizz.core.domain.entities
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 @Serializable
 data class GamePackage(
     val id: Uuid = Uuid.random(),
-    @SerialName("created_at") val createdAt: LocalDateTime? = null,
+    @SerialName("created_at")
+    val createdAt: Instant? = null,
     val title: String,
     val description: String,
     @SerialName("author_id") val authorId: Uuid? = null,

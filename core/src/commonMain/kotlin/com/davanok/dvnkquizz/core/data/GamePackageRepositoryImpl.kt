@@ -16,14 +16,16 @@ import kotlinx.coroutines.flow.Flow
 @ContributesBinding(AppScope::class)
 class GamePackageRepositoryImpl(
     private val postgrest: Postgrest,
-    private val logger: Logger
+    logger: Logger
 ): GamePackageRepository {
+    private val logger = logger.withTag(TAG)
     private suspend fun getPage(query: String, from: Long, count: Int): List<GamePackage> {
         logger.d { "getPage query=$query from=$from count=$count" }
+
         return postgrest.from("game_packages").select {
             if (query.isNotBlank()) filter {
+                val queryPattern = "%$query%"
                 or {
-                    val queryPattern = "%$query%"
                     GamePackage::title ilike queryPattern
                     GamePackage::description ilike queryPattern
                 }
@@ -40,6 +42,7 @@ class GamePackageRepositoryImpl(
     }
 
     companion object {
+        private const val TAG = "GamePackageRepository"
         private const val PAGE_SIZE = 20
     }
 }

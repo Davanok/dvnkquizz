@@ -21,6 +21,8 @@ import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.realtime.selectAsFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlin.uuid.Uuid
 
@@ -28,9 +30,10 @@ import kotlin.uuid.Uuid
 @ContributesBinding(AppScope::class)
 class GameProcessRepositoryImpl(
     private val postgrest: Postgrest,
-    private val logger: Logger,
+    logger: Logger,
     private val observeSessionRepository: ObserveSessionRepository,
 ): GameProcessRepository {
+    private val logger = logger.withTag(TAG)
 
     @OptIn(SupabaseExperimental::class)
     private fun observeSessionAnswers(sessionId: Uuid): Flow<Result<List<SessionAnswer>>> {
@@ -86,30 +89,20 @@ class GameProcessRepositoryImpl(
         }
     }
 
-    override fun observeGameSession(sessionId: Uuid): Flow<Result<FullGameSession>> {
-        logger.i { "observeFullGameSession started: sessionId=$sessionId" }
+    override fun observeGameSession(sessionId: Uuid): Flow<Result<FullGameSession>> = flow {
+        val sessionEnricher = GameSessionEnricher(
+            getActiveQuestion = { getActiveQuestion(sessionId).getOrThrow() },
+            getSessionBoard = { getSessionBoard(sessionId, it).getOrThrow() }
+        )
 
-        return combineResultFlow(
+        val resultFlow = combineResultFlow(
             observeSessionRepository.observeGameSessionStatus(sessionId),
             observeSessionAnswers(sessionId)
         ) { sessionStatus, answers ->
-            val session = sessionStatus.session
-            val participants = sessionStatus.participants
-
-            logger.d {
-                "FullGameSession update: participants=${participants.size} answers=${answers.size}"
-            }
-
-            FullGameSession(
-                session = session,
-                gamePackage = sessionStatus.gamePackage,
-                participants = participants,
-                answers = answers,
-                isHost = sessionStatus.isHost,
-                gameBoard = session.currentRoundId?.let { getSessionBoard(sessionId, it).getOrThrow() }.orEmpty(),
-                activeQuestion = session.currentQuestionId?.let { getActiveQuestion(sessionId).getOrThrow() }
-            )
+            sessionEnricher.enrich(sessionStatus, answers)
         }
+
+        emitAll(resultFlow)
     }
 
     override suspend fun sendHeartbeat(sessionId: Uuid): Result<Unit> =
@@ -197,4 +190,8 @@ class GameProcessRepositoryImpl(
     }
 
     override val HEARTBEAT_TIMEOUT_MS: Long = observeSessionRepository.HEARTBEAT_TIMEOUT_MS
+
+    companion object {
+        private const val TAG = "GameProcessRepository"
+    }
 }

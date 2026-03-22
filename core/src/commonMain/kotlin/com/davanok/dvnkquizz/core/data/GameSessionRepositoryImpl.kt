@@ -2,7 +2,6 @@ package com.davanok.dvnkquizz.core.data
 
 import co.touchlab.kermit.Logger
 import com.davanok.dvnkquizz.core.domain.entities.CreateSessionResponse
-import com.davanok.dvnkquizz.core.domain.entities.GameSession
 import com.davanok.dvnkquizz.core.domain.entities.GameSessionStatus
 import com.davanok.dvnkquizz.core.domain.entities.JoinSessionResponse
 import com.davanok.dvnkquizz.core.domain.enums.SessionStatus
@@ -20,9 +19,10 @@ import kotlin.uuid.Uuid
 @ContributesBinding(AppScope::class)
 class GameSessionRepositoryImpl(
     private val postgrest: Postgrest,
-    private val logger: Logger,
+    logger: Logger,
     private val observeSessionRepository: ObserveSessionRepository
 ) : GameSessionRepository {
+    private val logger = logger.withTag(TAG)
 
     // --- Session Management ---
 
@@ -71,9 +71,7 @@ class GameSessionRepositoryImpl(
 
         return runCatching {
             postgrest.from("game_sessions")
-                .update({
-                    GameSession::status setTo newStatus
-                }) {
+                .update(mapOf("status" to newStatus.name)) {
                     filter { eq("id", sessionId) }
                 }
             Unit
@@ -88,4 +86,8 @@ class GameSessionRepositoryImpl(
         observeSessionRepository.observeGameSessionStatus(sessionId)
 
     override val HEARTBEAT_TIMEOUT_MS: Long = 30_000
+
+    companion object {
+        private const val TAG = "GameSessionRepository"
+    }
 }

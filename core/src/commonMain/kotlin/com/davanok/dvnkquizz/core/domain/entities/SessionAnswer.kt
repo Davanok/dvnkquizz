@@ -1,8 +1,8 @@
 package com.davanok.dvnkquizz.core.domain.entities
 
-import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 @Serializable
@@ -19,5 +19,5 @@ data class SessionAnswer(
     @SerialName("points_awarded")
     val pointsAwarded: Int,
     @SerialName("answered_at")
-    val answeredAt: LocalDateTime
+    val answeredAt: Instant
 )

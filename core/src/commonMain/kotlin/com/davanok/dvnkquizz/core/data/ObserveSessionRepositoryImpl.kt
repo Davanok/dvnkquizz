@@ -27,6 +27,10 @@ import io.github.jan.supabase.realtime.selectSingleValueAsFlow
 import io.github.jan.supabase.storage.Storage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlin.uuid.Uuid
@@ -37,8 +41,9 @@ class ObserveSessionRepositoryImpl(
     private val auth: Auth,
     private val postgrest: Postgrest,
     private val storage: Storage,
-    private val logger: Logger
+    logger: Logger
 ) : ObserveSessionRepository {
+    private val logger = logger.withTag(TAG)
     private suspend fun getGamePackage(packageId: Uuid): GamePackage =
         postgrest.from("game_packages")
             .select {
@@ -66,12 +71,12 @@ class ObserveSessionRepositoryImpl(
     }
 
     @OptIn(SupabaseExperimental::class)
-    private fun observeParticipants(sessionId: Uuid): Flow<Result<List<Participant>>> {
+    private fun observeParticipants(sessionId: Uuid): Flow<Result<List<Participant>>> = flow {
         logger.i { "observeParticipants started for session=$sessionId" }
 
         val cachedUsers = mutableMapOf<Uuid, UserProfile>()
 
-        return postgrest.from("participants")
+        val resultFlow = postgrest.from("participants")
             .selectAsFlow<ParticipantDto, Uuid>(
                 ParticipantDto::id,
                 filter = FilterOperation("session_id", FilterOperator.EQ, sessionId)
@@ -86,11 +91,14 @@ class ObserveSessionRepositoryImpl(
                     )
                 }
             }
+            .distinctUntilChanged()
             .catch {
                 logger.e(it) { "observeParticipants flow error" }
                 throw it
             }
             .toResultFLow()
+
+        emitAll(resultFlow)
     }
 
     @OptIn(SupabaseExperimental::class)
@@ -111,11 +119,11 @@ class ObserveSessionRepositoryImpl(
             .toResultFLow()
     }
 
-    override fun observeGameSessionStatus(sessionId: Uuid): Flow<Result<GameSessionStatus>> {
+    override fun observeGameSessionStatus(sessionId: Uuid): Flow<Result<GameSessionStatus>> = flow {
         logger.i { "observeFullGameSession started: sessionId=$sessionId" }
 
         var gamePackage: GamePackage? = null
-        return combineResultFlow(
+        val resultFlow = combineResultFlow(
             observeSession(sessionId),
             observeParticipants(sessionId)
         ) { session, participants ->
@@ -133,6 +141,7 @@ class ObserveSessionRepositoryImpl(
                 isHost = session.hostId == auth.currentUserId
             )
         }
+        emitAll(resultFlow)
     }
 
     override suspend fun sendHeartbeat(sessionId: Uuid): Result<Unit> = runCatching {
@@ -149,4 +158,8 @@ class ObserveSessionRepositoryImpl(
 
 
     override val HEARTBEAT_TIMEOUT_MS: Long = 30_000
+
+    companion object {
+        private const val TAG = "ObserveSessionRepository"
+    }
 }

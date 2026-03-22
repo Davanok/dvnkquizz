@@ -20,47 +20,56 @@ import kotlinx.coroutines.flow.onEach
 @ContributesBinding(AppScope::class)
 class AuthRepositoryImpl(
     private val auth: Auth,
-    private val logger: Logger
-): AuthRepository {
+    logger: Logger
+) : AuthRepository {
+    private val logger = logger.withTag(TAG)
+
+    override fun observeUser(): Flow<Result<User?>> =
+        auth.sessionStatus
+            .onEach { status ->
+                logger.d { "Auth status changed: $status" }
+            }
+            .mapNotNull { status ->
+                when (status) {
+                    is SessionStatus.Authenticated -> Result.success(status.session.user?.toUser())
+                    is SessionStatus.NotAuthenticated -> Result.success(null)
+                    is SessionStatus.RefreshFailure -> Result.failure(Exception("Session refresh failure"))
+                    SessionStatus.Initializing -> null // Skip emission during startup
+                }
+            }
+
+    override suspend fun signInWithEmail(email: String, password: String): Result<Unit> =
+        runCatching {
+            auth.signInWith(Email) {
+                this.email = email
+                this.password = password
+            }
+        }
+
+    override suspend fun signUpWithEmail(email: String, password: String): Result<Unit> =
+        runCatching {
+            auth.signUpWith(Email) {
+                this.email = email
+                this.password = password
+            }
+        }
+
+    override suspend fun resendEmail(email: String): Result<Unit> =
+        runCatching {
+            auth.resendEmail(type = OtpType.Email.EMAIL, email = email)
+        }
+
+    override suspend fun logOut(): Result<Unit> =
+        runCatching {
+            auth.signOut()
+        }
+
     private fun UserInfo.toUser() = User(
         id = id.toUuid(),
         email = email
     )
 
-    override fun observeUser(): Flow<Result<User?>> =
-        auth.sessionStatus
-            .onEach { logger.d(tag = "authSessionStatusUpdate") { it.toString() } }
-            .mapNotNull { status ->
-                when (status) {
-                    is SessionStatus.Authenticated -> Result.success(status.session.user?.toUser())
-                    SessionStatus.Initializing -> null
-                    is SessionStatus.NotAuthenticated -> Result.success(null)
-                    is SessionStatus.RefreshFailure -> Result.failure(Exception("Session refresh failure"))
-                }
-            }
-
-    override suspend fun signInWithEmail(email: String, password: String): Result<Unit> = runCatching {
-        auth.signInWith(Email) {
-            this.email = email
-            this.password = password
-        }
-    }
-
-    override suspend fun signUpWithEmail(email: String, password: String): Result<Unit> = runCatching  {
-        auth.signUpWith(Email) {
-            this.email = email
-            this.password = password
-        }
-    }
-
-    override suspend fun resendEmail(email: String): Result<Unit> = runCatching {
-        auth.resendEmail(
-            type = OtpType.Email.EMAIL,
-            email = email
-        )
-    }
-
-    override suspend fun logOut(): Result<Unit> = runCatching {
-        auth.signOut()
+    companion object {
+        private const val TAG = "AuthRepository"
     }
 }

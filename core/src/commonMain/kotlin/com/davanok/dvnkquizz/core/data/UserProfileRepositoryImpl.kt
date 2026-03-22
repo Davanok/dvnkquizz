@@ -20,7 +20,9 @@ import io.github.jan.supabase.storage.downloadAuthenticatedAsFlow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.io.files.Path
@@ -32,8 +34,9 @@ class UserProfileRepositoryImpl(
     private val auth: Auth,
     private val postgrest: Postgrest,
     private val storage: Storage,
-    private val logger: Logger
-): UserProfileRepository {
+    logger: Logger
+) : UserProfileRepository {
+    private val logger = logger.withTag(TAG)
     private fun getUserImageFlow(path: String): Flow<FileDownloadStatus> =
         storage.from("profiles").downloadAuthenticatedAsFlow(path)
             .map { it.toFileDownloadStatus() }
@@ -43,11 +46,11 @@ class UserProfileRepositoryImpl(
             }
 
     @OptIn(SupabaseExperimental::class, ExperimentalCoroutinesApi::class)
-    override fun observeProfile(): Flow<Result<UserProfile>> {
+    override fun observeProfile(): Flow<Result<UserProfile>> = flow {
         var cachedImagePath: String? = null
         var currentImageFlow: Flow<FileDownloadStatus>? = null
 
-        return postgrest.from("users")
+        val resultFlow = postgrest.from("users")
             .selectSingleValueAsFlow(UserProfileDto::id) {
                 UserProfileDto::id eq auth.currentUserId
             }
@@ -59,9 +62,12 @@ class UserProfileRepositoryImpl(
                     }
                 }
 
-                currentImageFlow?.map { profileDto.toDomain(it) } ?: flowOf(profileDto.toDomain(null))
+                currentImageFlow?.map { profileDto.toDomain(it) }
+                    ?: flowOf(profileDto.toDomain(null))
             }
             .toResultFLow()
+
+        emitAll(resultFlow)
     }
 
     override suspend fun setNickname(nickname: String): Result<Unit> = runCatching {
@@ -73,7 +79,8 @@ class UserProfileRepositoryImpl(
 
     override suspend fun setImage(image: ByteArray?): Result<Unit> = runCatching {
         val currentUser = checkNotNull(auth.currentUserOrNull())
-        val filename = image?.let { Path(currentUser.id, Uuid.random().toString() + ".image").toString() }
+        val filename =
+            image?.let { Path(currentUser.id, Uuid.random().toString() + ".image").toString() }
 
         if (image != null && filename != null)
             storage.from("profiles")
@@ -85,5 +92,9 @@ class UserProfileRepositoryImpl(
             }) {
                 filter { UserProfileDto::id eq currentUser.id }
             }
+    }
+
+    companion object {
+        private const val TAG = "ObserveSessionRepository"
     }
 }

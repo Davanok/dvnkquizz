@@ -8,7 +8,7 @@ import kotlin.uuid.Uuid
 
 @Serializable
 data class Question(
-    val id: Uuid = Uuid.random(),
+    val id: Uuid,
     @SerialName("category_id") val categoryId: Uuid,
     @SerialName("question_text") val questionText: String,
     @SerialName("answer_text") val answerText: String,
