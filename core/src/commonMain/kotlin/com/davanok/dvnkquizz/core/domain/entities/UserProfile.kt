@@ -9,7 +9,7 @@ internal data class UserProfileDto(
     val nickname: String,
     val image: String?
 ) {
-    fun toDomain(image: ExternalFile?) = UserProfile(
+    fun toDomain(image: FileDownloadStatus?) = UserProfile(
         nickname = nickname,
         image = image
     )
@@ -17,5 +17,5 @@ internal data class UserProfileDto(
 
 data class UserProfile(
     val nickname: String,
-    val image: ExternalFile?
+    val image: FileDownloadStatus?
 )

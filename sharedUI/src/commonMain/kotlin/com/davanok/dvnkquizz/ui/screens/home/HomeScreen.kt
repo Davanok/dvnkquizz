@@ -1,5 +1,7 @@
 package com.davanok.dvnkquizz.ui.screens.home
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,13 +15,17 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,14 +38,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import co.touchlab.kermit.Logger
-import coil3.compose.AsyncImage
-import com.davanok.dvnkquizz.core.domain.entities.ExternalFile
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
+import com.davanok.dvnkquizz.ui.domain.ImageStatus
 import com.davanok.dvnkquizz.ui.screens.packagePicker.PackagePicker
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.ic_check
 import dvnkquizz.sharedui.generated.resources.ic_clear
+import dvnkquizz.sharedui.generated.resources.ic_error
+import dvnkquizz.sharedui.generated.resources.ic_logout
 import org.jetbrains.compose.resources.painterResource
 import kotlin.uuid.Uuid
 
@@ -66,16 +73,17 @@ fun HomeScreen(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
-        
+
         ProfilePart(
             nickname = state.nickname,
             image = state.image,
+            nicknameChanged = state.nicknameChanged,
             onNicknameChange = viewModel::setNickname,
             submitNickname = viewModel::submitNickname,
             onLogOut = viewModel::logOut,
             modifier = Modifier
         )
-        
+
         GamePart(
             inviteCode = inviteCode,
             onInviteCodeChange = { inviteCode = it.uppercase() },
@@ -85,12 +93,12 @@ fun HomeScreen(
             createEnabled = selectedPackage != null,
             onJoin = {
                 viewModel.onJoinClicked(inviteCode, onNavigateToLobby)
-                     },
+            },
             onCreate = {
                 selectedPackage?.let {
                     viewModel.onCreateGame(it.id, onNavigateToLobby)
                 }
-                       },
+            },
             modifier = Modifier
         )
 
@@ -102,27 +110,46 @@ fun HomeScreen(
             )
         }
     }
+
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ProfilePart(
     nickname: String,
-    image: ExternalFile?,
+    image: ImageStatus?,
+    nicknameChanged: Boolean,
     onNicknameChange: (String) -> Unit,
     submitNickname: () -> Unit,
     onLogOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(modifier = modifier) {
-        if (image != null)
-            AsyncImage(
-                model = image,
-                contentDescription = null,
-                modifier = Modifier.size(100.dp),
-                onError = { e ->
-                    Logger.e(e.result.throwable) { "failed to render profile image" }
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        if (image != null) {
+            Surface(
+                modifier = Modifier.size(64.dp),
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                when (image) {
+                    is ImageStatus.Error -> Icon(
+                        painter = painterResource(Res.drawable.ic_error),
+                        contentDescription = "error when downloading image"
+                    )
+                    is ImageStatus.Loading -> ContainedLoadingIndicator(
+                        progress = { image.percent }
+                    )
+                    is ImageStatus.Success -> Image(
+                        bitmap = image.bitmap,
+                        contentDescription = "profile image"
+                    )
                 }
-            )
+            }
+        }
 
         OutlinedTextField(
             value = nickname,
@@ -130,13 +157,26 @@ private fun ProfilePart(
             label = { Text("Your Nickname") },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { submitNickname() }),
-            singleLine = true
+            singleLine = true,
+            trailingIcon = {
+                AnimatedVisibility(visible = nicknameChanged) {
+                    IconButton(onClick = submitNickname) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_check),
+                            contentDescription = "submit nickname"
+                        )
+                    }
+                }
+            }
         )
 
-        Button(
+        FilledIconButton(
             onClick = onLogOut
         ) {
-            Text(text = "logout")
+            Icon(
+                painter = painterResource(Res.drawable.ic_logout),
+                contentDescription = "log out"
+            )
         }
     }
 }

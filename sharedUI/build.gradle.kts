@@ -49,8 +49,6 @@ kotlin {
             implementation(libs.compose.nav3)
             implementation(libs.androidx.lifecycle.viewmodel.nav3)
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.coil)
-            implementation(libs.coil.network.ktor)
             implementation(libs.multiplatformSettings)
             implementation(libs.kotlinx.datetime)
             implementation(libs.materialKolor)
@@ -60,6 +58,8 @@ kotlin {
 
             implementation(libs.androidx.paging.common)
             implementation(libs.androidx.paging.compose)
+
+            implementation(libs.bundles.filekit)
 
             api(project(":core"))
         }

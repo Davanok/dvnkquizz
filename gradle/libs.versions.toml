@@ -13,7 +13,6 @@ androidx-lifecycle = "2.10.0-alpha07"
 androidx-nav3 = "1.1.0-alpha01"
 kotlinx-serialization = "1.10.0"
 metro = "0.11.4"
-coil = "3.4.0"
 multiplatformSettings = "1.3.0"
 kotlinx-datetime = "0.7.1"
 buildConfig = "6.0.9"
@@ -21,6 +20,7 @@ materialKolor = "4.1.1"
 supabase = "3.4.1"
 ktor = "3.4.1"
 paging = "3.4.0-beta01"
+filekit = "0.13.0"
 
 [libraries]
 # Compose
@@ -73,13 +73,15 @@ metrox-viewmodel-compose = { group = "dev.zacsweers.metro", name = "metrox-viewm
 # utilities
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 
-coil = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
-coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
-
 multiplatformSettings = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettings" }
 
 androidx-paging-common = { group = "androidx.paging", name = "paging-common", version.ref = "paging" }
 androidx-paging-compose = { group = "androidx.paging", name = "paging-compose", version.ref = "paging" }
+
+# filekit
+filekit-core = { group = "io.github.vinceglb", name = "filekit-core", version.ref = "filekit" }
+filekit-dialogs = { group = "io.github.vinceglb", name = "filekit-dialogs", version.ref = "filekit" }
+filekit-dialogs-compose = { group = "io.github.vinceglb", name = "filekit-dialogs-compose", version.ref = "filekit" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -114,4 +116,10 @@ supabase = [
     "supabase-storage",
     "ktor-core",
     "ktor-client-cio"
+]
+
+filekit = [
+    "filekit-core",
+    "filekit-dialogs",
+    "filekit-dialogs-compose"
 ]

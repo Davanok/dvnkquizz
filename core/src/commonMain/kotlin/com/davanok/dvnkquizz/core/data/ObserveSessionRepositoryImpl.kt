@@ -1,6 +1,7 @@
 package com.davanok.dvnkquizz.core.data
 
 import co.touchlab.kermit.Logger
+import com.davanok.dvnkquizz.core.domain.entities.FileDownloadStatus
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
 import com.davanok.dvnkquizz.core.domain.entities.GameSession
 import com.davanok.dvnkquizz.core.domain.entities.GameSessionStatus
@@ -23,6 +24,7 @@ import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.realtime.selectAsFlow
 import io.github.jan.supabase.realtime.selectSingleValueAsFlow
+import io.github.jan.supabase.storage.Storage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -34,23 +36,31 @@ import kotlin.uuid.Uuid
 class ObserveSessionRepositoryImpl(
     private val auth: Auth,
     private val postgrest: Postgrest,
-    private val filesSource: FilesSource,
+    private val storage: Storage,
     private val logger: Logger
-): ObserveSessionRepository {
+) : ObserveSessionRepository {
     private suspend fun getGamePackage(packageId: Uuid): GamePackage =
         postgrest.from("game_packages")
             .select {
                 filter { GamePackage::id eq packageId }
             }.decodeSingle()
 
+    private suspend fun getUserImage(path: String): FileDownloadStatus =
+        runCatching {
+            val byteArray = storage.from("profiles").downloadAuthenticated(path)
+            FileDownloadStatus.ByteData(byteArray)
+        }.onFailure { thr ->
+            logger.e(thr) { "failed to download profile image" }
+        }.getOrElse {
+            FileDownloadStatus.Error(it)
+        }
+
     private suspend fun getUser(userId: Uuid): UserProfile {
         val profileDto = postgrest.from("users").select {
             filter { UserProfileDto::id eq userId }
         }.decodeSingle<UserProfileDto>()
 
-        val image = profileDto.image?.let { image ->
-            filesSource.fetchSource("profiles", image).getOrNull()
-        }
+        val image = profileDto.image?.let { getUserImage(it) }
 
         return profileDto.toDomain(image = image)
     }

@@ -6,6 +6,8 @@ import co.touchlab.kermit.Logger
 import com.davanok.dvnkquizz.core.domain.repositories.AuthRepository
 import com.davanok.dvnkquizz.core.domain.repositories.GameSessionRepository
 import com.davanok.dvnkquizz.core.domain.repositories.UserProfileRepository
+import com.davanok.dvnkquizz.ui.domain.ImageStatus
+import com.davanok.dvnkquizz.ui.domain.toImageStatus
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -14,7 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import okio.Path
+import kotlinx.io.files.Path
 import kotlin.uuid.Uuid
 
 @Inject
@@ -80,12 +82,19 @@ class HomeViewModel(
 
     private fun observeProfile() = viewModelScope.launch {
         userProfileRepository.observeProfile().collect { result ->
-            result.fold(
-                onSuccess = { profile ->
+            result.mapCatching { profile ->
+                val imageStatus = profile.image?.toImageStatus()
+
+                if (imageStatus is ImageStatus.Error)
+                    _uiState.update { it.copy(errorMessage = imageStatus.throwable.message) }
+
+                profile.nickname to imageStatus
+            }.fold(
+                onSuccess = { (nickname, image) ->
                     _uiState.update {
                         it.copy(
-                            nickname = profile.nickname,
-                            image = profile.image
+                            nickname = nickname,
+                            image = image
                         )
                     }
                 },
@@ -101,23 +110,16 @@ class HomeViewModel(
     }
 
     fun setNickname(nickname: String) {
-        _uiState.update { it.copy(nickname = nickname) }
+        _uiState.update { it.copy(nickname = nickname, nicknameChanged = true) }
     }
 
     fun setImage(image: Path) = viewModelScope.launch {
-        val currentState = uiState.value
-        userProfileRepository.updateProfile(
-            nickname = currentState.nickname,
-            image = TODO()
-        )
+        userProfileRepository.setImage(image = null) // TODO
     }
 
     fun submitNickname() = viewModelScope.launch {
-        val currentState = uiState.value
-        userProfileRepository.updateProfile(
-            nickname = currentState.nickname,
-            image = null
-        )
+        _uiState.update { it.copy(nicknameChanged = false) }
+        userProfileRepository.setNickname(nickname = uiState.value.nickname)
     }
 
     fun logOut() = viewModelScope.launch {
