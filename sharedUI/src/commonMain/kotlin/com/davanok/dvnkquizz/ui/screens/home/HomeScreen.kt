@@ -2,6 +2,7 @@ package com.davanok.dvnkquizz.ui.screens.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,7 +16,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
@@ -23,6 +23,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -31,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +49,11 @@ import dvnkquizz.sharedui.generated.resources.ic_check
 import dvnkquizz.sharedui.generated.resources.ic_clear
 import dvnkquizz.sharedui.generated.resources.ic_error
 import dvnkquizz.sharedui.generated.resources.ic_logout
+import dvnkquizz.sharedui.generated.resources.ic_person
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.readBytes
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import kotlin.uuid.Uuid
 
@@ -79,6 +86,7 @@ fun HomeScreen(
             image = state.image,
             nicknameChanged = state.nicknameChanged,
             onNicknameChange = viewModel::setNickname,
+            onImageChange = viewModel::setImage,
             submitNickname = viewModel::submitNickname,
             onLogOut = viewModel::logOut,
             modifier = Modifier
@@ -120,34 +128,46 @@ private fun ProfilePart(
     image: ImageStatus?,
     nicknameChanged: Boolean,
     onNicknameChange: (String) -> Unit,
+    onImageChange: (ByteArray?) -> Unit,
     submitNickname: () -> Unit,
     onLogOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val scope = rememberCoroutineScope()
+    val launcher = rememberFilePickerLauncher(type = FileKitType.Image) { file ->
+        if (file != null)
+            scope.launch { onImageChange(file.readBytes()) }
+    }
+
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        if (image != null) {
-            Surface(
-                modifier = Modifier.size(64.dp),
-                shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.primaryContainer
-            ) {
-                when (image) {
-                    is ImageStatus.Error -> Icon(
-                        painter = painterResource(Res.drawable.ic_error),
-                        contentDescription = "error when downloading image"
-                    )
-                    is ImageStatus.Loading -> ContainedLoadingIndicator(
-                        progress = { image.percent }
-                    )
-                    is ImageStatus.Success -> Image(
-                        bitmap = image.bitmap,
-                        contentDescription = "profile image"
-                    )
-                }
+        Surface(
+            modifier = Modifier.size(64.dp)
+                .combinedClickable(
+                    onClick = { launcher.launch() },
+                    onLongClickLabel = "delete image",
+                    onLongClick = { if (image != null) onImageChange(null) }
+                ),
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.primaryContainer
+        ) {
+            when (image) {
+                null -> Icon(
+                    painter = painterResource(Res.drawable.ic_person),
+                    contentDescription = "profile icon"
+                )
+                is ImageStatus.Error -> Icon(
+                    painter = painterResource(Res.drawable.ic_error),
+                    contentDescription = "error when downloading image"
+                )
+                is ImageStatus.Loading -> LoadingIndicator()
+                is ImageStatus.Success -> Image(
+                    bitmap = image.bitmap,
+                    contentDescription = "profile image"
+                )
             }
         }
 

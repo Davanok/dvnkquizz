@@ -23,6 +23,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.io.files.Path
+import kotlin.uuid.Uuid
 
 @Inject
 @ContributesBinding(AppScope::class)
@@ -70,6 +72,18 @@ class UserProfileRepositoryImpl(
     }
 
     override suspend fun setImage(image: ByteArray?): Result<Unit> = runCatching {
-        TODO("Not yet implemented")
+        val currentUser = checkNotNull(auth.currentUserOrNull())
+        val filename = image?.let { Path(currentUser.id, Uuid.random().toString() + ".image").toString() }
+
+        if (image != null && filename != null)
+            storage.from("profiles")
+                .upload(filename, image)
+
+        postgrest.from("users")
+            .update({
+                UserProfileDto::image setTo filename
+            }) {
+                filter { UserProfileDto::id eq currentUser.id }
+            }
     }
 }

@@ -8,6 +8,6 @@ data class HomeScreenUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val nickname: String = "",
-    val image: ImageStatus? = null,
+    val image: ImageStatus? = ImageStatus.Loading(),
     val nicknameChanged: Boolean = false
 )

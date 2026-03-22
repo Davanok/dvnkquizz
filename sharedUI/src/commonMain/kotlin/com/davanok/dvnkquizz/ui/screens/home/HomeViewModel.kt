@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.io.files.Path
 import kotlin.uuid.Uuid
 
 @Inject
@@ -113,8 +112,12 @@ class HomeViewModel(
         _uiState.update { it.copy(nickname = nickname, nicknameChanged = true) }
     }
 
-    fun setImage(image: Path) = viewModelScope.launch {
-        userProfileRepository.setImage(image = null) // TODO
+    fun setImage(image: ByteArray?) = viewModelScope.launch {
+        _uiState.update { it.copy(image = ImageStatus.Loading()) }
+        userProfileRepository.setImage(image = image)
+            .onFailure { thr ->
+                _uiState.update { it.copy(image = ImageStatus.Error(thr)) }
+            }
     }
 
     fun submitNickname() = viewModelScope.launch {

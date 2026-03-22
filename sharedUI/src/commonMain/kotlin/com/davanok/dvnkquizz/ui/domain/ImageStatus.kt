@@ -5,8 +5,11 @@ import androidx.compose.ui.graphics.decodeToImageBitmap
 import com.davanok.dvnkquizz.core.domain.entities.FileDownloadStatus
 
 sealed interface ImageStatus {
-    data class Loading(val percent: Float) : ImageStatus {
-        init { check(percent in 0f..1f) }
+    data class Loading(val percent: Float? = null) : ImageStatus {
+        init {
+            if (percent != null)
+                check(percent in 0f..1f)
+        }
     }
     data class Error(val throwable: Throwable) : ImageStatus
     data class Success(val bitmap: ImageBitmap) : ImageStatus
