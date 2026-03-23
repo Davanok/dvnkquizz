@@ -1,13 +1,13 @@
 package com.davanok.dvnkquizz.ui.screens.home
 
 import androidx.compose.runtime.Immutable
-import com.davanok.dvnkquizz.ui.domain.ImageStatus
 
 @Immutable
 data class HomeScreenUiState(
-    val isLoading: Boolean = true,
+    val isSessionLoading: Boolean = false,
     val errorMessage: String? = null,
+    val isProfileLoading: Boolean = true,
     val nickname: String = "",
-    val image: ImageStatus? = ImageStatus.Loading(),
+    val imageUrl: String? = null,
     val nicknameChanged: Boolean = false
 )

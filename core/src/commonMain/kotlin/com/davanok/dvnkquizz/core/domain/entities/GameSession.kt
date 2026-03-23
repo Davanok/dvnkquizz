@@ -16,5 +16,6 @@ data class GameSession(
     @SerialName("invite_code") val inviteCode: String? = null,
     @SerialName("created_at") val createdAt: Instant? = null,
     @SerialName("is_answer_visible") val isAnswerVisible: Boolean = false,
-    @SerialName("current_question_id") val currentQuestionId: Uuid? = null
+    @SerialName("current_question_id") val currentQuestionId: Uuid? = null,
+    @SerialName("show_question_at") val showQuestionAt: Instant?
 )

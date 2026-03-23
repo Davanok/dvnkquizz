@@ -3,6 +3,7 @@ package com.davanok.dvnkquizz.ui.screens.game
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.davanok.dvnkquizz.core.domain.entities.FullGameSession
+import com.davanok.dvnkquizz.core.domain.entities.Participant
 import com.davanok.dvnkquizz.core.domain.enums.SessionStatus
 import com.davanok.dvnkquizz.core.domain.repositories.GameProcessRepository
 import dev.zacsweers.metro.AppScope
@@ -17,9 +18,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 @AssistedInject
@@ -39,62 +42,90 @@ class GameViewModel(
 
     private fun observeSession() {
         viewModelScope.launch {
-            repository.observeGameSession(sessionId).collect { session ->
-                session.mapCatching { it.toUiState() }.fold(
+            repository.observeGameSession(sessionId).collectLatest { session ->
+                session.fold(
                     onFailure = { thr ->
                         _uiState.update {
                             GameScreenUiState.FatalError(thr.message.toString())
                         }
                     },
                     onSuccess = { state ->
-                        _uiState.update { state }
+                        val uiState = state.toUiState()
+
+                        _uiState.update { uiState }
+
+                        val showQuestionAt = state.session.showQuestionAt
+                        if (showQuestionAt != null) {
+                            while (Clock.System.now() < showQuestionAt) {
+                                delay(500L)
+                                _uiState.update { state.toUiState() }
+                            }
+                            _uiState.update { state.toUiState() }
+                        }
                     }
                 )
             }
         }
     }
 
-    private fun FullGameSession.toUiState(): GameScreenUiState = when {
-        session.status == SessionStatus.FINISHED -> GameScreenUiState.Results(
-            isHost = isHost,
-            participants = participants
-        )
-
-        session.currentRoundId == null -> GameScreenUiState.Idle(
-            isHost = isHost,
-            participants = participants
-        )
-
-        activeQuestion == null -> GameScreenUiState.SelectQuestion(
-            isHost = isHost,
-            participants = participants,
-            board = gameBoard
-        )
-
-        answers.none { it.questionId == session.currentQuestionId } -> GameScreenUiState.Question(
-            isHost = isHost,
-            participants = participants,
-            question = activeQuestion!!
-        )
-
-        answers.any { it.questionId == session.currentQuestionId && it.isCorrect == true } -> GameScreenUiState.Answer(
-            isHost = isHost,
-            participants = participants,
-            question = activeQuestion!!
-        )
-
-        else -> {
-            val activeAnswer = answers.first { it.questionId == session.currentQuestionId }
-            val buzzedParticipant = participants.first {
-                it.id == activeAnswer.participantId
-            }
-            GameScreenUiState.Answering(
-                isHost = isHost,
-                participants = participants,
-                question = activeQuestion!!,
-                buzzedParticipant = buzzedParticipant,
-                isMe = buzzedParticipant.isMe
+    private fun FullGameSession.toUiState(): GameScreenUiState {
+        val participants = participants
+            .sortedWith(
+                compareBy<Participant> { it.role } // host is first, spectators in end
+                    .thenByDescending { it.score } // higher score in start
             )
+
+        return when {
+            session.status == SessionStatus.FINISHED -> GameScreenUiState.Results(
+                isHost = isHost,
+                gamePackage = gamePackage,
+                participants = participants
+            )
+
+            session.currentRoundId == null -> GameScreenUiState.Idle(
+                isHost = isHost,
+                gamePackage = gamePackage,
+                participants = participants
+            )
+
+            activeQuestion == null -> GameScreenUiState.SelectQuestion(
+                isHost = isHost,
+                gamePackage = gamePackage,
+                participants = participants,
+                board = gameBoard.groupBy { it.categoryName }
+            )
+
+            answers.none { it.questionId == session.currentQuestionId } -> {
+                GameScreenUiState.Question(
+                    isHost = isHost,
+                    gamePackage = gamePackage,
+                    participants = participants,
+                    showQuestionIn = session.showQuestionAt?.let { it - Clock.System.now() }?.inWholeSeconds?.toInt(),
+                    question = activeQuestion!!
+                )
+            }
+
+            answers.any { it.questionId == session.currentQuestionId && it.isCorrect == true } -> GameScreenUiState.Answer(
+                isHost = isHost,
+                gamePackage = gamePackage,
+                participants = participants,
+                question = activeQuestion!!
+            )
+
+            else -> {
+                val activeAnswer = answers.first { it.questionId == session.currentQuestionId }
+                val buzzedParticipant = participants.first {
+                    it.id == activeAnswer.participantId
+                }
+                GameScreenUiState.Answering(
+                    isHost = isHost,
+                    gamePackage = gamePackage,
+                    participants = participants,
+                    question = activeQuestion!!,
+                    buzzedParticipant = buzzedParticipant,
+                    isMe = buzzedParticipant.isMe
+                )
+            }
         }
     }
 

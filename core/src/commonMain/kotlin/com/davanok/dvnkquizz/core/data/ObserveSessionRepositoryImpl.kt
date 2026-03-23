@@ -1,14 +1,12 @@
 package com.davanok.dvnkquizz.core.data
 
 import co.touchlab.kermit.Logger
-import com.davanok.dvnkquizz.core.domain.entities.FileDownloadStatus
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
 import com.davanok.dvnkquizz.core.domain.entities.GameSession
 import com.davanok.dvnkquizz.core.domain.entities.GameSessionStatus
 import com.davanok.dvnkquizz.core.domain.entities.Participant
 import com.davanok.dvnkquizz.core.domain.entities.ParticipantDto
 import com.davanok.dvnkquizz.core.domain.entities.UserProfile
-import com.davanok.dvnkquizz.core.domain.entities.UserProfileDto
 import com.davanok.dvnkquizz.core.domain.repositories.ObserveSessionRepository
 import com.davanok.dvnkquizz.core.utils.combineResultFlow
 import com.davanok.dvnkquizz.core.utils.currentUserId
@@ -28,11 +26,11 @@ import io.github.jan.supabase.storage.Storage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlin.time.Duration.Companion.hours
 import kotlin.uuid.Uuid
 
 @Inject
@@ -50,25 +48,16 @@ class ObserveSessionRepositoryImpl(
                 filter { GamePackage::id eq packageId }
             }.decodeSingle()
 
-    private suspend fun getUserImage(path: String): FileDownloadStatus =
-        runCatching {
-            val byteArray = storage.from("profiles").downloadAuthenticated(path)
-            FileDownloadStatus.ByteData(byteArray)
-        }.onFailure { thr ->
-            logger.e(thr) { "failed to download profile image" }
-        }.getOrElse {
-            FileDownloadStatus.Error(it)
+    private suspend fun getUser(userId: Uuid): UserProfile =
+        postgrest.from("users").select {
+            filter { UserProfile::id eq userId }
+        }.decodeSingle<UserProfile>().let {
+            if (it.image == null) it
+            else it.copy(
+                image = storage.from("profiles")
+                    .createSignedUrl(path = it.image, expiresIn = 1.hours)
+            )
         }
-
-    private suspend fun getUser(userId: Uuid): UserProfile {
-        val profileDto = postgrest.from("users").select {
-            filter { UserProfileDto::id eq userId }
-        }.decodeSingle<UserProfileDto>()
-
-        val image = profileDto.image?.let { getUserImage(it) }
-
-        return profileDto.toDomain(image = image)
-    }
 
     @OptIn(SupabaseExperimental::class)
     private fun observeParticipants(sessionId: Uuid): Flow<Result<List<Participant>>> = flow {

@@ -21,6 +21,7 @@ supabase = "3.4.1"
 ktor = "3.4.1"
 paging = "3.4.0-beta01"
 filekit = "0.13.0"
+coil = "3.4.0"
 
 [libraries]
 # Compose
@@ -83,6 +84,9 @@ filekit-core = { group = "io.github.vinceglb", name = "filekit-core", version.re
 filekit-dialogs = { group = "io.github.vinceglb", name = "filekit-dialogs", version.ref = "filekit" }
 filekit-dialogs-compose = { group = "io.github.vinceglb", name = "filekit-dialogs-compose", version.ref = "filekit" }
 
+coil = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
@@ -122,4 +126,10 @@ filekit = [
     "filekit-core",
     "filekit-dialogs",
     "filekit-dialogs-compose"
+]
+
+coil = [
+    "coil",
+    "coil-ktor",
+    "ktor-client-cio"
 ]

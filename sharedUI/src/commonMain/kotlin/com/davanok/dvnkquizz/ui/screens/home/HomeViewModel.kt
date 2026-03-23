@@ -2,12 +2,9 @@ package com.davanok.dvnkquizz.ui.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import co.touchlab.kermit.Logger
 import com.davanok.dvnkquizz.core.domain.repositories.AuthRepository
 import com.davanok.dvnkquizz.core.domain.repositories.GameSessionRepository
 import com.davanok.dvnkquizz.core.domain.repositories.UserProfileRepository
-import com.davanok.dvnkquizz.ui.domain.ImageStatus
-import com.davanok.dvnkquizz.ui.domain.toImageStatus
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -40,18 +37,16 @@ class HomeViewModel(
         if (inviteCode.isBlank()) return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isSessionLoading = true) }
 
             gameSessionRepository.joinSession(inviteCode.uppercase())
                 .onSuccess { response ->
-                    _uiState.update { it.copy(isLoading = false) }
                     onSuccess(response.sessionId)
                 }
                 .onFailure { e ->
-                    Logger.w(e) { "Unknown Error" }
                     _uiState.update {
                         it.copy(
-                            isLoading = false,
+                            isSessionLoading = false,
                             errorMessage = e.message
                         )
                     }
@@ -61,17 +56,15 @@ class HomeViewModel(
 
     fun onCreateGame(packageId: Uuid, onSuccess: (Uuid) -> Unit) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isSessionLoading = true) }
             gameSessionRepository.createSession(packageId)
                 .onSuccess { response ->
-                    _uiState.update { it.copy(isLoading = false) }
                     onSuccess(response.sessionId)
                 }
                 .onFailure { e ->
-                    Logger.w(e) { "Failed to create game" }
                     _uiState.update {
                         it.copy(
-                            isLoading = false,
+                            isSessionLoading = false,
                             errorMessage = e.message
                         )
                     }
@@ -81,25 +74,20 @@ class HomeViewModel(
 
     private fun observeProfile() = viewModelScope.launch {
         userProfileRepository.observeProfile().collect { result ->
-            result.mapCatching { profile ->
-                val imageStatus = profile.image?.toImageStatus()
-
-                if (imageStatus is ImageStatus.Error)
-                    _uiState.update { it.copy(errorMessage = imageStatus.throwable.message) }
-
-                profile.nickname to imageStatus
-            }.fold(
-                onSuccess = { (nickname, image) ->
+            result.fold(
+                onSuccess = { profile ->
                     _uiState.update {
                         it.copy(
-                            nickname = nickname,
-                            image = image
+                            isProfileLoading = false,
+                            nickname = profile.nickname,
+                            imageUrl = profile.image
                         )
                     }
                 },
                 onFailure = { thr ->
                     _uiState.update {
                         it.copy(
+                            isProfileLoading = false,
                             errorMessage = thr.message
                         )
                     }
@@ -113,16 +101,19 @@ class HomeViewModel(
     }
 
     fun setImage(image: ByteArray?) = viewModelScope.launch {
-        _uiState.update { it.copy(image = ImageStatus.Loading()) }
+        _uiState.update { it.copy(isProfileLoading = true) }
         userProfileRepository.setImage(image = image)
             .onFailure { thr ->
-                _uiState.update { it.copy(image = ImageStatus.Error(thr)) }
+                _uiState.update { it.copy(errorMessage = thr.message) }
             }
     }
 
     fun submitNickname() = viewModelScope.launch {
-        _uiState.update { it.copy(nicknameChanged = false) }
+        _uiState.update { it.copy(nicknameChanged = false, isProfileLoading = true) }
         userProfileRepository.setNickname(nickname = uiState.value.nickname)
+            .onFailure { thr ->
+                _uiState.update { it.copy(errorMessage = thr.message) }
+            }
     }
 
     fun logOut() = viewModelScope.launch {

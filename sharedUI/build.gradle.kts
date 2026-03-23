@@ -61,6 +61,8 @@ kotlin {
 
             implementation(libs.bundles.filekit)
 
+            implementation(libs.bundles.coil)
+
             api(project(":core"))
         }
 

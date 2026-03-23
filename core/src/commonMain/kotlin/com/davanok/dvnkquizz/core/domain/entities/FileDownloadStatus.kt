@@ -14,6 +14,8 @@ sealed interface FileDownloadStatus {
         }
 
         override fun hashCode(): Int = data.contentHashCode()
+
+        override fun toString(): String = "FileDownloadStatus.ByteData"
     }
     data object Success : FileDownloadStatus
 }

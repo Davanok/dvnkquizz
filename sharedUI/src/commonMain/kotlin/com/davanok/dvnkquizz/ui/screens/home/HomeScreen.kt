@@ -1,9 +1,10 @@
 package com.davanok.dvnkquizz.ui.screens.home
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +27,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,12 +36,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
-import com.davanok.dvnkquizz.ui.domain.ImageStatus
 import com.davanok.dvnkquizz.ui.screens.packagePicker.PackagePicker
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import dvnkquizz.sharedui.generated.resources.Res
@@ -82,8 +83,9 @@ fun HomeScreen(
         )
 
         ProfilePart(
+            isLoading = state.isProfileLoading,
             nickname = state.nickname,
-            image = state.image,
+            imageUrl = state.imageUrl,
             nicknameChanged = state.nicknameChanged,
             onNicknameChange = viewModel::setNickname,
             onImageChange = viewModel::setImage,
@@ -124,8 +126,9 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ProfilePart(
+    isLoading: Boolean,
     nickname: String,
-    image: ImageStatus?,
+    imageUrl: String?,
     nicknameChanged: Boolean,
     onNicknameChange: (String) -> Unit,
     onImageChange: (ByteArray?) -> Unit,
@@ -144,29 +147,28 @@ private fun ProfilePart(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Surface(
-            modifier = Modifier.size(64.dp)
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(MaterialTheme.shapes.large)
+                .background(MaterialTheme.colorScheme.primaryContainer)
                 .combinedClickable(
                     onClick = { launcher.launch() },
                     onLongClickLabel = "delete image",
-                    onLongClick = { if (image != null) onImageChange(null) }
+                    onLongClick = { if (imageUrl != null) onImageChange(null) }
                 ),
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.primaryContainer
+            contentAlignment = Alignment.Center
         ) {
-            when (image) {
-                null -> Icon(
+            when {
+                isLoading -> LoadingIndicator()
+                imageUrl == null -> Icon(
                     painter = painterResource(Res.drawable.ic_person),
                     contentDescription = "profile icon"
                 )
-                is ImageStatus.Error -> Icon(
-                    painter = painterResource(Res.drawable.ic_error),
-                    contentDescription = "error when downloading image"
-                )
-                is ImageStatus.Loading -> LoadingIndicator()
-                is ImageStatus.Success -> Image(
-                    bitmap = image.bitmap,
-                    contentDescription = "profile image"
+                else -> AsyncImage(
+                    model = imageUrl,
+                    contentDescription = "profile image",
+                    error = painterResource(Res.drawable.ic_error)
                 )
             }
         }

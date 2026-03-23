@@ -19,8 +19,8 @@ class AppActivity : ComponentActivity() {
     }
     private fun onThemeChanged(isDark: Boolean) {
         WindowInsetsControllerCompat(window, window.decorView).apply {
-            isAppearanceLightStatusBars = isDark
-            isAppearanceLightNavigationBars = isDark
+            isAppearanceLightStatusBars = !isDark
+            isAppearanceLightNavigationBars = !isDark
         }
     }
 }

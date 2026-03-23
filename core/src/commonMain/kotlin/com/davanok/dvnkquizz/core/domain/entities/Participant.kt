@@ -13,7 +13,8 @@ internal data class ParticipantDto(
     val score: Int = 0,
     val role: ParticipantRole = ParticipantRole.PLAYER,
     @SerialName("joined_at") val joinedAt: Instant,
-    @SerialName("last_active_at") val lastActiveAt: Instant
+    @SerialName("last_active_at") val lastActiveAt: Instant,
+    @SerialName("is_ready") val isReady: Boolean
 ) {
     fun toDomain(currentUserId: Uuid?, user: UserProfile) = Participant(
         id = id,

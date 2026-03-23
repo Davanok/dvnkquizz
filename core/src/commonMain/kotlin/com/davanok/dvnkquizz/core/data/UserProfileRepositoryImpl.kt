@@ -1,12 +1,9 @@
 package com.davanok.dvnkquizz.core.data
 
 import co.touchlab.kermit.Logger
-import com.davanok.dvnkquizz.core.domain.entities.FileDownloadStatus
 import com.davanok.dvnkquizz.core.domain.entities.UserProfile
-import com.davanok.dvnkquizz.core.domain.entities.UserProfileDto
 import com.davanok.dvnkquizz.core.domain.repositories.UserProfileRepository
 import com.davanok.dvnkquizz.core.utils.currentUserId
-import com.davanok.dvnkquizz.core.utils.toFileDownloadStatus
 import com.davanok.dvnkquizz.core.utils.toResultFLow
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -16,16 +13,11 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.selectSingleValueAsFlow
 import io.github.jan.supabase.storage.Storage
-import io.github.jan.supabase.storage.downloadAuthenticatedAsFlow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.io.files.Path
+import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.Uuid
 
 @Inject
@@ -37,47 +29,32 @@ class UserProfileRepositoryImpl(
     logger: Logger
 ) : UserProfileRepository {
     private val logger = logger.withTag(TAG)
-    private fun getUserImageFlow(path: String): Flow<FileDownloadStatus> =
-        storage.from("profiles").downloadAuthenticatedAsFlow(path)
-            .map { it.toFileDownloadStatus() }
-            .catch {
-                logger.e(it) { "failed to get user image flow" }
-                emit(FileDownloadStatus.Error(it))
-            }
 
     @OptIn(SupabaseExperimental::class, ExperimentalCoroutinesApi::class)
-    override fun observeProfile(): Flow<Result<UserProfile>> = flow {
-        var cachedImagePath: String? = null
-        var currentImageFlow: Flow<FileDownloadStatus>? = null
-
-        val resultFlow = postgrest.from("users")
-            .selectSingleValueAsFlow(UserProfileDto::id) {
-                UserProfileDto::id eq auth.currentUserId
+    override fun observeProfile(): Flow<Result<UserProfile>> =
+        postgrest.from("users")
+            .selectSingleValueAsFlow(UserProfile::id) {
+                UserProfile::id eq auth.currentUserId
             }
-            .flatMapLatest { profileDto ->
-                if (profileDto.image != cachedImagePath) {
-                    cachedImagePath = profileDto.image
-                    currentImageFlow = profileDto.image?.let {
-                        getUserImageFlow(profileDto.image)
-                    }
+            .mapLatest { profile ->
+                val profileImageUrl = profile.image?.let {
+                    storage.from("profiles").createSignedUrl(it, 1.minutes)
                 }
 
-                currentImageFlow?.map { profileDto.toDomain(it) }
-                    ?: flowOf(profileDto.toDomain(null))
+                profile.copy(image = profileImageUrl)
             }
             .toResultFLow()
 
-        emitAll(resultFlow)
-    }
-
-    override suspend fun setNickname(nickname: String): Result<Unit> = runCatching {
+    override suspend fun setNickname(nickname: String): Result<Unit> = runCatching<Unit> {
         postgrest.from("users")
-            .update({ UserProfileDto::nickname setTo nickname }) {
-                filter { UserProfileDto::id eq auth.currentUserId }
+            .update({ UserProfile::nickname setTo nickname }) {
+                filter { UserProfile::id eq auth.currentUserId }
             }
+    }.onFailure {
+        logger.e(it) { "failed to set profile nickname" }
     }
 
-    override suspend fun setImage(image: ByteArray?): Result<Unit> = runCatching {
+    override suspend fun setImage(image: ByteArray?): Result<Unit> = runCatching<Unit> {
         val currentUser = checkNotNull(auth.currentUserOrNull())
         val filename =
             image?.let { Path(currentUser.id, Uuid.random().toString() + ".image").toString() }
@@ -88,10 +65,12 @@ class UserProfileRepositoryImpl(
 
         postgrest.from("users")
             .update({
-                UserProfileDto::image setTo filename
+                UserProfile::image setTo filename
             }) {
-                filter { UserProfileDto::id eq currentUser.id }
+                filter { UserProfile::id eq currentUser.id }
             }
+    }.onFailure {
+        logger.e(it) { "failed to set profile image" }
     }
 
     companion object {
