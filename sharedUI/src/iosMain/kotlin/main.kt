@@ -1,5 +1,5 @@
 import androidx.compose.ui.window.ComposeUIViewController
-import com.davanok.dvnkquizz.di.IosAppGraph
+import com.davanok.dvnkquizz.ui.di.IosAppGraph
 import dev.zacsweers.metro.createGraph
 import platform.UIKit.UIApplication
 import platform.UIKit.UIStatusBarStyleDarkContent

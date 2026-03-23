@@ -83,54 +83,60 @@ class GameViewModel(
                 board = gameBoard.groupBy { it.categoryName }
             )
 
-            answers.none { it.questionId == session.currentQuestionId } -> {
-                GameScreenUiState.Question(
-                    isHost = isHost,
-                    gamePackage = gamePackage,
-                    participants = participants,
-                    showQuestionAt = session.showQuestionAt,
-                    question = activeQuestion!!
-                )
-            }
-
-            answers.any { it.questionId == session.currentQuestionId && it.isCorrect == true } -> GameScreenUiState.Answer(
-                isHost = isHost,
-                gamePackage = gamePackage,
-                participants = participants,
-                question = activeQuestion!!
-            )
-
             else -> {
-                val activeAnswer = answers.first { it.questionId == session.currentQuestionId }
-                val buzzedParticipant = participants.first {
-                    it.id == activeAnswer.participantId
+                val activeAnswers = answers.filter { it.questionId == session.currentQuestionId }
+
+                when {
+                    activeAnswers.none { it.isCorrect != false } -> GameScreenUiState.Question(
+                        isHost = isHost,
+                        gamePackage = gamePackage,
+                        participants = participants,
+                        showQuestionAt = session.showQuestionAt,
+                        question = activeQuestion!!
+                    )
+
+                    activeAnswers.none { it.isCorrect == true } -> {
+                        val answer = activeAnswers
+                            .filter { it.isCorrect == null }
+                            .minBy { it.answeredAt }
+
+                        val participant = participants
+                            .first { it.id == answer.participantId }
+
+                        GameScreenUiState.Answering(
+                            isHost = isHost,
+                            gamePackage = gamePackage,
+                            participants = participants,
+                            question = activeQuestion!!,
+                            answer = answer,
+                            buzzedParticipant = participant,
+                            isMe = participant.isMe
+                        )
+                    }
+
+                    else -> GameScreenUiState.Answer(
+                        isHost = isHost,
+                        gamePackage = gamePackage,
+                        participants = participants,
+                        question = activeQuestion!!
+                    )
                 }
-                GameScreenUiState.Answering(
-                    isHost = isHost,
-                    gamePackage = gamePackage,
-                    participants = participants,
-                    question = activeQuestion!!,
-                    buzzedParticipant = buzzedParticipant,
-                    isMe = buzzedParticipant.isMe
-                )
             }
         }
     }
 
     fun eventSink(event: GameScreenUiEvent) = viewModelScope.launch {
-        runCatching {
-            processEvent(event)
-        }.onFailure { thr ->
+        processEvent(event).onFailure { thr ->
             _uiState.update {
                 it.copyState(message = thr.toString())
             }
         }
     }
 
-    private suspend fun processEvent(event: GameScreenUiEvent) {
+    private suspend fun processEvent(event: GameScreenUiEvent): Result<Any> {
         val currentUiState = uiState.value
 
-        when (event) {
+        return when (event) {
             GameScreenUiEvent.NextRound -> {
                 check(currentUiState.isHost) { "only host can start round" }
 
@@ -160,11 +166,13 @@ class GameViewModel(
                 check(currentUiState is GameScreenUiState.Answering)
                 check(currentUiState.isHost) { "only host can judge answer" }
 
-                repository.judgeAnswer(sessionId, currentUiState.buzzedParticipant.id, event.isCorrect)
+                repository.judgeAnswer(sessionId, event.answerId, event.isCorrect)
             }
 
             GameScreenUiEvent.Leave -> {
-                _heartbeatJob.cancel()
+                runCatching {
+                    _heartbeatJob.cancel()
+                }
             }
         }
     }

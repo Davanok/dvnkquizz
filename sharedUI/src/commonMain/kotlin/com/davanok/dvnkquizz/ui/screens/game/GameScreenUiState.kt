@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.davanok.dvnkquizz.core.domain.entities.GameBoardItem
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
 import com.davanok.dvnkquizz.core.domain.entities.Participant
+import com.davanok.dvnkquizz.core.domain.entities.SessionAnswer
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -74,6 +75,7 @@ sealed interface GameScreenUiState {
         override val message: String? = null,
 
         val question: com.davanok.dvnkquizz.core.domain.entities.Question,
+        val answer: SessionAnswer,
         val buzzedParticipant: Participant,
         val isMe: Boolean
     ) : GameScreenUiState {
@@ -113,7 +115,7 @@ sealed interface GameScreenUiEvent {
     data object Buzz : GameScreenUiEvent
 
     // Answering
-    data class JudgeAnswer(val isCorrect: Boolean) : GameScreenUiEvent
+    data class JudgeAnswer(val answerId: Uuid, val isCorrect: Boolean) : GameScreenUiEvent
 
     // Results
     data object Leave : GameScreenUiEvent

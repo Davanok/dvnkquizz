@@ -17,7 +17,7 @@ data class SessionAnswer(
     @SerialName("is_correct")
     val isCorrect: Boolean?,
     @SerialName("points_awarded")
-    val pointsAwarded: Int,
+    val pointsAwarded: Int?,
     @SerialName("answered_at")
     val answeredAt: Instant
 )

@@ -2,7 +2,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import com.davanok.dvnkquizz.di.JvmAppGraph
+import com.davanok.dvnkquizz.ui.di.JvmAppGraph
 import dev.zacsweers.metro.createGraph
 import java.awt.Dimension
 

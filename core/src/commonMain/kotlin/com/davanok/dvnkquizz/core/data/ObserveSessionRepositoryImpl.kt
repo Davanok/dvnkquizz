@@ -71,8 +71,6 @@ class ObserveSessionRepositoryImpl(
                 filter = FilterOperation("session_id", FilterOperator.EQ, sessionId)
             )
             .map { participants ->
-                logger.d { "Participants update received: count=${participants.size}" }
-
                 participants.map { participant ->
                     participant.toDomain(
                         currentUserId = auth.currentUserId,
@@ -98,13 +96,6 @@ class ObserveSessionRepositoryImpl(
             .selectSingleValueAsFlow(
                 GameSession::id
             ) { GameSession::id eq sessionId }
-            .onEach {
-                logger.d { "Session update received: $it" }
-            }
-            .catch {
-                logger.e(it) { "observeSession flow error" }
-                throw it
-            }
             .toResultFLow()
     }
 
@@ -116,10 +107,6 @@ class ObserveSessionRepositoryImpl(
             observeSession(sessionId),
             observeParticipants(sessionId)
         ) { session, participants ->
-            logger.d {
-                "FullGameSession update: participants=${participants.size}"
-            }
-
             if (gamePackage == null)
                 gamePackage = getGamePackage(session.packageId)
 
@@ -131,6 +118,10 @@ class ObserveSessionRepositoryImpl(
             )
         }
         emitAll(resultFlow)
+    }.onEach {
+        logger.d {
+            "observeGameSessionStatus update: $it"
+        }
     }
 
     override suspend fun sendHeartbeat(sessionId: Uuid): Result<Unit> = runCatching {

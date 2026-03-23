@@ -14,9 +14,9 @@ interface GameProcessRepository {
 
     suspend fun selectQuestion(sessionId: Uuid, questionId: Uuid): Result<Unit>
 
-    suspend fun buzzIn(sessionId: Uuid): Result<Unit>
+    suspend fun buzzIn(sessionId: Uuid): Result<Boolean>
 
-    suspend fun judgeAnswer(sessionId: Uuid, participantId: Uuid, isCorrect: Boolean): Result<Unit>
+    suspend fun judgeAnswer(sessionId: Uuid, answerId: Uuid, isCorrect: Boolean): Result<Unit>
 
     val HEARTBEAT_TIMEOUT_MS: Long
 }

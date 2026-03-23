@@ -189,26 +189,26 @@ class GameProcessRepositoryImpl(
         }
     }
 
-    override suspend fun buzzIn(sessionId: Uuid): Result<Unit> {
+    override suspend fun buzzIn(sessionId: Uuid): Result<Boolean> {
         logger.i { "buzzIn called: sessionId=$sessionId" }
-        return runCatching<Unit> {
+        return runCatching {
             postgrest.rpc(
                 function = "buzz_in",
                 parameters = mapOf("p_session_id" to sessionId)
-            )
+            ).decodeAs<Boolean>()
         }.onFailure {
             logger.e(it) { "buzzIn failed" }
         }
     }
 
-    override suspend fun judgeAnswer(sessionId: Uuid, participantId: Uuid, isCorrect: Boolean): Result<Unit> {
-        logger.i { "judgeAnswer: sessionId=$sessionId participantId=$participantId isCorrect=$isCorrect" }
+    override suspend fun judgeAnswer(sessionId: Uuid, answerId: Uuid, isCorrect: Boolean): Result<Unit> {
+        logger.i { "judgeAnswer: sessionId=$sessionId answerId=$answerId isCorrect=$isCorrect" }
         return runCatching<Unit> {
             postgrest.rpc(
                 function = "judge_answer",
                 parameters = mapOf(
                     "p_session_id" to sessionId,
-                    "p_participant_id" to participantId,
+                    "p_answer_id" to answerId,
                     "p_is_correct" to isCorrect
                 )
             )

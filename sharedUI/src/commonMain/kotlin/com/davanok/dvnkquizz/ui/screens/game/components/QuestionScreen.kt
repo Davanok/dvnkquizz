@@ -69,14 +69,14 @@ fun QuestionScreen(
             )
         } else {
             val progress = question.media?.progress
-            when  {
-                progress == null -> CircularWavyProgressIndicator()
-                progress < 1 -> CircularWavyProgressIndicator(progress = { progress })
-                else -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "Waiting other participants")
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                when  {
+                    progress == null -> CircularWavyProgressIndicator()
+                    progress < 1 -> CircularWavyProgressIndicator(progress = { progress })
+                    else -> Text(text = "Waiting other participants")
                 }
             }
         }
