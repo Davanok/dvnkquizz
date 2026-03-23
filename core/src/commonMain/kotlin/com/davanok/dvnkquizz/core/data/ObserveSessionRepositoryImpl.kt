@@ -80,7 +80,7 @@ class ObserveSessionRepositoryImpl(
                     )
                 }
             }
-            .distinctUntilChanged()
+            .distinctUntilChanged() // requires because lastActiveAt not uses in app
             .catch {
                 logger.e(it) { "observeParticipants flow error" }
                 throw it

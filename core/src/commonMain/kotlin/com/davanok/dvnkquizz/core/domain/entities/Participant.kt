@@ -23,7 +23,8 @@ internal data class ParticipantDto(
         score = score,
         role = role,
         joinedAt = joinedAt,
-        isMe = id == currentUserId
+        isMe = id == currentUserId,
+        isReady = isReady
     )
 }
 data class Participant(
@@ -33,5 +34,6 @@ data class Participant(
     val score: Int = 0,
     val role: ParticipantRole = ParticipantRole.PLAYER,
     val joinedAt: Instant,
-    val isMe: Boolean
+    val isMe: Boolean,
+    val isReady: Boolean
 )

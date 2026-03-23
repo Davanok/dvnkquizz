@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 @AssistedInject
@@ -42,28 +41,17 @@ class GameViewModel(
 
     private fun observeSession() {
         viewModelScope.launch {
-            repository.observeGameSession(sessionId).collectLatest { session ->
-                session.fold(
-                    onFailure = { thr ->
-                        _uiState.update {
+            repository.observeGameSession(sessionId).collectLatest { result ->
+                _uiState.update {
+                    result.fold(
+                        onFailure = { thr ->
                             GameScreenUiState.FatalError(thr.message.toString())
+                        },
+                        onSuccess = { session ->
+                            session.toUiState()
                         }
-                    },
-                    onSuccess = { state ->
-                        val uiState = state.toUiState()
-
-                        _uiState.update { uiState }
-
-                        val showQuestionAt = state.session.showQuestionAt
-                        if (showQuestionAt != null) {
-                            while (Clock.System.now() < showQuestionAt) {
-                                delay(500L)
-                                _uiState.update { state.toUiState() }
-                            }
-                            _uiState.update { state.toUiState() }
-                        }
-                    }
-                )
+                    )
+                }
             }
         }
     }
@@ -100,7 +88,7 @@ class GameViewModel(
                     isHost = isHost,
                     gamePackage = gamePackage,
                     participants = participants,
-                    showQuestionIn = session.showQuestionAt?.let { it - Clock.System.now() }?.inWholeSeconds?.toInt(),
+                    showQuestionAt = session.showQuestionAt,
                     question = activeQuestion!!
                 )
             }

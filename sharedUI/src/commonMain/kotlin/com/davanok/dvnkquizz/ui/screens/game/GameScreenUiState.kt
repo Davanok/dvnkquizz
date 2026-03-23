@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.davanok.dvnkquizz.core.domain.entities.GameBoardItem
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
 import com.davanok.dvnkquizz.core.domain.entities.Participant
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 @Immutable
@@ -60,7 +61,7 @@ sealed interface GameScreenUiState {
         override val participants: List<Participant>,
         override val message: String? = null,
 
-        val showQuestionIn: Int?,
+        val showQuestionAt: Instant?,
         val question: com.davanok.dvnkquizz.core.domain.entities.Question
     ) : GameScreenUiState {
         override fun copyState(message: String?): GameScreenUiState = copy(message = message)

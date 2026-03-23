@@ -100,7 +100,7 @@ private fun Content(
                 is GameScreenUiState.Question -> QuestionScreen(
                     isHost = state.isHost,
                     onBuzz = { eventSink(GameScreenUiEvent.Buzz) },
-                    showQuestionIn = state.showQuestionIn,
+                    showQuestionAt = state.showQuestionAt,
                     question = state.question,
                     modifier = modifier
                 )
