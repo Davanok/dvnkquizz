@@ -47,11 +47,13 @@ class AuthRepositoryImpl(
         }
 
     override suspend fun signUpWithEmail(email: String, password: String): Result<Unit> =
-        runCatching {
+        runCatching<Unit> {
             auth.signUpWith(Email) {
                 this.email = email
                 this.password = password
             }
+        }.onSuccess {
+            signInWithEmail(email, password)
         }
 
     override suspend fun resendEmail(email: String): Result<Unit> =

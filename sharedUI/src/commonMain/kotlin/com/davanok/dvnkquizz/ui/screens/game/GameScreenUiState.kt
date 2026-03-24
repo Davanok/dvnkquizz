@@ -77,7 +77,6 @@ sealed interface GameScreenUiState {
         val question: com.davanok.dvnkquizz.core.domain.entities.Question,
         val answer: SessionAnswer,
         val buzzedParticipant: Participant,
-        val isMe: Boolean
     ) : GameScreenUiState {
         override fun copyState(message: String?): GameScreenUiState = copy(message = message)
     }
@@ -88,7 +87,9 @@ sealed interface GameScreenUiState {
         override val participants: List<Participant>,
         override val message: String? = null,
 
-        val question: com.davanok.dvnkquizz.core.domain.entities.Question
+        val question: com.davanok.dvnkquizz.core.domain.entities.Question,
+        val answer: SessionAnswer,
+        val answeredParticipant: Participant,
     ) : GameScreenUiState {
         override fun copyState(message: String?): GameScreenUiState = copy(message = message)
     }

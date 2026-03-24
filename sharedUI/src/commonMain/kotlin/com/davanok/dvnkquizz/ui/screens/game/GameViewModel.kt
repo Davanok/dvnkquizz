@@ -109,17 +109,27 @@ class GameViewModel(
                             participants = participants,
                             question = activeQuestion!!,
                             answer = answer,
-                            buzzedParticipant = participant,
-                            isMe = participant.isMe
+                            buzzedParticipant = participant
                         )
                     }
 
-                    else -> GameScreenUiState.Answer(
-                        isHost = isHost,
-                        gamePackage = gamePackage,
-                        participants = participants,
-                        question = activeQuestion!!
-                    )
+                    else -> {
+                        val answer = activeAnswers
+                            .filter { it.isCorrect == true }
+                            .minBy { it.answeredAt }
+
+                        val participant = participants
+                            .first { it.id == answer.participantId }
+
+                        GameScreenUiState.Answer(
+                            isHost = isHost,
+                            gamePackage = gamePackage,
+                            participants = participants,
+                            question = activeQuestion!!,
+                            answer = answer,
+                            answeredParticipant = participant
+                        )
+                    }
                 }
             }
         }

@@ -1,8 +1,13 @@
 package com.davanok.dvnkquizz.ui.screens.game.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -12,10 +17,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.davanok.dvnkquizz.core.domain.entities.Participant
+import com.davanok.dvnkquizz.core.domain.entities.Question
+import com.davanok.dvnkquizz.core.domain.enums.MediaKind
 import com.davanok.dvnkquizz.core.domain.enums.ParticipantRole
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.ic_error
@@ -36,7 +45,7 @@ fun ParticipantCard(
             ParticipantRole.SPECTATOR -> null
         }
     ) {
-        CharacterImage(
+        ParticipantImage(
             imageUrl = participant.user.image,
             modifier = Modifier
                 .fillMaxWidth()
@@ -49,19 +58,20 @@ fun ParticipantCard(
             style = MaterialTheme.typography.labelMedium,
             maxLines = 1
         )
-        Text(
-            text = participant.score.toString(),
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.labelMedium,
-            maxLines = 1
-        )
+        if (participant.role == ParticipantRole.PLAYER)
+            Text(
+                text = participant.score.toString(),
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 1
+            )
     }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun CharacterImage(
+private fun ParticipantImage(
     imageUrl: String?,
     modifier: Modifier = Modifier
 ) {
@@ -78,8 +88,49 @@ private fun CharacterImage(
             else -> AsyncImage(
                 model = imageUrl,
                 contentDescription = "profile image",
+                contentScale = ContentScale.Crop,
                 error = painterResource(Res.drawable.ic_error)
             )
         }
+    }
+}
+
+@Composable
+fun QuestionContent(
+    question: Question,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        question.media?.let { media ->
+            when (media.kind) {
+                MediaKind.IMAGE -> AsyncImage(
+                    model = media.url,
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 300.dp)
+                        .clip(MaterialTheme.shapes.large)
+                )
+                MediaKind.AUDIO -> {
+                    Text(text = "Audio not supported yet") // TODO
+                }
+                MediaKind.VIDEO -> {
+                    Text(text = "Video not supported yet") // TODO
+                }
+                MediaKind.NONE -> {}
+            }
+            Spacer(Modifier.height(16.dp))
+        }
+
+        Text(
+            text = question.questionText,
+            style = MaterialTheme.typography.headlineMedium,
+            textAlign = TextAlign.Center
+        )
     }
 }

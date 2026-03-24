@@ -3,13 +3,16 @@ package com.davanok.dvnkquizz.ui.screens.game.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,6 +29,7 @@ import com.davanok.dvnkquizz.core.domain.entities.GameBoardItem
 fun SelectQuestionScreen(
     isHost: Boolean,
     onSelectQuestion: (GameBoardItem) -> Unit,
+    onNextRound: () -> Unit,
     questions: Map<String, List<GameBoardItem>>,
     modifier: Modifier = Modifier
 ) {
@@ -35,44 +39,49 @@ fun SelectQuestionScreen(
 
     if (categories.isEmpty() || maxItems == 0) return
 
-    LazyHorizontalGrid(
-        modifier = modifier.fillMaxSize(),
-        rows = GridCells.Fixed(categories.size),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // First Column: Category Headers
-        categories.forEach { category ->
-            item {
-                CategoryHeader(
-                    title = category,
-                    modifier = Modifier.fillMaxHeight()
-                )
-            }
-        }
-
-        // Remaining Columns: The question cards
-        for (index in 0 until maxItems) {
+    Column {
+        LazyHorizontalGrid(
+            modifier = modifier.fillMaxWidth().weight(1f),
+            rows = GridCells.Fixed(categories.size),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // First Column: Category Headers
             categories.forEach { category ->
-                val item = questions[category]?.getOrNull(index)
+                item {
+                    CategoryHeader(
+                        title = category,
+                        modifier = Modifier.fillMaxHeight()
+                    )
+                }
+            }
 
-                if (item == null) {
-                    item(contentType = "placeholder") {
-                        // Use a fresh modifier, NOT the screen's root modifier
-                        Spacer(modifier = Modifier.width(100.dp).fillMaxHeight())
-                    }
-                } else {
-                    item(contentType = "item", key = item.questionId) { // Use ID for better recomposition
-                        GameBoardCard( // Renamed to avoid shadowing
-                            item = item,
-                            isHost = isHost,
-                            onClick = { onSelectQuestion(item) },
-                            modifier = Modifier.width(100.dp).fillMaxHeight()
-                        )
+            // Remaining Columns: The question cards
+            for (index in 0 until maxItems) {
+                categories.forEach { category ->
+                    val item = questions[category]?.getOrNull(index)
+
+                    if (item == null) {
+                        item(contentType = "placeholder") {
+                            // Use a fresh modifier, NOT the screen's root modifier
+                            Spacer(modifier = Modifier.width(100.dp).fillMaxHeight())
+                        }
+                    } else {
+                        item(contentType = "item", key = item.questionId) { // Use ID for better recomposition
+                            GameBoardCard( // Renamed to avoid shadowing
+                                item = item,
+                                isHost = isHost,
+                                onClick = { onSelectQuestion(item) },
+                                modifier = Modifier.width(100.dp).fillMaxHeight()
+                            )
+                        }
                     }
                 }
             }
+        }
+        Button(onClick = onNextRound) {
+            Text(text = "Next round")
         }
     }
 }

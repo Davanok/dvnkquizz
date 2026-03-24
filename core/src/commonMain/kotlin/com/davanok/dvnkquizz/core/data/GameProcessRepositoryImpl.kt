@@ -115,27 +115,48 @@ class GameProcessRepositoryImpl(
     private fun downloadMediaAsFlow(question: QuestionDto): Flow<Question> = flow {
         val mediaUrl = question.mediaUrl ?: return@flow
         val extension = mediaUrl.substringAfterLast('.', "bin")
-        val filename = "${Uuid.random()}.$extension"
+
+        val urlHash = mediaUrl.hashCode()
+        val filename = "${question.id}_$urlHash.$extension"
         val localPath = Path(SystemTemporaryDirectory, filename)
 
-        SystemFileSystem.sink(localPath).buffered().use { sink ->
-            storage.from("questions")
-                .downloadAuthenticatedAsFlow(mediaUrl, channel = sink.asByteWriteChannel())
-                .collect { status ->
-                    val domainQuestion = when (status) {
-                        is DownloadStatus.ByteData -> error("using channel, should not receive ByteData")
-                        is DownloadStatus.Progress -> question.toDomain(
-                            mediaUrl = localPath.toString(),
-                            progress = status.totalBytesReceived.toFloat() / status.contentLength.toFloat()
-                        )
+        if (SystemFileSystem.exists(localPath)) {
+            emit(question.toDomain(
+                mediaUrl = localPath.toString(),
+                progress = 1f
+            ))
+            return@flow
+        }
 
-                        is DownloadStatus.Success -> question.toDomain(
-                            mediaUrl = localPath.toString(),
-                            progress = 1f
-                        )
+        val tmpPath = Path(SystemTemporaryDirectory, "$filename.tmp")
+
+        runCatching {
+            SystemFileSystem.sink(tmpPath).buffered().use { sink ->
+                storage.from("questions")
+                    .downloadAuthenticatedAsFlow(mediaUrl, channel = sink.asByteWriteChannel())
+                    .collect { status ->
+                        val domainQuestion = when (status) {
+                            is DownloadStatus.ByteData -> error("using channel, should not receive ByteData")
+                            is DownloadStatus.Progress -> question.toDomain(
+                                mediaUrl = tmpPath.toString(),
+                                progress = status.totalBytesReceived.toFloat() / status.contentLength.toFloat()
+                            )
+                            is DownloadStatus.Success -> question.toDomain(
+                                mediaUrl = localPath.toString(), // При успехе отдаем финальный путь
+                                progress = 1f
+                            )
+                        }
+                        emit(domainQuestion)
                     }
-                    emit(domainQuestion)
-                }
+            }
+
+            SystemFileSystem.atomicMove(tmpPath, localPath)
+
+        }.onFailure { thr ->
+            if (SystemFileSystem.exists(tmpPath)) {
+                SystemFileSystem.delete(tmpPath)
+            }
+            throw thr
         }
     }
 

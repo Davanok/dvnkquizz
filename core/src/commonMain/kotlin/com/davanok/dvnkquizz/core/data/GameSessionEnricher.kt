@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -42,10 +42,10 @@ internal class GameSessionEnricher(
 
         // 1. Create a stable question stream that ONLY restarts if the ID changes
         val questionStream: Flow<Question?> = sharedStatus
-            .map { it.session.currentQuestionId }
-            .distinctUntilChanged() // <--- CRITICAL: Prevents restart on status updates
-            .flatMapLatest { questionId ->
-                if (questionId == null) flowOf(null)
+            .map { it.session }
+            .distinctUntilChangedBy { it.currentQuestionId to it.isAnswerVisible }
+            .flatMapLatest { session ->
+                if (session.currentQuestionId == null) flowOf(null)
                 else observeActiveQuestion()
             }
 
