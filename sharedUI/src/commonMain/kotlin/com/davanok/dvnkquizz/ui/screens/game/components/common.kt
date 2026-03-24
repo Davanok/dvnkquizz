@@ -1,5 +1,12 @@
 package com.davanok.dvnkquizz.ui.screens.game.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -58,14 +65,12 @@ fun ParticipantCard(
             style = MaterialTheme.typography.labelMedium,
             maxLines = 1
         )
-        if (participant.role == ParticipantRole.PLAYER)
-            Text(
-                text = participant.score.toString(),
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.labelMedium,
-                maxLines = 1
+        if (participant.role == ParticipantRole.PLAYER) {
+            ParticipantScore(
+                score = participant.score,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
+        }
     }
 }
 
@@ -92,6 +97,37 @@ private fun ParticipantImage(
                 error = painterResource(Res.drawable.ic_error)
             )
         }
+    }
+}
+
+@Composable
+private fun ParticipantScore(
+    score: Int,
+    modifier: Modifier = Modifier
+) {
+    AnimatedContent(
+        targetState = score,
+        transitionSpec = {
+            // Compare the new score with the old one to decide direction
+            if (targetState > initialState) {
+                // Score increased: Slide in from bottom, slide out to top
+                (slideInVertically { height -> height } + fadeIn()) togetherWith
+                        (slideOutVertically { height -> -height } + fadeOut())
+            } else {
+                // Score decreased: Slide in from top, slide out to bottom
+                (slideInVertically { height -> -height } + fadeIn()) togetherWith
+                        (slideOutVertically { height -> height } + fadeOut())
+            } using SizeTransform(clip = false)
+        },
+        label = "ScoreAnimation",
+        modifier = modifier
+    ) { targetScore ->
+        Text(
+            text = targetScore.toString(),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.labelMedium,
+            maxLines = 1
+        )
     }
 }
 
