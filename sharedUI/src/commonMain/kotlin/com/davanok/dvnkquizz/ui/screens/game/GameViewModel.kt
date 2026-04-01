@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.davanok.dvnkquizz.core.domain.entities.FullGameSession
 import com.davanok.dvnkquizz.core.domain.entities.Participant
+import com.davanok.dvnkquizz.core.domain.enums.ParticipantRole
 import com.davanok.dvnkquizz.core.domain.enums.SessionStatus
 import com.davanok.dvnkquizz.core.domain.repositories.GameProcessRepository
 import dev.zacsweers.metro.AppScope
@@ -61,22 +62,24 @@ class GameViewModel(
             .sortedWith(
                 compareBy<Participant> { it.role } // host is first, spectators in end
                     .thenByDescending { it.score } // higher score in start
+                    .thenBy { it.id } // ignore random movements
             )
+
+        val currentQuestion = activeQuestion
 
         return when {
             session.status == SessionStatus.FINISHED -> GameScreenUiState.Results(
                 isHost = isHost,
                 gamePackage = gamePackage,
-                participants = participants
+                participants = participants.filter { it.role == ParticipantRole.PLAYER }
             )
-
-            session.currentRoundId == null -> GameScreenUiState.Idle(
+            session.status == SessionStatus.LOBBY || session.currentRoundId == null -> GameScreenUiState.Idle(
                 isHost = isHost,
                 gamePackage = gamePackage,
                 participants = participants
             )
 
-            activeQuestion == null -> GameScreenUiState.SelectQuestion(
+            currentQuestion == null -> GameScreenUiState.SelectQuestion(
                 isHost = isHost,
                 gamePackage = gamePackage,
                 participants = participants,
@@ -92,7 +95,7 @@ class GameViewModel(
                         gamePackage = gamePackage,
                         participants = participants,
                         showQuestionAt = session.showQuestionAt,
-                        question = activeQuestion!!
+                        question = currentQuestion
                     )
 
                     activeAnswers.none { it.isCorrect == true } -> {
@@ -107,7 +110,7 @@ class GameViewModel(
                             isHost = isHost,
                             gamePackage = gamePackage,
                             participants = participants,
-                            question = activeQuestion!!,
+                            question = currentQuestion,
                             answer = answer,
                             buzzedParticipant = participant
                         )
@@ -125,7 +128,7 @@ class GameViewModel(
                             isHost = isHost,
                             gamePackage = gamePackage,
                             participants = participants,
-                            question = activeQuestion!!,
+                            question = currentQuestion,
                             answer = answer,
                             answeredParticipant = participant
                         )

@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.shareIn
 import kotlin.uuid.Uuid
 
@@ -48,6 +49,7 @@ internal class GameSessionEnricher(
                 if (session.currentQuestionId == null) flowOf(null)
                 else observeActiveQuestion()
             }
+            .retry(BUILD_FULL_SESSION_RETRIES)
 
         // 2. Combine the stable question stream with the fast-moving session/answer data
         combine(
@@ -69,7 +71,7 @@ internal class GameSessionEnricher(
                 gameBoard = boardItems,
                 activeQuestion = activeQuestion
             )
-        }.collect {
+        }.retry(BUILD_FULL_SESSION_RETRIES).collect {
             send(it)
         }
     }
@@ -85,5 +87,9 @@ internal class GameSessionEnricher(
             boardCache = GameBoardCache(roundId, answersCount, items)
         }
         return boardCache?.items.orEmpty()
+    }
+
+    companion object {
+        private const val BUILD_FULL_SESSION_RETRIES = 3L
     }
 }

@@ -49,7 +49,10 @@ fun ResultsScreen(
             }
         }
 
-        Button(onClick = onLeave) {
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onLeave
+        ) {
             Text(text = "Leave")
         }
     }

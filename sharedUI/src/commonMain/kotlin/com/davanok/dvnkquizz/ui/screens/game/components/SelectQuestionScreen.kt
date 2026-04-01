@@ -80,9 +80,13 @@ fun SelectQuestionScreen(
                 }
             }
         }
-        Button(onClick = onNextRound) {
-            Text(text = "Next round")
-        }
+        if (isHost)
+            Button(
+                onClick = onNextRound,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Next round")
+            }
     }
 }
 

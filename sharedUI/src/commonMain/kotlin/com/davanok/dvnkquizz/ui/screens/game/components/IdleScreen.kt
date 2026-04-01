@@ -97,7 +97,6 @@ private fun ParticipantGrid(
                 ParticipantCard(
                     participant = participant,
                     modifier = Modifier
-                        .fillMaxWidth()
                         .animateItem()
                 )
             }

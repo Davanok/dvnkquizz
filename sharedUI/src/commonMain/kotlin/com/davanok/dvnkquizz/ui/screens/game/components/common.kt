@@ -7,18 +7,21 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.davanok.dvnkquizz.core.domain.entities.Participant
@@ -43,38 +47,58 @@ fun ParticipantCard(
     participant: Participant,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    BadgedBox(
         modifier = modifier,
-        shape = MaterialTheme.shapes.large,
-        border = when (participant.role) {
-            ParticipantRole.HOST -> BorderStroke(1.dp, MaterialTheme.colorScheme.secondary)
-            ParticipantRole.PLAYER -> BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
-            ParticipantRole.SPECTATOR -> null
+        badge = {
+            Badge(
+                containerColor = when (participant.role) {
+                    ParticipantRole.HOST -> MaterialTheme.colorScheme.secondary
+                    ParticipantRole.PLAYER -> MaterialTheme.colorScheme.primary
+                    ParticipantRole.SPECTATOR -> MaterialTheme.colorScheme.outline
+                },
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.offset(x = (-48).dp, y = 8.dp)
+            ) {
+                Text(text = participant.role.name)
+            }
         }
     ) {
-        ParticipantImage(
-            imageUrl = participant.user.image,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-        )
-        Text(
-            text = participant.user.nickname,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.labelMedium,
-            maxLines = 1
-        )
-        if (participant.role == ParticipantRole.PLAYER) {
-            ParticipantScore(
-                score = participant.score,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+        OutlinedCard(
+            shape = MaterialTheme.shapes.extraLarge, // Softer corners look more modern
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // 2. Improved Image Presentation
+                ParticipantImage(
+                    imageUrl = participant.user.image,
+                    modifier = Modifier
+                        .aspectRatio(1f)
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = participant.user.nickname,
+                    style = MaterialTheme.typography.titleSmall,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+
+                Box(modifier = Modifier.height(16.dp)) {
+                    if (participant.role == ParticipantRole.PLAYER) {
+                        ParticipantScore(
+                            score = participant.score,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ParticipantImage(
     imageUrl: String?,
@@ -82,19 +106,21 @@ private fun ParticipantImage(
 ) {
     Surface(
         modifier = modifier,
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.primaryContainer
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceDim
     ) {
-        when {
-            imageUrl == null -> Icon(
+        if (imageUrl == null) {
+            Icon(
                 painter = painterResource(Res.drawable.ic_person),
-                contentDescription = "profile icon"
+                contentDescription = null
             )
-            else -> AsyncImage(
+        } else {
+            AsyncImage(
                 model = imageUrl,
                 contentDescription = "profile image",
                 contentScale = ContentScale.Crop,
-                error = painterResource(Res.drawable.ic_error)
+                error = painterResource(Res.drawable.ic_error),
+                placeholder = painterResource(Res.drawable.ic_person)
             )
         }
     }

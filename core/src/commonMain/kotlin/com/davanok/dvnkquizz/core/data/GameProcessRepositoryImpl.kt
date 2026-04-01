@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import com.davanok.dvnkquizz.core.domain.entities.FullGameSession
 import com.davanok.dvnkquizz.core.domain.entities.GameBoardItem
 import com.davanok.dvnkquizz.core.domain.entities.GameSession
+import com.davanok.dvnkquizz.core.domain.entities.JudgeAnswerRequest
 import com.davanok.dvnkquizz.core.domain.entities.Question
 import com.davanok.dvnkquizz.core.domain.entities.QuestionDto
 import com.davanok.dvnkquizz.core.domain.entities.SessionAnswer
@@ -66,7 +67,7 @@ class GameProcessRepositoryImpl(
                 filter = FilterOperation("session_id", FilterOperator.EQ, sessionId)
             )
 
-    private suspend fun getSessionBoard(sessionId: Uuid, roundId: Uuid): Result<List<GameBoardItem>> {
+    private suspend fun getSessionBoard(sessionId: Uuid, roundId: Uuid): List<GameBoardItem> {
         logger.i { "getSessionBoard: sessionId=$sessionId roundId=$roundId" }
         return runCatching {
             postgrest.rpc(
@@ -80,7 +81,7 @@ class GameProcessRepositoryImpl(
             logger.d { "Board loaded: items=${it.size}" }
         }.onFailure {
             logger.e(it) { "getSessionBoard failed" }
-        }
+        }.getOrThrow()
     }
 
     private fun getActiveQuestion(sessionId: Uuid): Flow<Question> = flow {
@@ -163,7 +164,7 @@ class GameProcessRepositoryImpl(
     override fun observeGameSession(sessionId: Uuid): Flow<Result<FullGameSession>> = flow {
         val sessionEnricher = GameSessionEnricher(
             observeActiveQuestion = { getActiveQuestion(sessionId) },
-            getSessionBoard = { getSessionBoard(sessionId, it).getOrThrow() }
+            getSessionBoard = { getSessionBoard(sessionId, it) }
         )
 
         val resultFlow = sessionEnricher.observeEnrichedSession(
@@ -227,10 +228,10 @@ class GameProcessRepositoryImpl(
         return runCatching<Unit> {
             postgrest.rpc(
                 function = "judge_answer",
-                parameters = mapOf(
-                    "p_session_id" to sessionId,
-                    "p_answer_id" to answerId,
-                    "p_is_correct" to isCorrect
+                parameters = JudgeAnswerRequest(
+                    sessionId = sessionId,
+                    answerId = answerId,
+                    isCorrect = isCorrect
                 )
             )
         }.onSuccess {

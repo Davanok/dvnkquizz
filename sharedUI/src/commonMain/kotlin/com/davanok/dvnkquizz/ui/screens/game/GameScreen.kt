@@ -1,11 +1,17 @@
 package com.davanok.dvnkquizz.ui.screens.game
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AssistChip
@@ -18,6 +24,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.davanok.dvnkquizz.core.domain.entities.Participant
@@ -87,6 +94,14 @@ private fun Content(
         }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+            if (state !is GameScreenUiState.Idle) {
+                // in idle we show participants grid
+                ParticipantsList(
+                    participants = state.participants,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(12.dp))
+            }
             PagesContent(
                 state = state,
                 eventSink = eventSink,
@@ -94,11 +109,6 @@ private fun Content(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-            )
-
-            ParticipantsList(
-                participants = state.participants,
-                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -111,8 +121,13 @@ private fun PagesContent(
     modifier: Modifier
 ) {
     AnimatedContent(
-        targetState = state
+        targetState = state,
+        modifier = modifier,
+        transitionSpec = {
+            fadeIn() togetherWith fadeOut()
+        }
     ) { state ->
+        val modifier = Modifier.fillMaxSize()
         when (state) {
             GameScreenUiState.Loading -> LoadingScreen(modifier = modifier)
             is GameScreenUiState.FatalError -> FatalErrorScreen(message = state.message, modifier = modifier)
@@ -166,7 +181,7 @@ private fun ParticipantsList(
 ) {
     LazyRow(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
     ) {
         items(
             items = participants,
@@ -174,7 +189,7 @@ private fun ParticipantsList(
         ) { participant ->
             ParticipantCard(
                 participant = participant,
-                modifier = Modifier.animateItem()
+                modifier = Modifier.width(200.dp).animateItem()
             )
         }
     }
