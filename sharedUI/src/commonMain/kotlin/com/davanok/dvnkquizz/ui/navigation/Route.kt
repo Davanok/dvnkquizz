@@ -12,8 +12,6 @@ sealed interface Route : NavKey {
     data object Auth : Route
     @Serializable
     data object Home : Route
-    @Serializable
-    data class Lobby(val sessionId: Uuid) : Route
 
     @Serializable
     data class Game(val sessionId: Uuid) : Route

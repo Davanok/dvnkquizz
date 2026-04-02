@@ -70,17 +70,20 @@ class GameViewModel(
         return when {
             session.status == SessionStatus.FINISHED -> GameScreenUiState.Results(
                 isHost = isHost,
+                inviteCode = session.inviteCode,
                 gamePackage = gamePackage,
                 participants = participants.filter { it.role == ParticipantRole.PLAYER }
             )
             session.status == SessionStatus.LOBBY || session.currentRoundId == null -> GameScreenUiState.Idle(
                 isHost = isHost,
+                inviteCode = session.inviteCode,
                 gamePackage = gamePackage,
                 participants = participants
             )
 
             currentQuestion == null -> GameScreenUiState.SelectQuestion(
                 isHost = isHost,
+                inviteCode = session.inviteCode,
                 gamePackage = gamePackage,
                 participants = participants,
                 board = gameBoard.groupBy { it.categoryName }
@@ -92,6 +95,7 @@ class GameViewModel(
                 when {
                     activeAnswers.none { it.isCorrect != false } -> GameScreenUiState.Question(
                         isHost = isHost,
+                        inviteCode = session.inviteCode,
                         gamePackage = gamePackage,
                         participants = participants,
                         showQuestionAt = session.showQuestionAt,
@@ -108,6 +112,7 @@ class GameViewModel(
 
                         GameScreenUiState.Answering(
                             isHost = isHost,
+                            inviteCode = session.inviteCode,
                             gamePackage = gamePackage,
                             participants = participants,
                             question = currentQuestion,
@@ -126,6 +131,7 @@ class GameViewModel(
 
                         GameScreenUiState.Answer(
                             isHost = isHost,
+                            inviteCode = session.inviteCode,
                             gamePackage = gamePackage,
                             participants = participants,
                             question = currentQuestion,

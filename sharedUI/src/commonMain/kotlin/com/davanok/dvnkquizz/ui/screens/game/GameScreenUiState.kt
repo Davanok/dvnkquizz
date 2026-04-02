@@ -11,6 +11,7 @@ import kotlin.uuid.Uuid
 @Immutable
 sealed interface GameScreenUiState {
     val isHost: Boolean
+    val inviteCode: String?
     val gamePackage: GamePackage?
     val participants: List<Participant>
     val message: String?
@@ -21,6 +22,7 @@ sealed interface GameScreenUiState {
 
     data object Loading : GameScreenUiState {
         override val isHost: Boolean = false
+        override val inviteCode: String? = null
         override val gamePackage: GamePackage? = null
         override val participants: List<Participant> = emptyList()
         override val message: String? = null
@@ -30,6 +32,7 @@ sealed interface GameScreenUiState {
 
     data class FatalError(override val message: String) : GameScreenUiState {
         override val isHost = false
+        override val inviteCode: String? = null
         override val gamePackage: GamePackage? = null
         override val participants: List<Participant> = emptyList()
 
@@ -38,6 +41,7 @@ sealed interface GameScreenUiState {
 
     data class Idle(
         override val isHost: Boolean,
+        override val inviteCode: String?,
         override val gamePackage: GamePackage?,
         override val participants: List<Participant>,
         override val message: String? = null
@@ -47,6 +51,7 @@ sealed interface GameScreenUiState {
 
     data class SelectQuestion(
         override val isHost: Boolean,
+        override val inviteCode: String?,
         override val gamePackage: GamePackage?,
         override val participants: List<Participant>,
         override val message: String? = null,
@@ -58,6 +63,7 @@ sealed interface GameScreenUiState {
 
     data class Question(
         override val isHost: Boolean,
+        override val inviteCode: String?,
         override val gamePackage: GamePackage?,
         override val participants: List<Participant>,
         override val message: String? = null,
@@ -70,6 +76,7 @@ sealed interface GameScreenUiState {
 
     data class Answering(
         override val isHost: Boolean,
+        override val inviteCode: String?,
         override val gamePackage: GamePackage?,
         override val participants: List<Participant>,
         override val message: String? = null,
@@ -83,6 +90,7 @@ sealed interface GameScreenUiState {
 
     data class Answer(
         override val isHost: Boolean,
+        override val inviteCode: String?,
         override val gamePackage: GamePackage?,
         override val participants: List<Participant>,
         override val message: String? = null,
@@ -96,6 +104,7 @@ sealed interface GameScreenUiState {
 
     data class Results(
         override val isHost: Boolean,
+        override val inviteCode: String?,
         override val gamePackage: GamePackage?,
         override val participants: List<Participant>,
         override val message: String? = null

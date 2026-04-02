@@ -4,8 +4,10 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,16 +20,29 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.davanok.dvnkquizz.core.domain.entities.Participant
+import com.davanok.dvnkquizz.ui.platform.ClipEntry
 import com.davanok.dvnkquizz.ui.screens.game.components.AnswerScreen
 import com.davanok.dvnkquizz.ui.screens.game.components.AnsweringScreen
 import com.davanok.dvnkquizz.ui.screens.game.components.FatalErrorScreen
@@ -39,6 +54,7 @@ import com.davanok.dvnkquizz.ui.screens.game.components.ResultsScreen
 import com.davanok.dvnkquizz.ui.screens.game.components.SelectQuestionScreen
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.ic_arrow_back
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -71,7 +87,17 @@ private fun Content(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text(text = state.gamePackage?.title ?: "Unknown") },
+                title = {
+                    Row {
+                        Text(text = state.gamePackage?.title ?: "Unknown")
+                        state.inviteCode?.let { inviteCode ->
+                            InviteCode(
+                                code = inviteCode,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                        },
                 navigationIcon = {
                     IconButton(
                         onClick = navigateBack
@@ -113,6 +139,56 @@ private fun Content(
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun InviteCode(
+    code: String,
+    modifier: Modifier = Modifier
+) {
+    val clipboard = LocalClipboard.current
+    val haptics = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
+
+    val tooltipState = rememberTooltipState()
+
+    Column(modifier = modifier) {
+        Text(
+            text = "Invite Code",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        TooltipBox(
+            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
+            tooltip = {
+                PlainTooltip {
+                    Text("Copied to clipboard")
+                }
+            },
+            state = tooltipState,
+            enableUserInput = false
+        ) {
+            Text(
+                text = code,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.clickable {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+
+                    scope.launch {
+                        clipboard.setClipEntry(ClipEntry(code))
+                    }
+                    scope.launch {
+                        tooltipState.show()
+                    }
+                }
+            )
+        }
+    }
+}
+
 @Composable
 private fun PagesContent(
     state: GameScreenUiState,

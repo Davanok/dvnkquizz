@@ -8,8 +8,6 @@ import com.davanok.dvnkquizz.ui.screens.auth.AuthScreen
 import com.davanok.dvnkquizz.ui.screens.game.GameScreen
 import com.davanok.dvnkquizz.ui.screens.game.GameViewModel
 import com.davanok.dvnkquizz.ui.screens.home.HomeScreen
-import com.davanok.dvnkquizz.ui.screens.lobby.LobbyScreen
-import com.davanok.dvnkquizz.ui.screens.lobby.LobbyViewModel
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 
 @Composable
@@ -34,14 +32,7 @@ fun AppNavDisplay(
             }
             entry<Route.Home> {
                 HomeScreen(
-                    onNavigateToLobby = { sessionId -> navigate(Route.Lobby(sessionId)) }
-                )
-            }
-            entry<Route.Lobby> { (sessionId) ->
-                LobbyScreen(
-                    onNavigateToGame = { replace(Route.Game(it)) },
-                    navigateBack = back,
-                    viewModel = assistedMetroViewModel<LobbyViewModel, LobbyViewModel.Factory>(key = sessionId.toString()) { create(sessionId) }
+                    onNavigateToLobby = { sessionId -> navigate(Route.Game(sessionId)) }
                 )
             }
             entry<Route.Game> { (sessionId) ->
