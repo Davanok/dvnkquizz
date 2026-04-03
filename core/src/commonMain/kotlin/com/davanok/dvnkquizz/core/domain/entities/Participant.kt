@@ -9,14 +9,19 @@ import kotlin.uuid.Uuid
 @Serializable
 internal data class ParticipantDto(
     val id: Uuid,
-    @SerialName("session_id") val sessionId: Uuid,
+    @SerialName("session_id")
+    val sessionId: Uuid,
     val score: Int = 0,
     val role: ParticipantRole = ParticipantRole.PLAYER,
-    @SerialName("joined_at") val joinedAt: Instant,
-    @SerialName("last_active_at") val lastActiveAt: Instant,
-    @SerialName("is_ready") val isReady: Boolean
+    @SerialName("joined_at")
+    val joinedAt: Instant,
+    @SerialName("last_active_at")
+    val lastActiveAt: Instant,
+    @SerialName("is_ready")
+    val isReady: Boolean,
+    val user: UserProfile
 ) {
-    fun toDomain(currentUserId: Uuid?, user: UserProfile) = Participant(
+    fun toDomain(currentUserId: Uuid?) = Participant(
         id = id,
         sessionId = sessionId,
         user = user,

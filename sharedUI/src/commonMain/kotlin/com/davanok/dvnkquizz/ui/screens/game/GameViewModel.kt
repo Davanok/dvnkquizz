@@ -2,6 +2,7 @@ package com.davanok.dvnkquizz.ui.screens.game
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.touchlab.kermit.Logger
 import com.davanok.dvnkquizz.core.domain.entities.FullGameSession
 import com.davanok.dvnkquizz.core.domain.entities.Participant
 import com.davanok.dvnkquizz.core.domain.enums.ParticipantRole
@@ -42,7 +43,8 @@ class GameViewModel(
 
     private fun observeSession() {
         viewModelScope.launch {
-            repository.observeGameSession(sessionId).collectLatest { result ->
+            repository.observeGameSession(sessionId).collect { result ->
+                Logger.d { "gameSessionUpdated: $result" }
                 _uiState.update {
                     result.fold(
                         onFailure = { thr ->

@@ -2,115 +2,68 @@ package com.davanok.dvnkquizz.core.data
 
 import co.touchlab.kermit.Logger
 import com.davanok.dvnkquizz.core.domain.entities.FullGameSession
-import com.davanok.dvnkquizz.core.domain.entities.GameBoardItem
+import com.davanok.dvnkquizz.core.domain.entities.FullGameSessionDto
 import com.davanok.dvnkquizz.core.domain.entities.GameSession
 import com.davanok.dvnkquizz.core.domain.entities.JudgeAnswerRequest
 import com.davanok.dvnkquizz.core.domain.entities.Question
 import com.davanok.dvnkquizz.core.domain.entities.QuestionDto
-import com.davanok.dvnkquizz.core.domain.entities.SessionAnswer
 import com.davanok.dvnkquizz.core.domain.enums.MediaKind
 import com.davanok.dvnkquizz.core.domain.repositories.GameProcessRepository
-import com.davanok.dvnkquizz.core.domain.repositories.ObserveSessionRepository
-import com.davanok.dvnkquizz.core.platform.Platform
-import com.davanok.dvnkquizz.core.platform.currentPlatform
+import com.davanok.dvnkquizz.core.utils.currentUserId
 import com.davanok.dvnkquizz.core.utils.toResultFLow
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import io.github.jan.supabase.annotations.SupabaseExperimental
+import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.postgrest.query.filter.FilterOperation
-import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.postgrest.rpc
-import io.github.jan.supabase.realtime.selectAsFlow
+import io.github.jan.supabase.realtime.Realtime
+import io.github.jan.supabase.realtime.broadcastFlow
+import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.storage.DownloadStatus
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.downloadAuthenticatedAsFlow
 import io.ktor.utils.io.asByteWriteChannel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.retry
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.files.SystemTemporaryDirectory
-import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.Uuid
 
 @Inject
 @ContributesBinding(AppScope::class)
 class GameProcessRepositoryImpl(
     private val postgrest: Postgrest,
+    private val realtime: Realtime,
     private val storage: Storage,
-    logger: Logger,
-    private val observeSessionRepository: ObserveSessionRepository,
+    private val auth: Auth,
+    logger: Logger
 ) : GameProcessRepository {
 
     private val logger = logger.withTag(TAG)
 
-    override val HEARTBEAT_TIMEOUT_MS: Long = observeSessionRepository.HEARTBEAT_TIMEOUT_MS
+    override val HEARTBEAT_TIMEOUT_MS: Long = 30_000
 
     private suspend fun markMeAsReady(sessionId: Uuid) {
         postgrest.rpc(
             function = "mark_participant_ready",
             parameters = mapOf("p_session_id" to sessionId)
         )
-    }
-
-    @OptIn(SupabaseExperimental::class)
-    private fun observeSessionAnswers(sessionId: Uuid): Flow<List<SessionAnswer>> =
-        postgrest.from("session_answers")
-            .selectAsFlow(
-                SessionAnswer::id,
-                filter = FilterOperation("session_id", FilterOperator.EQ, sessionId)
-            )
-
-    private suspend fun getSessionBoard(sessionId: Uuid, roundId: Uuid): List<GameBoardItem> {
-        logger.i { "getSessionBoard: sessionId=$sessionId roundId=$roundId" }
-        return runCatching {
-            postgrest.rpc(
-                function = "get_session_board",
-                parameters = mapOf(
-                    "p_session_id" to sessionId,
-                    "p_round_id" to roundId
-                )
-            ).decodeList<GameBoardItem>()
-        }.onSuccess {
-            logger.d { "Board loaded: items=${it.size}" }
-        }.onFailure {
-            logger.e(it) { "getSessionBoard failed" }
-        }.getOrThrow()
-    }
-
-    private fun getActiveQuestion(sessionId: Uuid): Flow<Question> = flow {
-        logger.i { "getActiveQuestion: sessionId=$sessionId" }
-
-        runCatching {
-            val question = postgrest.rpc(
-                function = "get_active_question",
-                parameters = mapOf("p_session_id" to sessionId)
-            ).decodeSingle<QuestionDto>()
-
-            when {
-                question.mediaKind == MediaKind.NONE || question.mediaUrl == null -> {
-                    emit(question.toDomain())
-                }
-                Platform.currentPlatform() is Platform.Web -> {
-                    val mediaUrl = storage.from("questions")
-                        .createSignedUrl(question.mediaUrl, 1.minutes)
-                    emit(question.toDomain(mediaUrl = mediaUrl, progress = 1f))
-                }
-                else -> {
-                    emitAll(downloadMediaAsFlow(question))
-                }
-            }
-        }.onFailure {
-            logger.e(it) { "failed to get active question" }
-        }.also {
-            markMeAsReady(sessionId)
-        }
     }
 
     private fun downloadMediaAsFlow(question: QuestionDto): Flow<Question> = flow {
@@ -159,26 +112,56 @@ class GameProcessRepositoryImpl(
             }
             throw thr
         }
+    }.retry(DOWNLOAD_MEDIA_RETRIES)
+
+    private fun getQuestionFlowHelper(sessionId: Uuid, question: QuestionDto): Flow<Question> = flow {
+        if (question.mediaKind == MediaKind.NONE || question.mediaUrl == null)
+            emit(question.toDomain())
+        else
+            emitAll(downloadMediaAsFlow(question))
+        markMeAsReady(sessionId)
     }
 
-    override fun observeGameSession(sessionId: Uuid): Flow<Result<FullGameSession>> = flow {
-        val sessionEnricher = GameSessionEnricher(
-            observeActiveQuestion = { getActiveQuestion(sessionId) },
-            getSessionBoard = { getSessionBoard(sessionId, it) }
+    @OptIn(SupabaseExperimental::class, ExperimentalCoroutinesApi::class)
+    override fun observeGameSession(sessionId: Uuid): Flow<Result<FullGameSession>> = channelFlow {
+        val channel = realtime.channel(sessionId.toString()) {}
+        channel.subscribe(false)
+
+        val broadcastSharedFlow = channel
+            .broadcastFlow<FullGameSessionDto>("game-state-update:${sessionId.toHexDashString()}")
+            .onCompletion { channel.unsubscribe() }
+            .shareIn(this, SharingStarted.WhileSubscribed(5_000))
+
+        val questionStream: Flow<Question?> = broadcastSharedFlow
+            .distinctUntilChangedBy { it.activeQuestion to it.session.isAnswerVisible }
+            .flatMapLatest { session ->
+                if (session.activeQuestion == null) flowOf(null)
+                else getQuestionFlowHelper(sessionId, session.activeQuestion)
+            }
+
+        combine(
+            broadcastSharedFlow,
+            questionStream
+        ) { status, question ->
+            status.toDomain(auth.currentUserId) { question }
+        }.collect {
+            send(it)
+        }
+    }.toResultFLow().onEach {
+        logger.d { it.toString() }
+    }
+
+    override suspend fun sendHeartbeat(sessionId: Uuid): Result<Unit> = runCatching {
+        logger.d { "Sending heartbeat for session: $sessionId" }
+
+        postgrest.rpc(
+            "participant_heartbeat",
+            parameters = mapOf("p_session_id" to sessionId)
         )
-
-        val resultFlow = sessionEnricher.observeEnrichedSession(
-            statusFlow = observeSessionRepository.observeGameSessionStatus(sessionId).map { it.getOrThrow() },
-            answersFlow = observeSessionAnswers(sessionId)
-        ).toResultFLow()
-
-        emitAll(resultFlow)
-    }.onEach {
-        logger.d { "observeGameSession updated: $it" }
+        Unit
+    }.onFailure {
+        logger.e(it) { "Heartbeat RPC failed" }
     }
-
-    override suspend fun sendHeartbeat(sessionId: Uuid): Result<Unit> =
-        observeSessionRepository.sendHeartbeat(sessionId)
 
     override suspend fun nextRound(sessionId: Uuid): Result<Unit> = runCatching {
         postgrest.rpc(
@@ -243,5 +226,6 @@ class GameProcessRepositoryImpl(
 
     companion object {
         private const val TAG = "GameProcessRepository"
+        private const val DOWNLOAD_MEDIA_RETRIES = 5L
     }
 }
