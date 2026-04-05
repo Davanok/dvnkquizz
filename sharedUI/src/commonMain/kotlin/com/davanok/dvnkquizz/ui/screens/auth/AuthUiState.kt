@@ -1,6 +1,8 @@
 package com.davanok.dvnkquizz.ui.screens.auth
 
 import androidx.compose.runtime.Immutable
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @Immutable
 data class AuthUiState(
@@ -11,7 +13,7 @@ data class AuthUiState(
     val error: String? = null,
     val isSignUpMode: Boolean = false,
     val isLinkSent: Boolean = false,
-    val resendUntil: Int = 0
+    val resendAvailableAt: Instant = Clock.System.now()
 )
 sealed interface AuthEvent {
     data class EmailChanged(val email: String) : AuthEvent

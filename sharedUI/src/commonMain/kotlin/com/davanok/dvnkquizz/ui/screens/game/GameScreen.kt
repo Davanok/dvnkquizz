@@ -53,9 +53,15 @@ import com.davanok.dvnkquizz.ui.screens.game.components.QuestionScreen
 import com.davanok.dvnkquizz.ui.screens.game.components.ResultsScreen
 import com.davanok.dvnkquizz.ui.screens.game.components.SelectQuestionScreen
 import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.back
+import dvnkquizz.sharedui.generated.resources.copied_to_clipboard
+import dvnkquizz.sharedui.generated.resources.host
 import dvnkquizz.sharedui.generated.resources.ic_arrow_back
+import dvnkquizz.sharedui.generated.resources.invite_code
+import dvnkquizz.sharedui.generated.resources.unknown_game_package
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun GameScreen(
@@ -88,8 +94,9 @@ private fun Content(
         topBar = {
             TopAppBar(
                 title = {
-                    Row {
-                        Text(text = state.gamePackage?.title ?: "Unknown")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = state.gamePackage?.title ?: stringResource(Res.string.unknown_game_package))
+
                         state.inviteCode?.let { inviteCode ->
                             InviteCode(
                                 code = inviteCode,
@@ -104,7 +111,7 @@ private fun Content(
                     ) {
                         Icon(
                             painter = painterResource(Res.drawable.ic_arrow_back),
-                            contentDescription = "back"
+                            contentDescription = stringResource(Res.string.back)
                         )
                     }
                 },
@@ -112,7 +119,7 @@ private fun Content(
                     if (state.isHost) {
                         AssistChip(
                             onClick = {},
-                            label = { Text("Host") }
+                            label = { Text(stringResource(Res.string.host)) }
                         )
                     }
                 }
@@ -154,8 +161,8 @@ private fun InviteCode(
 
     Column(modifier = modifier) {
         Text(
-            text = "Invite Code",
-            style = MaterialTheme.typography.titleMedium,
+            text = stringResource(Res.string.invite_code),
+            style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
@@ -163,7 +170,7 @@ private fun InviteCode(
             positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
             tooltip = {
                 PlainTooltip {
-                    Text("Copied to clipboard")
+                    Text(stringResource(Res.string.copied_to_clipboard))
                 }
             },
             state = tooltipState,

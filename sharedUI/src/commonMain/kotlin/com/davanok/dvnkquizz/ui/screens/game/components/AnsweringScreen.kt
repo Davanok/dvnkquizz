@@ -22,9 +22,12 @@ import com.davanok.dvnkquizz.core.domain.entities.Participant
 import com.davanok.dvnkquizz.core.domain.entities.Question
 import com.davanok.dvnkquizz.core.domain.entities.SessionAnswer
 import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.correct_answer
 import dvnkquizz.sharedui.generated.resources.ic_check
 import dvnkquizz.sharedui.generated.resources.ic_close
+import dvnkquizz.sharedui.generated.resources.incorrect_answer
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import kotlin.uuid.Uuid
 
 @Composable
@@ -78,7 +81,7 @@ private fun HostJudgingButtons(
                 modifier = Modifier.size(ButtonDefaults.IconSize)
             )
             Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-            Text(text = "Incorrect")
+            Text(text = stringResource(Res.string.correct_answer))
         }
 
         Button(
@@ -92,7 +95,7 @@ private fun HostJudgingButtons(
                 modifier = Modifier.size(ButtonDefaults.IconSize)
             )
             Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-            Text(text = "Correct")
+            Text(text = stringResource(Res.string.incorrect_answer))
         }
     }
 }

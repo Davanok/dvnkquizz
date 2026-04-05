@@ -7,6 +7,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.davanok.dvnkquizz.core.domain.entities.Question
+import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.next_question
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun AnswerScreen(
@@ -23,7 +26,7 @@ fun AnswerScreen(
                 onClick = onNextQuestion,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "next question")
+                Text(text = stringResource(Res.string.next_question))
             }
         }
     }

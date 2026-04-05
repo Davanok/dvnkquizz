@@ -1,7 +1,69 @@
 <resources>
-    <string name="cyclone">Cyclone</string>
-    <string name="open_github">Open github</string>
-    <string name="run">Run</string>
-    <string name="stop">Stop</string>
-    <string name="theme">Theme</string>
+    <string name="app_name">DVNK Quizz</string>
+
+    <string name="back">Back</string>
+
+    <string name="profile_image">Profile image</string>
+    <string name="no_profile_image">No profile image</string>
+    <string name="change_profile_image">Change profile image</string>
+    <string name="delete_profile_image">Delete profile image</string>
+    <string name="nickname_field_label">Your nickname</string>
+    <string name="submit_nickname">Submit nickname</string>
+    <string name="log_out">Log out</string>
+
+    <string name="join_game_title">Join game</string>
+    <string name="invite_code_field_label">Invite code</string>
+    <string name="invite_code_field_placeholder">AB1234</string>
+    <string name="join_lobby">Join lobby</string>
+
+    <string name="host_game_title">Host new game</string>
+    <string name="host_game">Host game</string>
+
+    <string name="unselect_game_package">Unselect game package</string>
+
+    <string name="search_package_field_placeholder">Search for a game package...</string>
+    <string name="clear_query">Clear query</string>
+
+    <string name="error_loading_packages">Error loading more. Retry?</string>
+    <string name="no_packages_found">No packages found</string>
+
+    <string name="anonymous_package_author">Anonymous</string>
+    <string name="package_author">By: %1$s</string>
+    <string name="package_difficulty">Diff: %1$d</string>
+
+    <string name="email_field_label">Email</string>
+    <string name="password_field_label">Password</string>
+    <string name="sign_in">Sign in</string>
+    <string name="sign_up">Sign up</string>
+    <string name="switch_to_sign_up">Don't have an account? Sign Up</string>
+    <string name="switch_to_sign_in">Already have an account? Sign In</string>
+
+    <string name="invalid_email">Invalid email</string>
+    <string name="check_email">Check your email</string>
+    <string name="email_sent">We sent a sign-in link to %1$s. Click the link to securely access your account.</string>
+    <string name="after_confirm_sign_in">After confirm email, please sign in</string>
+    <string name="resend_email_in">Resend email in %1$ss</string>
+    <string name="resend_email">Resend email</string>
+    <string name="change_email">Change email</string>
+
+    <string name="unknown_game_package">Unknown package</string>
+    <string name="host">Host</string>
+    <string name="invite_code">Invite code</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+
+    <string name="correct_answer">Correct</string>
+    <string name="incorrect_answer">Incorrect</string>
+
+    <string name="next_question">Next question</string>
+    <string name="next_round">Next round</string>
+
+    <string name="waiting_other_participants">Waiting other participants</string>
+    <string name="buzz">BUZZ</string>
+
+    <string name="leave">Leave</string>
+
+    <string name="only_host_can_start_round">Only host can start round</string>
+    <string name="only_host_can_select_question">Only host can select question</string>
+    <string name="only_player_can_buzz">Only player can buzz</string>
+    <string name="only_host_can_judge_answer">Only host can judge answer</string>
 </resources>

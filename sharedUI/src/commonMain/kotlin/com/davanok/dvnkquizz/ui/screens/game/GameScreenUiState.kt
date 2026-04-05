@@ -5,12 +5,13 @@ import com.davanok.dvnkquizz.core.domain.entities.GameBoardItem
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
 import com.davanok.dvnkquizz.core.domain.entities.Participant
 import com.davanok.dvnkquizz.core.domain.entities.SessionAnswer
+import com.davanok.dvnkquizz.core.domain.enums.ParticipantRole
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 @Immutable
 sealed interface GameScreenUiState {
-    val isHost: Boolean
+    val role: ParticipantRole
     val inviteCode: String?
     val gamePackage: GamePackage?
     val participants: List<Participant>
@@ -21,7 +22,7 @@ sealed interface GameScreenUiState {
     ): GameScreenUiState
 
     data object Loading : GameScreenUiState {
-        override val isHost: Boolean = false
+        override val role: ParticipantRole = ParticipantRole.SPECTATOR
         override val inviteCode: String? = null
         override val gamePackage: GamePackage? = null
         override val participants: List<Participant> = emptyList()
@@ -31,7 +32,7 @@ sealed interface GameScreenUiState {
     }
 
     data class FatalError(override val message: String) : GameScreenUiState {
-        override val isHost = false
+        override val role: ParticipantRole = ParticipantRole.SPECTATOR
         override val inviteCode: String? = null
         override val gamePackage: GamePackage? = null
         override val participants: List<Participant> = emptyList()
@@ -40,7 +41,7 @@ sealed interface GameScreenUiState {
     }
 
     data class Idle(
-        override val isHost: Boolean,
+        override val role: ParticipantRole,
         override val inviteCode: String?,
         override val gamePackage: GamePackage?,
         override val participants: List<Participant>,
@@ -50,7 +51,7 @@ sealed interface GameScreenUiState {
     }
 
     data class SelectQuestion(
-        override val isHost: Boolean,
+        override val role: ParticipantRole,
         override val inviteCode: String?,
         override val gamePackage: GamePackage?,
         override val participants: List<Participant>,
@@ -62,7 +63,7 @@ sealed interface GameScreenUiState {
     }
 
     data class Question(
-        override val isHost: Boolean,
+        override val role: ParticipantRole,
         override val inviteCode: String?,
         override val gamePackage: GamePackage?,
         override val participants: List<Participant>,
@@ -75,7 +76,7 @@ sealed interface GameScreenUiState {
     }
 
     data class Answering(
-        override val isHost: Boolean,
+        override val role: ParticipantRole,
         override val inviteCode: String?,
         override val gamePackage: GamePackage?,
         override val participants: List<Participant>,
@@ -89,7 +90,7 @@ sealed interface GameScreenUiState {
     }
 
     data class Answer(
-        override val isHost: Boolean,
+        override val role: ParticipantRole,
         override val inviteCode: String?,
         override val gamePackage: GamePackage?,
         override val participants: List<Participant>,
@@ -103,7 +104,7 @@ sealed interface GameScreenUiState {
     }
 
     data class Results(
-        override val isHost: Boolean,
+        override val role: ParticipantRole,
         override val inviteCode: String?,
         override val gamePackage: GamePackage?,
         override val participants: List<Participant>,
@@ -112,6 +113,10 @@ sealed interface GameScreenUiState {
         override fun copyState(message: String?): GameScreenUiState = copy(message = message)
     }
 }
+
+
+val GameScreenUiState.isHost: Boolean
+    get() = role == ParticipantRole.HOST
 
 sealed interface GameScreenUiEvent {
     // Control

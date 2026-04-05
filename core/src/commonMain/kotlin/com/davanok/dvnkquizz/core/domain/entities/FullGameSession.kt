@@ -1,5 +1,6 @@
 package com.davanok.dvnkquizz.core.domain.entities
 
+import com.davanok.dvnkquizz.core.domain.enums.ParticipantRole
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.uuid.Uuid
@@ -17,12 +18,21 @@ internal data class FullGameSessionDto(
     @SerialName("active_question")
     val activeQuestion: QuestionDto?
 ) {
+    private fun getMyRole(currentUserId: Uuid?): ParticipantRole {
+        if (currentUserId == null) return ParticipantRole.SPECTATOR
+        if (session.hostId == currentUserId) return ParticipantRole.HOST
+        return participants
+            .firstOrNull { it.id == currentUserId }
+            ?.role
+            ?: ParticipantRole.SPECTATOR
+    }
+
     inline fun toDomain(
         currentUserId: Uuid?,
         transformActiveQuestion: (QuestionDto?) -> Question?
     ): FullGameSession = FullGameSession(
         session = session,
-        isHost = session.hostId == currentUserId,
+        myRole = getMyRole(currentUserId),
         gamePackage = gamePackage,
         participants = participants.map { it.toDomain(currentUserId) },
         answers = answers,
@@ -34,7 +44,7 @@ internal data class FullGameSessionDto(
 
 data class FullGameSession(
     val session: GameSession,
-    val isHost: Boolean,
+    val myRole: ParticipantRole,
     val gamePackage: GamePackage,
     val participants: List<Participant>,
     val answers: List<SessionAnswer>,

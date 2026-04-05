@@ -24,6 +24,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.davanok.dvnkquizz.core.domain.entities.GameBoardItem
+import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.next_round
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun SelectQuestionScreen(
@@ -85,7 +88,7 @@ fun SelectQuestionScreen(
                 onClick = onNextRound,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "Next round")
+                Text(text = stringResource(Res.string.next_round))
             }
     }
 }

@@ -40,7 +40,10 @@ import com.davanok.dvnkquizz.core.domain.enums.ParticipantRole
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.ic_error
 import dvnkquizz.sharedui.generated.resources.ic_person
+import dvnkquizz.sharedui.generated.resources.no_profile_image
+import dvnkquizz.sharedui.generated.resources.profile_image
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ParticipantCard(
@@ -112,12 +115,12 @@ private fun ParticipantImage(
         if (imageUrl == null) {
             Icon(
                 painter = painterResource(Res.drawable.ic_person),
-                contentDescription = null
+                contentDescription = stringResource(Res.string.no_profile_image)
             )
         } else {
             AsyncImage(
                 model = imageUrl,
-                contentDescription = "profile image",
+                contentDescription = stringResource(Res.string.profile_image),
                 contentScale = ContentScale.Crop,
                 error = painterResource(Res.drawable.ic_error),
                 placeholder = painterResource(Res.drawable.ic_person)
@@ -134,13 +137,10 @@ private fun ParticipantScore(
     AnimatedContent(
         targetState = score,
         transitionSpec = {
-            // Compare the new score with the old one to decide direction
             if (targetState > initialState) {
-                // Score increased: Slide in from bottom, slide out to top
                 (slideInVertically { height -> height } + fadeIn()) togetherWith
                         (slideOutVertically { height -> -height } + fadeOut())
             } else {
-                // Score decreased: Slide in from top, slide out to bottom
                 (slideInVertically { height -> -height } + fadeIn()) togetherWith
                         (slideOutVertically { height -> height } + fadeOut())
             } using SizeTransform(clip = false)

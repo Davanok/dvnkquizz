@@ -19,6 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.davanok.dvnkquizz.core.domain.entities.Participant
+import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.next_round
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun IdleScreen(
@@ -56,7 +59,7 @@ private fun HostBottomBar(
         modifier = modifier
     ) {
         Text(
-            text = "Start Next Round",
+            text = stringResource(Res.string.next_round),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(vertical = 8.dp)
         )

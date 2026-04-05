@@ -15,6 +15,11 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.only_host_can_judge_answer
+import dvnkquizz.sharedui.generated.resources.only_host_can_select_question
+import dvnkquizz.sharedui.generated.resources.only_host_can_start_round
+import dvnkquizz.sharedui.generated.resources.only_player_can_buzz
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
 import kotlin.uuid.Uuid
 
 @AssistedInject
@@ -70,20 +76,20 @@ class GameViewModel(
 
         return when {
             session.status == SessionStatus.FINISHED -> GameScreenUiState.Results(
-                isHost = isHost,
+                role = myRole,
                 inviteCode = session.inviteCode,
                 gamePackage = gamePackage,
                 participants = participants.filter { it.role == ParticipantRole.PLAYER }
             )
             session.status == SessionStatus.LOBBY || session.currentRoundId == null -> GameScreenUiState.Idle(
-                isHost = isHost,
+                role = myRole,
                 inviteCode = session.inviteCode,
                 gamePackage = gamePackage,
                 participants = participants
             )
 
             currentQuestion == null -> GameScreenUiState.SelectQuestion(
-                isHost = isHost,
+                role = myRole,
                 inviteCode = session.inviteCode,
                 gamePackage = gamePackage,
                 participants = participants,
@@ -95,7 +101,7 @@ class GameViewModel(
 
                 when {
                     activeAnswers.none { it.isCorrect != false } -> GameScreenUiState.Question(
-                        isHost = isHost,
+                        role = myRole,
                         inviteCode = session.inviteCode,
                         gamePackage = gamePackage,
                         participants = participants,
@@ -112,7 +118,7 @@ class GameViewModel(
                             .first { it.id == answer.participantId }
 
                         GameScreenUiState.Answering(
-                            isHost = isHost,
+                            role = myRole,
                             inviteCode = session.inviteCode,
                             gamePackage = gamePackage,
                             participants = participants,
@@ -131,7 +137,7 @@ class GameViewModel(
                             .first { it.id == answer.participantId }
 
                         GameScreenUiState.Answer(
-                            isHost = isHost,
+                            role = myRole,
                             inviteCode = session.inviteCode,
                             gamePackage = gamePackage,
                             participants = participants,
@@ -158,33 +164,43 @@ class GameViewModel(
 
         return when (event) {
             GameScreenUiEvent.NextRound -> {
-                check(currentUiState.isHost) { "only host can start round" }
+                check(currentUiState.isHost) {
+                    getString(Res.string.only_host_can_start_round)
+                }
 
                 repository.nextRound(sessionId)
             }
             GameScreenUiEvent.NextQuestion -> {
-                check(currentUiState.isHost) { "only host can select another question" }
+                check(currentUiState.isHost) { 
+                    getString(Res.string.only_host_can_select_question)
+                }
 
                 repository.nextQuestion(sessionId)
             }
 
             is GameScreenUiEvent.SelectQuestion -> {
                 check(currentUiState is GameScreenUiState.SelectQuestion)
-                check(currentUiState.isHost) { "only host can select question" }
+                check(currentUiState.isHost) {
+                    getString(Res.string.only_host_can_select_question)
+                }
 
                 repository.selectQuestion(sessionId, event.questionId)
             }
 
             GameScreenUiEvent.Buzz -> {
                 check(currentUiState is GameScreenUiState.Question)
-                check(!currentUiState.isHost) { "host cant buzz answer" }
+                check(currentUiState.role == ParticipantRole.PLAYER) {
+                    getString(Res.string.only_player_can_buzz)
+                }
 
                 repository.buzzIn(sessionId)
             }
 
             is GameScreenUiEvent.JudgeAnswer -> {
                 check(currentUiState is GameScreenUiState.Answering)
-                check(currentUiState.isHost) { "only host can judge answer" }
+                check(currentUiState.isHost) { 
+                    getString(Res.string.only_host_can_judge_answer)
+                }
 
                 repository.judgeAnswer(sessionId, event.answerId, event.isCorrect)
             }

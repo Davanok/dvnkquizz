@@ -37,9 +37,17 @@ import androidx.paging.compose.itemKey
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.anonymous_package_author
+import dvnkquizz.sharedui.generated.resources.clear_query
+import dvnkquizz.sharedui.generated.resources.error_loading_packages
 import dvnkquizz.sharedui.generated.resources.ic_close
 import dvnkquizz.sharedui.generated.resources.ic_search
+import dvnkquizz.sharedui.generated.resources.no_packages_found
+import dvnkquizz.sharedui.generated.resources.package_author
+import dvnkquizz.sharedui.generated.resources.package_difficulty
+import dvnkquizz.sharedui.generated.resources.search_package_field_placeholder
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -62,14 +70,20 @@ fun PackagePicker(
                 onSearch = { searchBarExpanded = false },
                 expanded = searchBarExpanded,
                 onExpandedChange = { searchBarExpanded = it },
-                placeholder = { Text("Search for a game package...") },
+                placeholder = { Text(stringResource(Res.string.search_package_field_placeholder)) },
                 leadingIcon = {
-                    Icon(painterResource(Res.drawable.ic_search), contentDescription = null)
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_search),
+                        contentDescription = null
+                    )
                               },
                 trailingIcon = {
                     if (query.isNotEmpty()) {
                         IconButton(onClick = { viewModel.onQueryChange("") }) {
-                            Icon(painterResource(Res.drawable.ic_close), contentDescription = null)
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_close),
+                                contentDescription = stringResource(Res.string.clear_query)
+                            )
                         }
                     }
                 }
@@ -91,23 +105,30 @@ fun PackagePicker(
                 key = pagingItems.itemKey { it.id }
             ) { index ->
                 pagingItems[index]?.let { pkg ->
-                    PackageItem(pkg, onClick = {
-                        onPackageSelected(pkg)
-                        searchBarExpanded = false
-                    })
+                    PackageItem(
+                        pkg = pkg,
+                        onClick = {
+                            onPackageSelected(pkg)
+                            searchBarExpanded = false
+                            viewModel.onQueryChange(pkg.title)
+                        }
+                    )
                 }
             }
 
             // Append Loading/Error States
             item {
-                when (val state = pagingItems.loadState.append) {
+                when (pagingItems.loadState.append) {
                     is LoadState.Loading -> LoadingIndicator(modifier = Modifier.padding(16.dp))
-                    is LoadState.Error -> TextButton(onClick = { pagingItems.retry() }) {
-                        Text("Error loading more. Retry?")
+                    is LoadState.Error -> TextButton(onClick = pagingItems::retry) {
+                        Text(stringResource(Res.string.error_loading_packages))
                     }
                     else -> {
                         if (pagingItems.itemCount == 0 && pagingItems.loadState.refresh is LoadState.NotLoading) {
-                            Text("No packages found", modifier = Modifier.padding(16.dp))
+                            Text(
+                                text = stringResource(Res.string.no_packages_found),
+                                modifier = Modifier.padding(16.dp)
+                            )
                         }
                     }
                 }
@@ -130,8 +151,9 @@ fun PackageItem(
         },
         supportingContent = {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                val packageAuthorName = pkg.author?.nickname ?: stringResource(Res.string.anonymous_package_author)
                 Text(
-                    text = "By ${pkg.authorId ?: "Anonymous"}",
+                    text = stringResource(Res.string.package_author, packageAuthorName),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline
                 )
@@ -146,7 +168,7 @@ fun PackageItem(
         trailingContent = {
             SuggestionChip(
                 onClick = { },
-                label = { Text("Diff: ${pkg.difficulty}") },
+                label = { Text(stringResource(Res.string.package_difficulty, pkg.difficulty)) },
                 border = null,
                 colors = SuggestionChipDefaults.suggestionChipColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer

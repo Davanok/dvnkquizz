@@ -28,6 +28,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.davanok.dvnkquizz.core.domain.entities.Participant
+import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.leave
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +56,7 @@ fun ResultsScreen(
             modifier = Modifier.fillMaxWidth(),
             onClick = onLeave
         ) {
-            Text(text = "Leave")
+            Text(stringResource(Res.string.leave))
         }
     }
 }
@@ -109,10 +112,6 @@ private fun ParticipantResultItem(
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "очков",
-                    style = MaterialTheme.typography.labelSmall
                 )
             }
         }

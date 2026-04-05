@@ -25,7 +25,11 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.davanok.dvnkquizz.core.domain.entities.Question
+import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.buzz
+import dvnkquizz.sharedui.generated.resources.waiting_other_participants
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -44,7 +48,7 @@ fun QuestionScreen(
             do {
                 delta = (showQuestionAt - Clock.System.now()).inWholeSeconds.toInt()
                 value = delta
-                delay(500)
+                delay(100)
             } while (delta > 0)
         }
     }.value
@@ -66,7 +70,7 @@ fun QuestionScreen(
                 when  {
                     progress == null -> CircularWavyProgressIndicator()
                     progress < 1 -> CircularWavyProgressIndicator(progress = { progress })
-                    else -> Text(text = "Waiting other participants")
+                    else -> Text(text = stringResource(Res.string.waiting_other_participants))
                 }
             }
         }
@@ -111,7 +115,10 @@ private fun Content(
                     onBuzz()
                 }
             ) {
-                Text("BUZZ", style = MaterialTheme.typography.titleLarge)
+                Text(
+                    stringResource(Res.string.buzz),
+                    style = MaterialTheme.typography.titleLarge
+                )
             }
         }
     }

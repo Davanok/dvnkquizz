@@ -1,6 +1,5 @@
 package com.davanok.dvnkquizz.core.domain.entities
 
-import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
@@ -13,7 +12,11 @@ data class GamePackage(
     val createdAt: Instant? = null,
     val title: String,
     val description: String,
-    @SerialName("author_id") val authorId: Uuid? = null,
+    @SerialName("author_id")
+    val authorId: Uuid? = null,
     val difficulty: Int = 1,
-    @SerialName("is_public") val isPublic: Boolean = false
+    @SerialName("is_public")
+    val isPublic: Boolean = false,
+
+    val author: UserProfile?
 )

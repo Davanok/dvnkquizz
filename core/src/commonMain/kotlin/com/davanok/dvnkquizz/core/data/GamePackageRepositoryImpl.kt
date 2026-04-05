@@ -22,7 +22,7 @@ class GamePackageRepositoryImpl(
     private suspend fun getPage(query: String, from: Long, count: Int): List<GamePackage> {
         logger.d { "getPage query=$query from=$from count=$count" }
 
-        return postgrest.from("game_packages").select {
+        return postgrest.from("game_packages, author:users(*)").select {
             if (query.isNotBlank()) filter {
                 val queryPattern = "%$query%"
                 or {
