@@ -1,7 +1,6 @@
 package com.davanok.dvnkquizz.core.domain.repositories
 
 import com.davanok.dvnkquizz.core.domain.entities.FullGameSession
-import com.davanok.dvnkquizz.core.domain.enums.SessionStatus
 import kotlinx.coroutines.flow.Flow
 import kotlin.uuid.Uuid
 

@@ -9,7 +9,10 @@ import com.davanok.dvnkquizz.core.domain.entities.Question
 import com.davanok.dvnkquizz.core.domain.entities.QuestionDto
 import com.davanok.dvnkquizz.core.domain.enums.MediaKind
 import com.davanok.dvnkquizz.core.domain.repositories.GameProcessRepository
+import com.davanok.dvnkquizz.core.platform.Platform
+import com.davanok.dvnkquizz.core.platform.currentPlatform
 import com.davanok.dvnkquizz.core.utils.currentUserId
+import com.davanok.dvnkquizz.core.utils.div
 import com.davanok.dvnkquizz.core.utils.toResultFLow
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -26,6 +29,7 @@ import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.downloadAuthenticatedAsFlow
 import io.ktor.utils.io.asByteWriteChannel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.channelFlow
@@ -35,14 +39,14 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.launch
 import kotlinx.io.buffered
-import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.files.SystemTemporaryDirectory
+import kotlin.time.Duration.Companion.hours
 import kotlin.uuid.Uuid
 
 @Inject
@@ -59,115 +63,119 @@ class GameProcessRepositoryImpl(
 
     override val HEARTBEAT_TIMEOUT_MS: Long = 30_000
 
-    private suspend fun markMeAsReady(sessionId: Uuid) {
-        postgrest.rpc(
-            function = "mark_participant_ready",
-            parameters = mapOf("p_session_id" to sessionId)
-        )
-    }
-
+    /**
+     * Downloads media file with progress reporting and local caching.
+     */
     private fun downloadMediaAsFlow(question: QuestionDto): Flow<Question> = flow {
         val mediaUrl = question.mediaUrl ?: return@flow
         val extension = mediaUrl.substringAfterLast('.', "bin")
+        val filename = "${question.id}_${mediaUrl.hashCode()}.$extension"
 
-        val urlHash = mediaUrl.hashCode()
-        val filename = "${question.id}_$urlHash.$extension"
-        val localPath = Path(SystemTemporaryDirectory, filename)
+        val localPath = SystemTemporaryDirectory / filename
+        val tmpPath = SystemTemporaryDirectory / "$filename.tmp"
 
+        // 1. Check Cache
         if (SystemFileSystem.exists(localPath)) {
-            emit(question.toDomain(
-                mediaUrl = localPath.toString(),
-                progress = 1f
-            ))
+            emit(question.toDomain(mediaUrl = localPath.toString(), progress = 1f))
             return@flow
         }
 
-        val tmpPath = Path(SystemTemporaryDirectory, "$filename.tmp")
-
+        // 2. Download to Temp File
         runCatching {
             SystemFileSystem.sink(tmpPath).buffered().use { sink ->
                 storage.from("questions")
                     .downloadAuthenticatedAsFlow(mediaUrl, channel = sink.asByteWriteChannel())
                     .collect { status ->
-                        val domainQuestion = when (status) {
-                            is DownloadStatus.ByteData -> error("using channel, should not receive ByteData")
-                            is DownloadStatus.Progress -> question.toDomain(
-                                mediaUrl = tmpPath.toString(),
-                                progress = status.totalBytesReceived.toFloat() / status.contentLength.toFloat()
-                            )
-                            is DownloadStatus.Success -> question.toDomain(
-                                mediaUrl = localPath.toString(), // При успехе отдаем финальный путь
-                                progress = 1f
-                            )
+                        when (status) {
+                            is DownloadStatus.Progress -> {
+                                val progress = status.totalBytesReceived.toFloat() / status.contentLength.toFloat()
+                                emit(question.toDomain(mediaUrl = tmpPath.toString(), progress = progress))
+                            }
+                            is DownloadStatus.Success -> {
+                                // Handled by atomic move after collection
+                            }
+                            is DownloadStatus.ByteData -> {
+                                logger.w { "Unexpected ByteData received during channel download" }
+                            }
                         }
-                        emit(domainQuestion)
                     }
             }
-
             SystemFileSystem.atomicMove(tmpPath, localPath)
-
+            emit(question.toDomain(mediaUrl = localPath.toString(), progress = 1f))
         }.onFailure { thr ->
-            if (SystemFileSystem.exists(tmpPath)) {
-                SystemFileSystem.delete(tmpPath)
-            }
+            if (SystemFileSystem.exists(tmpPath)) SystemFileSystem.delete(tmpPath)
+            logger.e(thr) { "Failed to download media for question ${question.id}" }
             throw thr
         }
     }.retry(DOWNLOAD_MEDIA_RETRIES)
 
     private fun getQuestionFlowHelper(sessionId: Uuid, question: QuestionDto): Flow<Question> = flow {
-        if (question.mediaKind == MediaKind.NONE || question.mediaUrl == null)
-            emit(question.toDomain())
-        else
-            emitAll(downloadMediaAsFlow(question))
+        runCatching {
+            when {
+                question.mediaKind == MediaKind.NONE || question.mediaUrl == null ->
+                    emit(question.toDomain())
+
+                Platform.currentPlatform() == Platform.Web ->
+                    emit(question.toDomain(
+                        mediaUrl = storage.from("questions")
+                            .createSignedUrl(question.mediaUrl, MEDIA_URL_EXPIRE_DURATION),
+                        progress = 1f
+                    ))
+
+                else -> emitAll(downloadMediaAsFlow(question))
+            }
+        }
+        // Notify server that this client has loaded assets and is ready to display
         markMeAsReady(sessionId)
     }
 
     @OptIn(SupabaseExperimental::class, ExperimentalCoroutinesApi::class)
     override fun observeGameSession(sessionId: Uuid): Flow<Result<FullGameSession>> = channelFlow {
-        val channel = realtime.channel(sessionId.toString()) {}
-        channel.subscribe(false)
+        val topic = "game-state-update:${sessionId.toHexDashString()}"
+        val channel = realtime.channel(sessionId.toString())
+
+        channel.subscribe(blockUntilSubscribed = false)
 
         val broadcastSharedFlow = channel
-            .broadcastFlow<FullGameSessionDto>("game-state-update:${sessionId.toHexDashString()}")
-            .onCompletion { channel.unsubscribe() }
-            .shareIn(this, SharingStarted.WhileSubscribed(5_000))
+            .broadcastFlow<FullGameSessionDto>(topic)
+            .shareIn(this, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS))
 
+        // Transform the raw DTO stream into a stream that includes hydrated Question data
         val questionStream: Flow<Question?> = broadcastSharedFlow
-            .distinctUntilChangedBy { it.activeQuestion to it.session.isAnswerVisible }
+            .distinctUntilChangedBy { it.activeQuestion?.id } // Only trigger download if question ID changes
             .flatMapLatest { session ->
-                if (session.activeQuestion == null) flowOf(null)
-                else getQuestionFlowHelper(sessionId, session.activeQuestion)
+                session.activeQuestion?.let { getQuestionFlowHelper(sessionId, it) } ?: flowOf(null)
             }
 
-        combine(
-            broadcastSharedFlow,
-            questionStream
-        ) { status, question ->
+        combine(broadcastSharedFlow, questionStream) { status, question ->
             status.toDomain(auth.currentUserId) { question }
         }.collect {
             send(it)
         }
-    }.toResultFLow().onEach {
-        logger.d { it.toString() }
+
+        awaitClose {
+            logger.d { "Closing game session observer for $sessionId" }
+            launch {
+                channel.unsubscribe()
+            }
+        }
+    }.toResultFLow().onEach { res ->
+        res.onFailure { logger.e(it) { "Error in game session flow" } }
+    }
+
+    // --- RPC Actions ---
+
+    private suspend fun markMeAsReady(sessionId: Uuid) {
+        postgrest.rpc("mark_participant_ready", mapOf("p_session_id" to sessionId))
     }
 
     override suspend fun sendHeartbeat(sessionId: Uuid): Result<Unit> = runCatching {
-        logger.d { "Sending heartbeat for session: $sessionId" }
-
-        postgrest.rpc(
-            "participant_heartbeat",
-            parameters = mapOf("p_session_id" to sessionId)
-        )
+        postgrest.rpc("participant_heartbeat", mapOf("p_session_id" to sessionId))
         Unit
-    }.onFailure {
-        logger.e(it) { "Heartbeat RPC failed" }
     }
 
     override suspend fun nextRound(sessionId: Uuid): Result<Unit> = runCatching {
-        postgrest.rpc(
-            function = "next_round",
-            parameters = mapOf("p_session_id" to sessionId)
-        )
+        postgrest.rpc("next_round", mapOf("p_session_id" to sessionId))
     }
 
     override suspend fun nextQuestion(sessionId: Uuid): Result<Unit> = runCatching {
@@ -177,55 +185,25 @@ class GameProcessRepositoryImpl(
             }
     }
 
-    override suspend fun selectQuestion(sessionId: Uuid, questionId: Uuid): Result<Unit> {
-        logger.i { "selectQuestion: sessionId=$sessionId questionId=$questionId" }
-        return runCatching<Unit> {
-            postgrest.rpc(
-                function = "pick_question",
-                parameters = mapOf(
-                    "p_session_id" to sessionId,
-                    "p_question_id" to questionId
-                )
-            )
-        }.onSuccess {
-            logger.d { "selectQuestion success" }
-        }.onFailure {
-            logger.e(it) { "selectQuestion failed" }
-        }
+    override suspend fun selectQuestion(sessionId: Uuid, questionId: Uuid): Result<Unit> = runCatching {
+        postgrest.rpc("pick_question", mapOf(
+            "p_session_id" to sessionId,
+            "p_question_id" to questionId
+        ))
     }
 
-    override suspend fun buzzIn(sessionId: Uuid): Result<Boolean> {
-        logger.i { "buzzIn called: sessionId=$sessionId" }
-        return runCatching {
-            postgrest.rpc(
-                function = "buzz_in",
-                parameters = mapOf("p_session_id" to sessionId)
-            ).decodeAs<Boolean>()
-        }.onFailure {
-            logger.e(it) { "buzzIn failed" }
-        }
+    override suspend fun buzzIn(sessionId: Uuid): Result<Boolean> = runCatching {
+        postgrest.rpc("buzz_in", mapOf("p_session_id" to sessionId)).decodeAs<Boolean>()
     }
 
-    override suspend fun judgeAnswer(sessionId: Uuid, answerId: Uuid, isCorrect: Boolean): Result<Unit> {
-        logger.i { "judgeAnswer: sessionId=$sessionId answerId=$answerId isCorrect=$isCorrect" }
-        return runCatching<Unit> {
-            postgrest.rpc(
-                function = "judge_answer",
-                parameters = JudgeAnswerRequest(
-                    sessionId = sessionId,
-                    answerId = answerId,
-                    isCorrect = isCorrect
-                )
-            )
-        }.onSuccess {
-            logger.d { "judgeAnswer success" }
-        }.onFailure {
-            logger.e(it) { "judgeAnswer failed" }
-        }
+    override suspend fun judgeAnswer(sessionId: Uuid, answerId: Uuid, isCorrect: Boolean): Result<Unit> = runCatching {
+        postgrest.rpc("judge_answer", JudgeAnswerRequest(sessionId, answerId, isCorrect))
     }
 
     companion object {
         private const val TAG = "GameProcessRepository"
+        private val MEDIA_URL_EXPIRE_DURATION = 1.hours
         private const val DOWNLOAD_MEDIA_RETRIES = 5L
+        private const val STOP_TIMEOUT_MS = 5_000L
     }
 }
