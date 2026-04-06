@@ -1,7 +1,6 @@
 package com.davanok.dvnkquizz.ui.screens.game.components
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +21,7 @@ import com.davanok.dvnkquizz.core.domain.entities.Participant
 import com.davanok.dvnkquizz.core.domain.entities.Question
 import com.davanok.dvnkquizz.core.domain.entities.SessionAnswer
 import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.answering
 import dvnkquizz.sharedui.generated.resources.correct_answer
 import dvnkquizz.sharedui.generated.resources.ic_check
 import dvnkquizz.sharedui.generated.resources.ic_close
@@ -40,15 +40,18 @@ fun AnsweringScreen(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        Box(
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            ParticipantCard(
-                participant = participant,
-                modifier = Modifier.fillMaxWidth(2/3f).widthIn(max = 300.dp)
-            )
-        }
+        ParticipantCard(
+            participant = participant,
+            modifier = Modifier
+                .widthIn(max = 300.dp)
+                .fillMaxWidth(0.5f)
+                .align(Alignment.CenterHorizontally)
+        )
+
+        Text(
+            text = stringResource(Res.string.answering),
+            style = MaterialTheme.typography.bodyMedium
+        )
 
         if (isHost)
             HostJudgingButtons(

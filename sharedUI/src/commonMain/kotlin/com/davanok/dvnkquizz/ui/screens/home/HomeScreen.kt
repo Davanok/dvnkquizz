@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
@@ -293,6 +295,8 @@ private fun GamePart(
             }
         }
 
+        Spacer(Modifier.height(12.dp))
+
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxWidth()
@@ -330,7 +334,7 @@ private fun JoinGamePage(
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             stringResource(Res.string.join_game_title),
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.labelMedium
         )
         OutlinedTextField(
             value = inviteCode,
@@ -360,7 +364,7 @@ private fun HostGamePage(
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = stringResource(Res.string.host_game_title),
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.labelMedium
         )
 
 

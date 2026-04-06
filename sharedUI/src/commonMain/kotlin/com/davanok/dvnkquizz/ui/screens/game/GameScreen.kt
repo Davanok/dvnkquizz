@@ -97,6 +97,8 @@ private fun Content(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(text = state.gamePackage?.title ?: stringResource(Res.string.unknown_game_package))
 
+                        Spacer(Modifier.width(8.dp))
+
                         state.inviteCode?.let { inviteCode ->
                             InviteCode(
                                 code = inviteCode,

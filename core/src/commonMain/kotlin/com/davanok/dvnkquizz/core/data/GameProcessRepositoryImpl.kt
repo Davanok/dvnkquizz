@@ -171,7 +171,6 @@ class GameProcessRepositoryImpl(
 
     override suspend fun sendHeartbeat(sessionId: Uuid): Result<Unit> = runCatching {
         postgrest.rpc("participant_heartbeat", mapOf("p_session_id" to sessionId))
-        Unit
     }
 
     override suspend fun nextRound(sessionId: Uuid): Result<Unit> = runCatching {

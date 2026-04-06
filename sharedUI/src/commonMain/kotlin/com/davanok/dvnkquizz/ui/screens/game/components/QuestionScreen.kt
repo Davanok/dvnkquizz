@@ -101,7 +101,10 @@ private fun Content(
     question: Question,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        QuestionContent(question = question)
+        QuestionContent(
+            question = question,
+            modifier = Modifier.weight(1f)
+        )
 
         Spacer(Modifier.height(24.dp))
 
