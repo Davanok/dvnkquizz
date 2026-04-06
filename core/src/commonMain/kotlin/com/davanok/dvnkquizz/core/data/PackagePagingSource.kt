@@ -2,11 +2,13 @@ package com.davanok.dvnkquizz.core.data
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import co.touchlab.kermit.Logger
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
 
 class PackagePagingSource(
     private val getPage: suspend (query: String, from: Long, count: Int) -> List<GamePackage>,
-    private val query: String
+    private val query: String,
+    private val logger: Logger
 ) : PagingSource<Int, GamePackage>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, GamePackage> {
@@ -16,6 +18,8 @@ class PackagePagingSource(
 
         return runCatching {
             getPage(query, from.toLong(), pageSize)
+        }.onFailure {
+            logger.e(it) { "failed to load packages" }
         }.fold(
             onSuccess = { response ->
                 LoadResult.Page(

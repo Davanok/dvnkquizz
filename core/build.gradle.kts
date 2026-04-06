@@ -40,12 +40,13 @@ kotlin {
             implementation(libs.kermit)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.multiplatformSettings)
             implementation(libs.kotlinx.datetime)
 
             implementation(libs.bundles.supabase)
 
             implementation(libs.androidx.paging.common)
+
+            implementation(libs.bundles.settings)
         }
 
         commonTest.dependencies {

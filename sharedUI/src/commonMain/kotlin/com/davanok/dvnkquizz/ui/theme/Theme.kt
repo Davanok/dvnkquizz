@@ -10,14 +10,20 @@ import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import com.davanok.dvnkquizz.core.domain.enums.AppTheme
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun AppTheme(
+    mode: AppTheme,
     onThemeChanged: (isDark: Boolean) -> Unit,
     content: @Composable () -> Unit
 ) {
-    val systemIsDark = isSystemInDarkTheme()
+    val systemIsDark = when(mode) {
+        AppTheme.SYSTEM -> isSystemInDarkTheme()
+        AppTheme.LIGHT -> false
+        AppTheme.DARK -> true
+    }
     LaunchedEffect(systemIsDark) {
         onThemeChanged(systemIsDark)
     }

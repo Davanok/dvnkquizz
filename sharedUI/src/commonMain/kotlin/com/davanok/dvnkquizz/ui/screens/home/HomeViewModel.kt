@@ -2,8 +2,10 @@ package com.davanok.dvnkquizz.ui.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.davanok.dvnkquizz.core.domain.enums.AppTheme
 import com.davanok.dvnkquizz.core.domain.repositories.AuthRepository
 import com.davanok.dvnkquizz.core.domain.repositories.GameSessionRepository
+import com.davanok.dvnkquizz.core.domain.repositories.SettingsRepository
 import com.davanok.dvnkquizz.core.domain.repositories.UserProfileRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
@@ -21,13 +23,15 @@ import kotlin.uuid.Uuid
 class HomeViewModel(
     private val authRepository: AuthRepository,
     private val userProfileRepository: UserProfileRepository,
-    private val gameSessionRepository: GameSessionRepository
+    private val gameSessionRepository: GameSessionRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeScreenUiState())
     val uiState = _uiState.asStateFlow()
 
     init {
         observeProfile()
+        observeAppSettings()
     }
 
     fun onJoinClicked(
@@ -118,5 +122,20 @@ class HomeViewModel(
 
     fun logOut() = viewModelScope.launch {
         authRepository.logOut()
+    }
+
+    fun observeAppSettings() = viewModelScope.launch {
+        settingsRepository.observeAppSettings().collect { settings ->
+            _uiState.update {
+                it.copy(
+                    appSettings = settings
+                )
+            }
+        }
+    }
+    fun setAppTheme(theme: AppTheme) = viewModelScope.launch {
+        settingsRepository.updateAppSettings(
+            uiState.value.appSettings.copy(theme = theme)
+        )
     }
 }

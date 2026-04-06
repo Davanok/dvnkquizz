@@ -74,7 +74,9 @@ metrox-viewmodel-compose = { group = "dev.zacsweers.metro", name = "metrox-viewm
 # utilities
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 
-multiplatformSettings = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettings" }
+settings = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettings" }
+settings-observable = { module = "com.russhwolf:multiplatform-settings-make-observable", version.ref = "multiplatformSettings" }
+settings-coroutines = { module = "com.russhwolf:multiplatform-settings-coroutines", version.ref = "multiplatformSettings" }
 
 androidx-paging-common = { group = "androidx.paging", name = "paging-common", version.ref = "paging" }
 androidx-paging-compose = { group = "androidx.paging", name = "paging-compose", version.ref = "paging" }
@@ -132,4 +134,10 @@ coil = [
     "coil",
     "coil-ktor",
     "ktor-client-cio"
+]
+
+settings = [
+    "settings",
+    "settings-observable",
+    "settings-coroutines"
 ]

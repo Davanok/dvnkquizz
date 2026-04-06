@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.davanok.dvnkquizz.core.domain.entities.User
 import com.davanok.dvnkquizz.core.domain.repositories.AuthRepository
+import com.davanok.dvnkquizz.core.domain.repositories.SettingsRepository
 import com.davanok.dvnkquizz.ui.navigation.Route
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 @ViewModelKey(AppViewModel::class)
 @ContributesIntoMap(AppScope::class)
 class AppViewModel(
+    private val settingsRepository: SettingsRepository,
     private val authRepository: AuthRepository
 ): ViewModel() {
     private val _uiState = MutableStateFlow(AppUiState())
@@ -25,27 +27,30 @@ class AppViewModel(
 
     init {
         observeUser()
+        observeSettings()
     }
 
     private fun observeUser() = viewModelScope.launch {
         authRepository
             .observeUser()
             .collect { result ->
-                result.onSuccess { user ->
-                    _uiState.update {
-                        it.copy(
-                            user = user,
-                            errorMessage = null
-                        )
-                    }
-                    handleAuthNavigation(user)
-                }.onFailure { thr ->
-                    _uiState.update {
-                        it.copy(
-                            user = null,
-                            errorMessage = thr.message
-                        )
-                    }
+                _uiState.update { state ->
+                    result.onSuccess {
+                        handleAuthNavigation(it)
+                    }.fold(
+                        onSuccess = { user ->
+                            state.copy(
+                                user = user,
+                                errorMessage = null
+                            )
+                        },
+                        onFailure = { thr ->
+                            state.copy(
+                                user = null,
+                                errorMessage = thr.message
+                            )
+                        }
+                    )
                 }
             }
     }
@@ -73,5 +78,15 @@ class AppViewModel(
             is NavigationEvent.Replace -> backStack[backStack.lastIndex] = event.route
         }
         it.copy(backStack = backStack)
+    }
+
+    fun observeSettings() = viewModelScope.launch {
+        settingsRepository.observeAppSettings().collect { appSettings ->
+            _uiState.update {
+                it.copy(
+                    theme = appSettings.theme
+                )
+            }
+        }
     }
 }

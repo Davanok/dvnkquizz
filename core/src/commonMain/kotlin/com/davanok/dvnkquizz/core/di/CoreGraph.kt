@@ -2,6 +2,10 @@ package com.davanok.dvnkquizz.core.di
 
 import co.touchlab.kermit.Logger
 import com.davanok.dvnkquizz.core.BuildConfig
+import com.russhwolf.settings.ExperimentalSettingsApi
+import com.russhwolf.settings.ObservableSettings
+import com.russhwolf.settings.Settings
+import com.russhwolf.settings.observable.makeObservable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
@@ -44,4 +48,9 @@ interface CoreGraph {
     @Provides
     @SingleIn(AppScope::class)
     fun provideLogger(): Logger = Logger
+
+    @OptIn(ExperimentalSettingsApi::class)
+    @Provides
+    @SingleIn(AppScope::class)
+    fun provideUiSettings(): ObservableSettings = Settings().makeObservable()
 }

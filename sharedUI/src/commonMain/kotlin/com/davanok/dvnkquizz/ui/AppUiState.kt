@@ -1,10 +1,12 @@
 package com.davanok.dvnkquizz.ui
 
 import com.davanok.dvnkquizz.core.domain.entities.User
+import com.davanok.dvnkquizz.core.domain.enums.AppTheme
 import com.davanok.dvnkquizz.ui.navigation.Route
 
 data class AppUiState(
     val user: User? = null,
+    val theme: AppTheme = AppTheme.entries.first(),
     val errorMessage: String? = null,
     val backStack: List<Route> = listOf(Route.PlaceHolder)
 )

@@ -20,10 +20,13 @@ class AppClass(
     @Composable
     operator fun invoke(onThemeChanged: (Boolean) -> Unit = {}) {
         CompositionLocalProvider(LocalMetroViewModelFactory provides metroViewModel) {
-            AppTheme(onThemeChanged) {
-                val viewModel: AppViewModel = metroViewModel()
-                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+            val viewModel: AppViewModel = metroViewModel()
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+            AppTheme(
+                uiState.theme,
+                onThemeChanged
+            ) {
                 AppNavDisplay(
                     backStack = uiState.backStack,
                     modifier = Modifier.fillMaxSize(),

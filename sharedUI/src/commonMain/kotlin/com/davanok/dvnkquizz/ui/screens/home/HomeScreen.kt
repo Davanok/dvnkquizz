@@ -39,11 +39,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
+import com.davanok.dvnkquizz.core.domain.enums.AppTheme
 import com.davanok.dvnkquizz.ui.screens.packagePicker.PackagePicker
+import com.davanok.dvnkquizz.ui.utils.drawableRes
+import com.davanok.dvnkquizz.ui.utils.titleRes
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.app_name
@@ -79,7 +83,7 @@ fun HomeScreen(
     onNavigateToLobby: (Uuid) -> Unit,
     viewModel: HomeViewModel = metroViewModel()
 ) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var inviteCode by remember { mutableStateOf("") }
     var selectedPackage by remember { mutableStateOf<GamePackage?>(null) }
 
@@ -91,18 +95,30 @@ fun HomeScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        Text(
-            text = stringResource(Res.string.app_name),
-            style = MaterialTheme.typography.displaySmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(Res.string.app_name),
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f)
+            )
+
+            ThemeSwitcher(
+                current = uiState.appSettings.theme,
+                onChange = viewModel::setAppTheme
+            )
+        }
 
         ProfilePart(
-            isLoading = state.isProfileLoading,
-            nickname = state.nickname,
-            imageUrl = state.imageUrl,
-            nicknameChanged = state.nicknameChanged,
+            isLoading = uiState.isProfileLoading,
+            nickname = uiState.nickname,
+            imageUrl = uiState.imageUrl,
+            nicknameChanged = uiState.nicknameChanged,
             onNicknameChange = viewModel::setNickname,
             onImageChange = viewModel::setImage,
             submitNickname = viewModel::submitNickname,
@@ -128,16 +144,39 @@ fun HomeScreen(
             modifier = Modifier
         )
 
-        if (state.errorMessage != null) {
+        if (uiState.errorMessage != null) {
             Text(
-                text = state.errorMessage.toString(),
+                text = uiState.errorMessage.toString(),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall
             )
         }
     }
-
 }
+
+@Composable
+private fun ThemeSwitcher(
+    current: AppTheme,
+    onChange: (AppTheme) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    fun nextAppTheme(current: AppTheme): AppTheme = when(current) {
+        AppTheme.SYSTEM -> AppTheme.LIGHT
+        AppTheme.LIGHT -> AppTheme.DARK
+        AppTheme.DARK -> AppTheme.SYSTEM
+    }
+
+    IconButton(
+        onClick = { onChange(nextAppTheme(current)) },
+        modifier = modifier
+    ) {
+        Icon(
+            painter = painterResource(current.drawableRes),
+            contentDescription = stringResource(current.titleRes)
+        )
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -255,8 +294,8 @@ private fun GamePart(
         }
 
         HorizontalPager(
-            state = rememberPagerState { 2 },
-            modifier = Modifier.fillMaxWidth().weight(1f)
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth()
         ) { currentPage ->
             val isJoin = currentPage == 0
 

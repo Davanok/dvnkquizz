@@ -3,6 +3,10 @@
 
     <string name="back">Back</string>
 
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_system">System</string>
+
     <string name="profile_image">Profile image</string>
     <string name="no_profile_image">No profile image</string>
     <string name="change_profile_image">Change profile image</string>

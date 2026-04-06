@@ -10,6 +10,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.flow.Flow
 
 @Inject
@@ -17,27 +18,28 @@ import kotlinx.coroutines.flow.Flow
 class GamePackageRepositoryImpl(
     private val postgrest: Postgrest,
     logger: Logger
-): GamePackageRepository {
+) : GamePackageRepository {
     private val logger = logger.withTag(TAG)
     private suspend fun getPage(query: String, from: Long, count: Int): List<GamePackage> {
         logger.d { "getPage query=$query from=$from count=$count" }
 
-        return postgrest.from("game_packages, author:users(*)").select {
-            if (query.isNotBlank()) filter {
-                val queryPattern = "%$query%"
-                or {
-                    GamePackage::title ilike queryPattern
-                    GamePackage::description ilike queryPattern
+        return postgrest.from("game_packages")
+            .select(Columns.raw("*, author:users(*)")) {
+                if (query.isNotBlank()) filter {
+                    val queryPattern = "%$query%"
+                    or {
+                        GamePackage::title ilike queryPattern
+                        GamePackage::description ilike queryPattern
+                    }
                 }
-            }
-            range(from, from + count)
-        }.decodeList()
+                range(from, from + count)
+            }.decodeList()
     }
 
     override fun getPagedPackages(query: String): Flow<PagingData<GamePackage>> {
         return Pager(
             config = PagingConfig(pageSize = PAGE_SIZE, enablePlaceholders = false),
-            pagingSourceFactory = { PackagePagingSource(::getPage, query) }
+            pagingSourceFactory = { PackagePagingSource(::getPage, query, logger) }
         ).flow
     }
 

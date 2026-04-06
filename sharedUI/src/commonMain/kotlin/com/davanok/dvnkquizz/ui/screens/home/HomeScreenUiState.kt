@@ -1,6 +1,7 @@
 package com.davanok.dvnkquizz.ui.screens.home
 
 import androidx.compose.runtime.Immutable
+import com.davanok.dvnkquizz.core.domain.entities.AppSettings
 
 @Immutable
 data class HomeScreenUiState(
@@ -9,5 +10,6 @@ data class HomeScreenUiState(
     val isProfileLoading: Boolean = true,
     val nickname: String = "",
     val imageUrl: String? = null,
-    val nicknameChanged: Boolean = false
+    val nicknameChanged: Boolean = false,
+    val appSettings: AppSettings = AppSettings()
 )
