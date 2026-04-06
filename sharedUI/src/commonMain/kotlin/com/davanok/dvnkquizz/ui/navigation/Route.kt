@@ -15,4 +15,9 @@ sealed interface Route : NavKey {
 
     @Serializable
     data class Game(val sessionId: Uuid) : Route
+
+    @Serializable
+    data object UserGamePackages : Route
+    @Serializable
+    data class EditUserGamePackage(val packageId: Uuid) : Route
 }

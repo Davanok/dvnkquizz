@@ -24,7 +24,7 @@ class GamePackageRepositoryImpl(
         logger.d { "getPage query=$query from=$from count=$count" }
 
         return postgrest.from("game_packages")
-            .select(Columns.raw("*, author:users(*)")) {
+            .select(Columns.raw(GAME_PACKAGE_QUERY)) {
                 if (query.isNotBlank()) filter {
                     val queryPattern = "%$query%"
                     or {
@@ -46,5 +46,7 @@ class GamePackageRepositoryImpl(
     companion object {
         private const val TAG = "GamePackageRepository"
         private const val PAGE_SIZE = 20
+
+        private const val GAME_PACKAGE_QUERY = "*, author:users(*)"
     }
 }

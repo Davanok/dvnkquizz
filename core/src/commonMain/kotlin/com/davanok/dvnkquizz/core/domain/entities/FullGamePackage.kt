@@ -6,7 +6,7 @@ import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 @Serializable
-data class GamePackage(
+internal data class FullGamePackageDto(
     val id: Uuid,
     @SerialName("created_at")
     val createdAt: Instant? = null,
@@ -18,5 +18,19 @@ data class GamePackage(
     @SerialName("is_public")
     val isPublic: Boolean = false,
 
-    val author: UserProfile?
+    val author: UserProfile?,
+    val rounds: List<FullGameRoundDto>
+)
+
+data class FullGamePackage(
+    val id: Uuid,
+    val createdAt: Instant? = null,
+    val title: String,
+    val description: String,
+    val authorId: Uuid?,
+    val difficulty: Int,
+    val isPublic: Boolean,
+
+    val author: UserProfile?,
+    val rounds: List<FullGameRound>
 )
