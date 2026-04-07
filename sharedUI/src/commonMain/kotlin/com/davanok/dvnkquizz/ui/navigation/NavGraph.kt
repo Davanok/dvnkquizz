@@ -8,6 +8,7 @@ import com.davanok.dvnkquizz.ui.screens.auth.AuthScreen
 import com.davanok.dvnkquizz.ui.screens.game.GameScreen
 import com.davanok.dvnkquizz.ui.screens.game.GameViewModel
 import com.davanok.dvnkquizz.ui.screens.home.HomeScreen
+import com.davanok.dvnkquizz.ui.screens.userGamePackages.UserGamePackagesScreen
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 
 @Composable
@@ -39,6 +40,14 @@ fun AppNavDisplay(
                 GameScreen(
                     navigateBack = back,
                     viewModel = assistedMetroViewModel<GameViewModel, GameViewModel.Factory>(key = sessionId.toString()) { create(sessionId) }
+                )
+            }
+
+            entry<Route.UserGamePackages> {
+                UserGamePackagesScreen(
+                    onBackClick = back,
+                    navigateToPackage = { packageId -> navigate(Route.EditUserGamePackage(packageId)) },
+                    navigateToNewPackage = {  }
                 )
             }
         }

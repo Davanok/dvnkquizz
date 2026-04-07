@@ -5,7 +5,7 @@ import com.davanok.dvnkquizz.core.domain.entities.GamePackage
 
 @Immutable
 data class UserGamePackagesScreenUiState(
-    val isLoading: Boolean,
-    val errorMessage: String,
-    val gamePackages: List<GamePackage>
+    val isLoading: Boolean = true,
+    val errorMessage: String? = null,
+    val gamePackages: List<GamePackage> = emptyList()
 )

@@ -3,6 +3,7 @@ package com.davanok.dvnkquizz.core.data
 import co.touchlab.kermit.Logger
 import com.davanok.dvnkquizz.core.domain.entities.FullGamePackage
 import com.davanok.dvnkquizz.core.domain.entities.FullGamePackageDto
+import com.davanok.dvnkquizz.core.domain.entities.GamePackage
 import com.davanok.dvnkquizz.core.domain.entities.Question
 import com.davanok.dvnkquizz.core.domain.entities.QuestionDto
 import com.davanok.dvnkquizz.core.domain.enums.MediaKind
@@ -30,7 +31,6 @@ class UserGamePackagesRepositoryImpl(
     logger: Logger
 ): UserGamePackagesRepository {
     private val logger = logger.withTag(TAG)
-
     private suspend fun QuestionDto.toQuestion(): Question {
         if (mediaKind == MediaKind.NONE || mediaUrl == null)
             return toDomain()
@@ -40,7 +40,7 @@ class UserGamePackagesRepositoryImpl(
         return toDomain(mediaUrl, 1f)
     }
 
-    override suspend fun getUserGamePackages(): Result<List<FullGamePackage>> {
+    override suspend fun getUserGamePackages(): Result<List<GamePackage>> {
         logger.d { "get user game packages list" }
 
         return runCatching {
@@ -51,16 +51,7 @@ class UserGamePackagesRepositoryImpl(
                     filter {
                         FullGamePackageDto::authorId eq userId
                     }
-                }.decodeList<FullGamePackageDto>()
-                .map { pkg ->
-                    pkg.toFullGamePackage { round ->
-                        round.toFullGameRound { category ->
-                            category.toFullGameCategory { question ->
-                                question.toQuestion()
-                            }
-                        }
-                    }
-                }
+                }.decodeList<GamePackage>()
         }.onFailure {
             logger.e(it) { "failed to get user packages" }
         }
@@ -73,7 +64,7 @@ class UserGamePackagesRepositoryImpl(
             val userId = checkNotNull(auth.currentUserId) { "User not authorized" }
 
             postgrest.from("game_packages")
-                .select(Columns.raw(GAME_PACKAGE_QUERY)) {
+                .select(Columns.raw(FULL_GAME_PACKAGE_QUERY)) {
                     filter {
                         and {
                             FullGamePackageDto::id eq packageId
@@ -116,7 +107,9 @@ class UserGamePackagesRepositoryImpl(
 
     companion object {
         private const val TAG = "EditGamePackageRepository"
-        private val GAME_PACKAGE_QUERY = """
+
+        private const val GAME_PACKAGE_QUERY = "*, author:users(*)"
+        private val FULL_GAME_PACKAGE_QUERY = """
             *, 
             author:users(*)
             rounds:rounds(

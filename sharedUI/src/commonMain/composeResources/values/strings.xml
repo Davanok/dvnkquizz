@@ -71,4 +71,7 @@
     <string name="only_host_can_select_question">Only host can select question</string>
     <string name="only_player_can_buzz">Only player can buzz</string>
     <string name="only_host_can_judge_answer">Only host can judge answer</string>
+
+    <string name="user_game_packages_list_title">My game packages</string>
+    <string name="create_new_game_package">Create new game package</string>
 </resources>
