@@ -74,4 +74,9 @@
 
     <string name="user_game_packages_list_title">My game packages</string>
     <string name="create_new_game_package">Create new game package</string>
+
+    <string name="saving_draft">save draft in progress</string>
+    <string name="unnamed_game_package">Unnamed game package</string>
+    <string name="draft_saved">Draft saved</string>
+    <string name="upload_game_package">Upload game package</string>
 </resources>

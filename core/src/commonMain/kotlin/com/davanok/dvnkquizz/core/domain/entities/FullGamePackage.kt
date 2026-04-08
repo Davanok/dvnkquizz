@@ -33,4 +33,18 @@ data class FullGamePackage(
 
     val author: UserProfile?,
     val rounds: List<FullGameRound>
-)
+) {
+    companion object {
+        val Empty = FullGamePackage(
+            id = Uuid.random(),
+            createdAt = null,
+            title = "",
+            description = "",
+            authorId = null,
+            difficulty = 0,
+            isPublic = false,
+            author = null,
+            rounds = emptyList()
+        )
+    }
+}
