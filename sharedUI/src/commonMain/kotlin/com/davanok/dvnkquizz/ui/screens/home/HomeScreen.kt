@@ -20,6 +20,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -28,8 +29,11 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,9 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -67,6 +69,7 @@ import dvnkquizz.sharedui.generated.resources.invite_code_field_placeholder
 import dvnkquizz.sharedui.generated.resources.join_game_title
 import dvnkquizz.sharedui.generated.resources.join_lobby
 import dvnkquizz.sharedui.generated.resources.log_out
+import dvnkquizz.sharedui.generated.resources.my_packages
 import dvnkquizz.sharedui.generated.resources.nickname_field_label
 import dvnkquizz.sharedui.generated.resources.no_profile_image
 import dvnkquizz.sharedui.generated.resources.profile_image
@@ -80,78 +83,87 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.uuid.Uuid
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onNavigateToLobby: (Uuid) -> Unit,
+    navigateToUserPackages: () -> Unit,
     viewModel: HomeViewModel = metroViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var inviteCode by remember { mutableStateOf("") }
     var selectedPackage by remember { mutableStateOf<GamePackage?>(null) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()) // Handle small screens
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(Res.string.app_name),
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f)
-            )
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(Res.string.app_name)) },
+                actions = {
+                    ThemeSwitcher(
+                        current = uiState.appSettings.theme,
+                        onChange = viewModel::setAppTheme
+                    )
 
-            ThemeSwitcher(
-                current = uiState.appSettings.theme,
-                onChange = viewModel::setAppTheme
+                    FilledIconButton(onClick = viewModel::logOut) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_logout),
+                            contentDescription = stringResource(Res.string.log_out)
+                        )
+                    }
+                }
             )
         }
-
-        ProfilePart(
-            isLoading = uiState.isProfileLoading,
-            nickname = uiState.nickname,
-            imageUrl = uiState.imageUrl,
-            nicknameChanged = uiState.nicknameChanged,
-            onNicknameChange = viewModel::setNickname,
-            onImageChange = viewModel::setImage,
-            submitNickname = viewModel::submitNickname,
-            onLogOut = viewModel::logOut,
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-        )
-
-        GamePart(
-            inviteCode = inviteCode,
-            onInviteCodeChange = { inviteCode = it.uppercase() },
-            selectedPackage = selectedPackage,
-            onSelectPackage = { selectedPackage = it },
-            joinEnabled = inviteCode.length == 6,
-            createEnabled = selectedPackage != null,
-            onJoin = {
-                viewModel.onJoinClicked(inviteCode, onNavigateToLobby)
-            },
-            onCreate = {
-                selectedPackage?.let {
-                    viewModel.onCreateGame(it.id, onNavigateToLobby)
-                }
-            },
-            modifier = Modifier
-        )
-
-        if (uiState.errorMessage != null) {
-            Text(
-                text = uiState.errorMessage.toString(),
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall
+                .padding(paddingValues)
+                .padding(horizontal = 12.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            ProfilePart(
+                isLoading = uiState.isProfileLoading,
+                nickname = uiState.nickname,
+                imageUrl = uiState.imageUrl,
+                nicknameChanged = uiState.nicknameChanged,
+                onNicknameChange = viewModel::setNickname,
+                onImageChange = viewModel::setImage,
+                submitNickname = viewModel::submitNickname,
+                modifier = Modifier
             )
+
+            TextButton(onClick = navigateToUserPackages) {
+                Text(stringResource(Res.string.my_packages))
+            }
+
+            GamePart(
+                inviteCode = inviteCode,
+                onInviteCodeChange = { inviteCode = it.uppercase() },
+                selectedPackage = selectedPackage,
+                onSelectPackage = { selectedPackage = it },
+                joinEnabled = inviteCode.length == 6,
+                createEnabled = selectedPackage != null,
+                onJoin = {
+                    viewModel.onJoinClicked(inviteCode, onNavigateToLobby)
+                },
+                onCreate = {
+                    selectedPackage?.let {
+                        viewModel.onCreateGame(it.id, onNavigateToLobby)
+                    }
+                },
+                modifier = Modifier
+            )
+
+            if (uiState.errorMessage != null) {
+                Text(
+                    text = uiState.errorMessage.toString(),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
     }
 }
@@ -190,7 +202,6 @@ private fun ProfilePart(
     onNicknameChange: (String) -> Unit,
     onImageChange: (ByteArray?) -> Unit,
     submitNickname: () -> Unit,
-    onLogOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
@@ -249,15 +260,6 @@ private fun ProfilePart(
                 }
             }
         )
-
-        FilledIconButton(
-            onClick = onLogOut
-        ) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_logout),
-                contentDescription = stringResource(Res.string.log_out)
-            )
-        }
     }
 }
 
@@ -332,10 +334,6 @@ private fun JoinGamePage(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            stringResource(Res.string.join_game_title),
-            style = MaterialTheme.typography.labelMedium
-        )
         OutlinedTextField(
             value = inviteCode,
             onValueChange = onInviteCodeChange,
@@ -362,12 +360,6 @@ private fun HostGamePage(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            text = stringResource(Res.string.host_game_title),
-            style = MaterialTheme.typography.labelMedium
-        )
-
-
         PackagePicker(
             onPackageSelected = onSelectPackage,
             modifier = Modifier.fillMaxWidth()

@@ -35,7 +35,8 @@ fun AppNavDisplay(
             }
             entry<Route.Home> {
                 HomeScreen(
-                    onNavigateToLobby = { sessionId -> navigate(Route.Game(sessionId)) }
+                    onNavigateToLobby = { sessionId -> navigate(Route.Game(sessionId)) },
+                    navigateToUserPackages = { navigate(Route.UserGamePackages) }
                 )
             }
             entry<Route.Game> { (sessionId) ->

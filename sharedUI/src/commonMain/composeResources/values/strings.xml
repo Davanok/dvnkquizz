@@ -79,4 +79,6 @@
     <string name="unnamed_game_package">Unnamed game package</string>
     <string name="draft_saved">Draft saved</string>
     <string name="upload_game_package">Upload game package</string>
+
+    <string name="my_packages">My packages</string>
 </resources>
