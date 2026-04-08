@@ -93,7 +93,11 @@ class GameViewModel(
                 inviteCode = session.inviteCode,
                 gamePackage = gamePackage,
                 participants = participants,
-                board = gameBoard.groupBy { it.categoryName }
+                board = gameBoard
+                    .groupBy { it.categoryName }
+                    .mapValues { (_, value) ->
+                        value.sortedBy { it.price }
+                    }
             )
 
             else -> {

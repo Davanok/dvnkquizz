@@ -81,4 +81,24 @@
     <string name="upload_game_package">Upload game package</string>
 
     <string name="my_packages">My packages</string>
+
+    <string name="package_title_text_field_label">Title</string>
+    <string name="package_difficulty_text_field_label">Difficulty</string>
+    <string name="package_description_text_field_label">Description</string>
+
+    <string name="round_title">Round %1$d: %2$s</string>
+    <string name="add_round">Add round</string>
+    <string name="add_category_to_round">Add category to round</string>
+    <string name="toggle_round_expand">Toggle round is expanded</string>
+    <string name="add_question_to_category">Add question to category</string>
+
+    <string name="title_text_field_label">Title</string>
+    <string name="title_cannot_be_empty">Title cannot be empty</string>
+    <string name="add">Add</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="add_round_dialog_title">Add round</string>
+    <string name="add_category_dialog_title">Add category</string>
+
+    <string name="no_user_game_packages">You haven’t created packages yet</string>
 </resources>

@@ -2,6 +2,7 @@ package com.davanok.dvnkquizz.ui.screens.userGamePackages
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +20,7 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,6 +37,7 @@ import dvnkquizz.sharedui.generated.resources.back
 import dvnkquizz.sharedui.generated.resources.create_new_game_package
 import dvnkquizz.sharedui.generated.resources.ic_add
 import dvnkquizz.sharedui.generated.resources.ic_arrow_back
+import dvnkquizz.sharedui.generated.resources.no_user_game_packages
 import dvnkquizz.sharedui.generated.resources.user_game_packages_list_title
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
@@ -113,8 +116,19 @@ private fun Content(
             uiState.errorMessage != null -> Box(modifier) {
                 Text(
                     text = uiState.errorMessage,
-                    color = MaterialTheme.colorScheme.error
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.align(Alignment.Center)
                 )
+            }
+            uiState.gamePackages.isEmpty() -> Column(
+                modifier = modifier,
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(stringResource(Res.string.no_user_game_packages))
+                TextButton(onClick = onNewPackageClick) {
+                    Text(stringResource(Res.string.create_new_game_package))
+                }
             }
             else -> PackagesList(
                 gamePackages = uiState.gamePackages,

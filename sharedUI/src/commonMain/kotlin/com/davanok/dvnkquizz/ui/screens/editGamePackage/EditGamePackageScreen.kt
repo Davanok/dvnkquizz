@@ -26,7 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.davanok.dvnkquizz.core.domain.entities.FullGamePackage
+import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditGamePackageContent
+import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditGamePackageQuestion
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.back
 import dvnkquizz.sharedui.generated.resources.draft_saved
@@ -86,56 +87,30 @@ private fun Content(
                 )
             }
         }
-    }
-    else {
+    } else {
         Scaffold(
             modifier = modifier,
             topBar = {
-                TopAppBar(
-                    title = {
-                        val title = uiState.gamePackage.title.ifBlank { stringResource(Res.string.unnamed_game_package) }
-                        Text(text = title)
+                EditPackageTopBar(
+                    title = uiState.gamePackage.title,
+                    onBackClick = {
+                        eventSink(EditGamePackageUiEvent.SaveDraft)
+                        wantToNavigateBack = true
                     },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                eventSink(EditGamePackageUiEvent.SaveDraft)
-                                wantToNavigateBack = true
-                            }
-                        ) {
-                            Icon(
-                                painter = painterResource(Res.drawable.ic_arrow_back),
-                                contentDescription = stringResource(Res.string.back)
-                            )
-                        }
-                    },
-                    actions = {
-                        if (uiState.isSaveInProgress)
-                            LoadingIndicator()
-                        else
-                            Icon(
-                                painter = painterResource(Res.drawable.ic_check),
-                                contentDescription = stringResource(Res.string.draft_saved)
-                            )
-
-                        if (uiState.uploadProgress != null)
-                            LoadingIndicator(progress = { uiState.uploadProgress })
-                        else
-                            IconButton(onClick = { eventSink(EditGamePackageUiEvent.UploadPackage) }) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.ic_upload),
-                                    contentDescription = stringResource(Res.string.upload_game_package)
-                                )
-                            }
-                    }
+                    isSaveInProgress = uiState.isSaveInProgress,
+                    onSaveClick = { eventSink(EditGamePackageUiEvent.SaveDraft) },
+                    uploadProgress = uiState.uploadProgress,
+                    onUploadClick = { eventSink(EditGamePackageUiEvent.UploadPackage) }
                 )
             }
         ) { paddingValues ->
-            val modifier = Modifier.padding(paddingValues).fillMaxSize()
+            val modifier = Modifier.padding(paddingValues).padding(horizontal = 12.dp).fillMaxSize()
+
             when {
                 uiState.isLoading -> Box(modifier) {
                     LoadingIndicator(Modifier.align(Alignment.Center))
                 }
+
                 uiState.errorMessage != null -> Box(modifier) {
                     Text(
                         modifier = Modifier.align(Alignment.Center),
@@ -144,6 +119,12 @@ private fun Content(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
+
+                uiState.editQuestion != null -> EditGamePackageQuestion(
+                    question = uiState.editQuestion,
+                    modifier = modifier
+                )
+
                 else -> EditGamePackageContent(
                     gamePackage = uiState.gamePackage,
                     eventSink = eventSink,
@@ -154,11 +135,53 @@ private fun Content(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun EditGamePackageContent(
-    gamePackage: FullGamePackage,
-    eventSink: (EditGamePackageUiEvent) -> Unit,
+private fun EditPackageTopBar(
+    title: String,
+    onBackClick: () -> Unit,
+    isSaveInProgress: Boolean,
+    onSaveClick: () -> Unit,
+    uploadProgress: Float?,
+    onUploadClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    TopAppBar(
+        modifier = modifier,
+        title = {
+            Text(text = title.ifBlank { stringResource(Res.string.unnamed_game_package) })
+        },
+        navigationIcon = {
+            IconButton(
+                onClick = onBackClick
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_arrow_back),
+                    contentDescription = stringResource(Res.string.back)
+                )
+            }
+        },
+        actions = {
+            if (isSaveInProgress)
+                LoadingIndicator()
+            else
+                IconButton(onClick = onSaveClick) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_check),
+                        contentDescription = stringResource(Res.string.draft_saved)
+                    )
+                }
 
+            if (uploadProgress != null)
+                LoadingIndicator(progress = { uploadProgress })
+            else
+                IconButton(onClick = onUploadClick) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_upload),
+                        contentDescription = stringResource(Res.string.upload_game_package)
+                    )
+                }
+        }
+    )
 }
+
