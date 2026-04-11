@@ -2,6 +2,7 @@ package com.davanok.dvnkquizz.core.domain.mappers
 
 import com.davanok.dvnkquizz.core.domain.entities.FullGameCategory
 import com.davanok.dvnkquizz.core.domain.entities.FullGameCategoryDto
+import com.davanok.dvnkquizz.core.domain.entities.GameCategory
 import com.davanok.dvnkquizz.core.domain.entities.Question
 import com.davanok.dvnkquizz.core.domain.entities.QuestionDto
 import kotlin.uuid.Uuid
@@ -24,4 +25,10 @@ internal inline fun FullGameCategory.toFullGameCategoryDto(
     name = name,
     ordinal = ordinal,
     questions = questions.map(transformQuestion)
+)
+
+fun FullGameCategory.toGameCategory() = GameCategory(
+    id = id,
+    name = name,
+    ordinal = ordinal
 )

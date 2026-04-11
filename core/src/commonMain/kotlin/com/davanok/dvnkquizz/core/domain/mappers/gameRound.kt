@@ -4,6 +4,7 @@ import com.davanok.dvnkquizz.core.domain.entities.FullGameCategory
 import com.davanok.dvnkquizz.core.domain.entities.FullGameCategoryDto
 import com.davanok.dvnkquizz.core.domain.entities.FullGameRound
 import com.davanok.dvnkquizz.core.domain.entities.FullGameRoundDto
+import com.davanok.dvnkquizz.core.domain.entities.GameRound
 import kotlin.uuid.Uuid
 
 internal inline fun FullGameRoundDto.toFullGameRound(
@@ -24,4 +25,10 @@ internal inline fun FullGameRound.toFullGameRoundDto(
     name = name,
     ordinal = ordinal,
     categories = categories.map(transformCategory)
+)
+
+fun FullGameRound.toGameRound() = GameRound(
+    id = id,
+    name = name,
+    ordinal = ordinal
 )

@@ -1,6 +1,7 @@
 package com.davanok.dvnkquizz.core.data
 
 import co.touchlab.kermit.Logger
+import com.davanok.dvnkquizz.core.BuildConfig
 import com.davanok.dvnkquizz.core.domain.entities.AppSettings
 import com.davanok.dvnkquizz.core.domain.repositories.SettingsRepository
 import com.russhwolf.settings.ExperimentalSettingsApi
@@ -53,6 +54,6 @@ class SettingsRepositoryImpl(
     }
 
     companion object {
-        private const val APP_SETTINGS_KEY = "app_settings"
+        private val APP_SETTINGS_KEY = "${BuildConfig.APP_ID}:app_settings"
     }
 }

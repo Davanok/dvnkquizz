@@ -2,11 +2,14 @@ package com.davanok.dvnkquizz.ui.screens.editGamePackage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.davanok.dvnkquizz.core.domain.entities.FullGameCategory
+import co.touchlab.kermit.Logger
 import com.davanok.dvnkquizz.core.domain.entities.FullGamePackage
-import com.davanok.dvnkquizz.core.domain.entities.FullGameRound
+import com.davanok.dvnkquizz.core.domain.entities.GameCategory
+import com.davanok.dvnkquizz.core.domain.entities.GameRound
 import com.davanok.dvnkquizz.core.domain.entities.Question
 import com.davanok.dvnkquizz.core.domain.enums.QuestionType
+import com.davanok.dvnkquizz.core.domain.mappers.toGameCategory
+import com.davanok.dvnkquizz.core.domain.mappers.toGameRound
 import com.davanok.dvnkquizz.core.domain.repositories.UserGamePackagesRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
@@ -53,7 +56,7 @@ class EditGamePackageViewModel(
             _uiState.update {
                 it.copy(
                     isLoading = false,
-                    errorMessage = null,
+                    criticalError = null,
                     gamePackage = FullGamePackage.Empty
                 )
             }
@@ -69,14 +72,14 @@ class EditGamePackageViewModel(
                 onSuccess = { gamePackage ->
                     state.copy(
                         isLoading = false,
-                        errorMessage = null,
+                        criticalError = null,
                         gamePackage = gamePackage
                     )
                 },
                 onFailure = { thr ->
                     state.copy(
                         isLoading = false,
-                        errorMessage = thr.message,
+                        criticalError = thr.message,
                         gamePackage = FullGamePackage.Empty
                     )
                 }
@@ -85,97 +88,91 @@ class EditGamePackageViewModel(
     }
 
     fun eventSink(event: EditGamePackageUiEvent) {
-        when (event) {
-            EditGamePackageUiEvent.SaveDraft -> TODO()
-            EditGamePackageUiEvent.UploadPackage -> TODO()
+        runCatching {
+            when (event) {
+                EditGamePackageUiEvent.SaveDraft -> TODO()
+                EditGamePackageUiEvent.UploadPackage -> TODO()
 
-            is EditGamePackageUiEvent.SetTitle -> {
-                if (event.title.length <= GamePackageLimits.TITLE_MAX_LENGTH)
-                    _gamePackage.update {
-                        it.copy(title = event.title)
-                    }
-            }
-
-            is EditGamePackageUiEvent.SetDescription -> {
-                if (event.description.length <= GamePackageLimits.DESCRIPTION_MAX_LENGTH)
-                    _gamePackage.update {
-                        it.copy(description = event.description)
-                    }
-            }
-
-            is EditGamePackageUiEvent.SetDifficulty -> {
-                if (event.difficulty <= GamePackageLimits.DIFFICULTY_MAX_VALUE)
-                    _gamePackage.update {
-                        it.copy(difficulty = event.difficulty)
-                    }
-            }
-
-            is EditGamePackageUiEvent.AddRound -> {
-                val newRound = FullGameRound(
-                    id = Uuid.random(),
-                    name = event.name,
-                    ordinal = _gamePackage.value.rounds.lastOrNull()?.ordinal?.plus(1) ?: 1,
-                    categories = emptyList()
-                )
-                _gamePackage.update {
-                    it.copy(rounds = it.rounds + newRound)
+                is EditGamePackageUiEvent.SetTitle -> {
+                    if (event.title.length <= GamePackageLimits.TITLE_MAX_LENGTH)
+                        _gamePackage.update {
+                            it.copy(title = event.title)
+                        }
                 }
-            }
-            is EditGamePackageUiEvent.AddCategory -> {
-                val updateRoundIndex = _gamePackage.value.rounds
-                    .indexOfFirst { it.id == event.roundId }
-                val updateRound = _gamePackage.value.rounds[updateRoundIndex]
 
-                val newCategory = FullGameCategory(
-                    id = Uuid.random(),
-                    name = event.name,
-                    ordinal = updateRound.categories.lastOrNull()?.ordinal?.plus(1) ?: 1,
-                    questions = emptyList()
-                )
-
-                val updatedRounds = _gamePackage.value.rounds.toMutableList()
-                updatedRounds[updateRoundIndex] = updateRound.copy(categories = updateRound.categories + newCategory)
-
-                _gamePackage.update {
-                    it.copy(rounds = updatedRounds)
+                is EditGamePackageUiEvent.SetDescription -> {
+                    if (event.description.length <= GamePackageLimits.DESCRIPTION_MAX_LENGTH)
+                        _gamePackage.update {
+                            it.copy(description = event.description)
+                        }
                 }
+
+                is EditGamePackageUiEvent.SetDifficulty -> {
+                    if (event.difficulty <= GamePackageLimits.DIFFICULTY_MAX_VALUE)
+                        _gamePackage.update {
+                            it.copy(difficulty = event.difficulty)
+                        }
+                }
+
+                is EditGamePackageUiEvent.ShowDialog -> showDialog(event.dialogRequest)
+                EditGamePackageUiEvent.CloseDialog -> _uiState.update { it.copy(dialog = null) }
+
+                is EditGamePackageUiEvent.UpdateRound -> TODO()
+                is EditGamePackageUiEvent.UpdateCategory -> TODO()
+                is EditGamePackageUiEvent.UpdateQuestion -> TODO()
+            }
+        }.onFailure { thr ->
+            Logger.e(thr) { "failed to process uiEvent $event" }
+            _uiState.update { it.copy(errorMessage = thr.message) }
+        }
+    }
+
+    private fun showDialog(dialogRequest: EditGamePackageDialogRequest) {
+        val dialog = when(dialogRequest) {
+            EditGamePackageDialogRequest.AddRound -> {
+                val ordinal = _gamePackage.value.rounds.maxOfOrNull { it.ordinal }?.plus(1) ?: 0
+                EditGamePackageDialog.EditRound(GameRound(ordinal = ordinal))
+            }
+            is EditGamePackageDialogRequest.EditRound -> {
+                val round = _gamePackage.value.rounds.first { it.id == dialogRequest.roundId }
+                EditGamePackageDialog.EditRound(round.toGameRound())
             }
 
-            is EditGamePackageUiEvent.NewQuestion -> {
-                val newQuestion = Question(
+            is EditGamePackageDialogRequest.AddCategory -> {
+                val round = _gamePackage.value.rounds.first { it.id == dialogRequest.roundId }
+                val ordinal = round.categories.maxOfOrNull { it.ordinal }?.plus(1) ?: 0
+                EditGamePackageDialog.EditCategory(GameCategory(ordinal = ordinal))
+            }
+            is EditGamePackageDialogRequest.EditCategory -> {
+                val category = _gamePackage.value.rounds.firstNotNullOf { round ->
+                    round.categories.firstOrNull { it.id == dialogRequest.categoryId }
+                }
+                EditGamePackageDialog.EditCategory(category.toGameCategory())
+            }
+
+            is EditGamePackageDialogRequest.AddQuestion -> {
+                val question = Question(
                     id = Uuid.random(),
-                    categoryId = event.categoryId,
+                    categoryId = dialogRequest.categoryId,
                     questionText = "",
                     answerText = "",
                     price = 0,
                     type = QuestionType.NORMAL,
                     media = null
                 )
-
-                _uiState.update {
-                    it.copy(editQuestion = newQuestion)
-                }
+                EditGamePackageDialog.EditQuestion(question)
             }
-
-            is EditGamePackageUiEvent.EditQuestion -> {
-                var questionToEdit: Question? = null
-
-                _gamePackage.value.rounds.forEach root@ { round ->
-                    round.categories.forEach { category ->
-                        category.questions.forEach { question ->
-                            if (question.id == event.questionId) {
-                                questionToEdit = question
-                                return@root
-                            }
-                        }
+            is EditGamePackageDialogRequest.EditQuestion -> {
+                val question = _gamePackage.value.rounds.firstNotNullOf { round ->
+                    round.categories.firstNotNullOfOrNull { category ->
+                        category.questions.firstOrNull { it.id == dialogRequest.questionId }
                     }
                 }
-
-                _uiState.update {
-                    it.copy(editQuestion = questionToEdit)
-                }
+                EditGamePackageDialog.EditQuestion(question)
             }
         }
+
+        _uiState.update { it.copy(dialog = dialog) }
     }
 
     @AssistedFactory

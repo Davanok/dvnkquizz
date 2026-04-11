@@ -90,4 +90,6 @@ buildConfig {
     ).forEach { key ->
         buildConfigField(key, properties[key]!!.toString())
     }
+
+    buildConfigField("APP_ID", "com.davanok.dvnkquizz")
 }

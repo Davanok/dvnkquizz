@@ -26,8 +26,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.davanok.dvnkquizz.ui.LocalSnackBarHostState
+import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditCategoryDialog
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditGamePackageContent
-import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditGamePackageQuestion
+import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditGamePackageQuestionDialog
+import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditRoundDialog
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.back
 import dvnkquizz.sharedui.generated.resources.draft_saved
@@ -88,6 +91,14 @@ private fun Content(
             }
         }
     } else {
+        val snackbarState = LocalSnackBarHostState.current
+
+        LaunchedEffect(uiState.errorMessage) {
+            if (uiState.errorMessage != null) {
+                snackbarState.showSnackbar(uiState.errorMessage)
+            }
+        }
+
         Scaffold(
             modifier = modifier,
             topBar = {
@@ -111,25 +122,39 @@ private fun Content(
                     LoadingIndicator(Modifier.align(Alignment.Center))
                 }
 
-                uiState.errorMessage != null -> Box(modifier) {
+                uiState.criticalError != null -> Box(modifier) {
                     Text(
                         modifier = Modifier.align(Alignment.Center),
-                        text = uiState.errorMessage,
+                        text = uiState.criticalError,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.error
                     )
                 }
-
-                uiState.editQuestion != null -> EditGamePackageQuestion(
-                    question = uiState.editQuestion,
-                    modifier = modifier
-                )
 
                 else -> EditGamePackageContent(
                     gamePackage = uiState.gamePackage,
                     eventSink = eventSink,
                     modifier = modifier
                 )
+            }
+
+            when (val dialog = uiState.dialog) {
+                is EditGamePackageDialog.EditRound -> EditRoundDialog(
+                    round = dialog.round,
+                    onSave = { eventSink(EditGamePackageUiEvent.UpdateRound(it)) },
+                    onDismissRequest = { eventSink(EditGamePackageUiEvent.CloseDialog) }
+                )
+                is EditGamePackageDialog.EditCategory -> EditCategoryDialog(
+                    category = dialog.category,
+                    onSave = { eventSink(EditGamePackageUiEvent.UpdateCategory(it)) },
+                    onDismissRequest = { eventSink(EditGamePackageUiEvent.CloseDialog) }
+                )
+                is EditGamePackageDialog.EditQuestion -> EditGamePackageQuestionDialog(
+                    question = dialog.question,
+                    onSave = { eventSink(EditGamePackageUiEvent.UpdateQuestion(it)) },
+                    onDismissRequest = { eventSink(EditGamePackageUiEvent.CloseDialog) }
+                )
+                null -> {  }
             }
         }
     }
