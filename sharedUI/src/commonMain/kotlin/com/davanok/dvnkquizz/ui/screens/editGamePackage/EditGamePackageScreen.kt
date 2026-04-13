@@ -151,6 +151,9 @@ private fun Content(
                 )
                 is EditGamePackageDialog.EditQuestion -> EditGamePackageQuestionDialog(
                     question = dialog.question,
+                    questionMediaErrorMessage = dialog.mediaErrorMessage,
+                    openMediaSelector = {  },
+                    removeMedia = {  },
                     onSave = { eventSink(EditGamePackageUiEvent.UpdateQuestion(it)) },
                     onDismissRequest = { eventSink(EditGamePackageUiEvent.CloseDialog) }
                 )

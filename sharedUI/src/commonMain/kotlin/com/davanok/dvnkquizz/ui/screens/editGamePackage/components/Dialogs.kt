@@ -61,7 +61,7 @@ private fun EditDialog(
     onSave: (String) -> Unit,
     onDismissRequest: () -> Unit
 ) {
-    var newName by remember { mutableStateOf(oldName) }
+    var newName by remember(oldName) { mutableStateOf(oldName) }
 
     var textFieldError by remember { mutableStateOf(false) }
     val onDismiss = {

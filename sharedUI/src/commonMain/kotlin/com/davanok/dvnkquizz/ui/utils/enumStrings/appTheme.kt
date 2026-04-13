@@ -1,4 +1,4 @@
-package com.davanok.dvnkquizz.ui.utils
+package com.davanok.dvnkquizz.ui.utils.enumStrings
 
 import com.davanok.dvnkquizz.core.domain.enums.AppTheme
 import dvnkquizz.sharedui.generated.resources.Res

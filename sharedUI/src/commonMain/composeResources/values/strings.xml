@@ -101,4 +101,21 @@
     <string name="add_category_dialog_title">Add category</string>
 
     <string name="no_user_game_packages">You haven’t created packages yet</string>
+
+    <string name="question_type_normal">Normal</string>
+    <string name="question_type_cat_in_the_bag">Normal</string>
+    <string name="question_type_auction">Normal</string>
+    <string name="question_type_final">Normal</string>
+
+    <string name="question_text_label">Question</string>
+    <string name="question_answer_label">Answer</string>
+    <string name="question_price_label">Price</string>
+    <string name="question_type_label">Type</string>
+
+    <string name="question_no_media_selected_placeholder">Select media for question</string>
+    <string name="remove_question_media">Remove question media</string>
+    <string name="change_question_media">Change question media</string>
+
+    <string name="max_question_media_size">Media size cannot be bigger than %1$s</string>
+    <string name="filetype_not_supported">File type '%1$s' not supported. Allowed file types: %2$s</string>
 </resources>

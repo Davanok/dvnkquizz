@@ -5,6 +5,9 @@ import com.davanok.dvnkquizz.core.domain.entities.FullGamePackage
 import com.davanok.dvnkquizz.core.domain.entities.GameCategory
 import com.davanok.dvnkquizz.core.domain.entities.GameRound
 import com.davanok.dvnkquizz.core.domain.entities.Question
+import com.davanok.dvnkquizz.core.utils.AllowedExtensions
+import com.davanok.dvnkquizz.core.utils.AllowedMimeTypes
+import io.github.vinceglb.filekit.mimeType.MimeType
 import kotlin.uuid.Uuid
 
 @Immutable
@@ -32,6 +35,9 @@ sealed interface EditGamePackageUiEvent {
     data class UpdateRound(val round: GameRound): EditGamePackageUiEvent
     data class UpdateCategory(val category: GameCategory): EditGamePackageUiEvent
     data class UpdateQuestion(val question: Question): EditGamePackageUiEvent
+
+    data object OpenQuestionMediaSelector: EditGamePackageUiEvent
+    data object RemoveQuestionMedia: EditGamePackageUiEvent
 }
 
 sealed interface EditGamePackageDialogRequest {
@@ -51,11 +57,22 @@ sealed interface EditGamePackageDialog {
 
     data class EditCategory(val category: GameCategory): EditGamePackageDialog
 
-    data class EditQuestion(val question: Question): EditGamePackageDialog
+    data class EditQuestion(val question: Question, val mediaErrorMessage: String?): EditGamePackageDialog
 }
 
 object GamePackageLimits {
     const val TITLE_MAX_LENGTH = 50
     const val DESCRIPTION_MAX_LENGTH = 50
     const val DIFFICULTY_MAX_VALUE = 10
+
+    const val QUESTION_TEXT_MAX_LENGTH = 100
+    const val QUESTION_ANSWER_MAX_LENGTH = 100
+    const val QUESTION_MEDIA_MAX_SIZE = 200L * 1024 * 1024 // 200 Mib in bytes
+
+    val allowedMediaFileExtensions = with(AllowedExtensions) {
+        ImageExtensions + AudioExtensions + VideoExtensions
+    }
+    val allowedMediaFileMimeTypes = with(AllowedMimeTypes) {
+        ImageMimeTypes + AudioMimeTypes + VideoMimeTypes
+    }.map { MimeType.parse(it) }.toSet()
 }

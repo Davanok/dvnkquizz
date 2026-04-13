@@ -50,8 +50,8 @@ import coil3.compose.AsyncImage
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
 import com.davanok.dvnkquizz.core.domain.enums.AppTheme
 import com.davanok.dvnkquizz.ui.screens.packagePicker.PackagePicker
-import com.davanok.dvnkquizz.ui.utils.drawableRes
-import com.davanok.dvnkquizz.ui.utils.titleRes
+import com.davanok.dvnkquizz.ui.utils.enumStrings.drawableRes
+import com.davanok.dvnkquizz.ui.utils.enumStrings.titleRes
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.app_name
