@@ -69,22 +69,13 @@ class EditGamePackageViewModel(
 
         val result = repository.getGamePackage(packageId)
 
+        _gamePackage.update {
+            result.getOrElse { FullGamePackage.Empty }
+        }
         _uiState.update { state ->
-            result.fold(
-                onSuccess = { gamePackage ->
-                    state.copy(
-                        isLoading = false,
-                        criticalError = null,
-                        gamePackage = gamePackage
-                    )
-                },
-                onFailure = { thr ->
-                    state.copy(
-                        isLoading = false,
-                        criticalError = thr.message,
-                        gamePackage = FullGamePackage.Empty
-                    )
-                }
+            state.copy(
+                isLoading = false,
+                criticalError = result.exceptionOrNull()?.message
             )
         }
     }
@@ -110,7 +101,7 @@ class EditGamePackageViewModel(
                 }
 
                 is EditGamePackageUiEvent.SetDifficulty -> {
-                    if (event.difficulty <= GamePackageLimits.DIFFICULTY_MAX_VALUE)
+                    if (event.difficulty in GamePackageLimits.DIFFICULTY_MIN_VALUE..GamePackageLimits.DIFFICULTY_MAX_VALUE)
                         _gamePackage.update {
                             it.copy(difficulty = event.difficulty)
                         }

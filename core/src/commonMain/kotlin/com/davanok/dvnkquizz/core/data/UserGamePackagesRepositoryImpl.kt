@@ -72,16 +72,9 @@ class UserGamePackagesRepositoryImpl(
         logger.d { "get user game package: packageId=$packageId" }
 
         return runCatching {
-            val userId = checkNotNull(auth.currentUserId) { "User not authorized" }
-
             postgrest.from("game_packages")
                 .select(Columns.raw(FULL_GAME_PACKAGE_QUERY)) {
-                    filter {
-                        and {
-                            FullGamePackageDto::id eq packageId
-                            FullGamePackageDto::authorId eq userId
-                        }
-                    }
+                    filter { FullGamePackageDto::id eq packageId }
                 }.decodeSingleOrNull<FullGamePackageDto>()
                 .let { pkg ->
                     pkg?.toFullGamePackage { round ->
@@ -169,7 +162,7 @@ class UserGamePackagesRepositoryImpl(
         private const val GAME_PACKAGE_QUERY = "*, author:users(*)"
         private val FULL_GAME_PACKAGE_QUERY = """
             *, 
-            author:users(*)
+            author:users(*),
             rounds:rounds(
                 *,
                 categories:categories(

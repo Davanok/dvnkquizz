@@ -61,8 +61,9 @@ sealed interface EditGamePackageDialog {
 }
 
 object GamePackageLimits {
-    const val TITLE_MAX_LENGTH = 50
-    const val DESCRIPTION_MAX_LENGTH = 50
+    const val TITLE_MAX_LENGTH = 35
+    const val DESCRIPTION_MAX_LENGTH = 80
+    const val DIFFICULTY_MIN_VALUE = 1
     const val DIFFICULTY_MAX_VALUE = 10
 
     const val QUESTION_TEXT_MAX_LENGTH = 100

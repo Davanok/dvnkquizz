@@ -87,10 +87,7 @@
     <string name="package_description_text_field_label">Description</string>
 
     <string name="round_title">Round %1$d: %2$s</string>
-    <string name="add_round">Add round</string>
-    <string name="add_category_to_round">Add category to round</string>
     <string name="toggle_round_expand">Toggle round is expanded</string>
-    <string name="add_question_to_category">Add question to category</string>
 
     <string name="title_text_field_label">Title</string>
     <string name="title_cannot_be_empty">Title cannot be empty</string>
@@ -118,4 +115,11 @@
 
     <string name="max_question_media_size">Media size cannot be bigger than %1$s</string>
     <string name="filetype_not_supported">File type '%1$s' not supported. Allowed file types: %2$s</string>
+    <string name="no_categories_yet">No categories yet</string>
+
+    <string name="package_details">Package details</string>
+
+    <string name="add_round">Add round</string>
+    <string name="add_category">Add category</string>
+    <string name="add_question">Add question</string>
 </resources>

@@ -1,14 +1,14 @@
 package com.davanok.dvnkquizz.ui.screens.editGamePackage.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,18 +18,26 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -37,25 +45,28 @@ import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.
 import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component2
 import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component3
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.davanok.dvnkquizz.core.domain.entities.FullGameCategory
 import com.davanok.dvnkquizz.core.domain.entities.FullGamePackage
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.EditGamePackageDialogRequest
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.EditGamePackageUiEvent
+import com.davanok.dvnkquizz.ui.screens.editGamePackage.GamePackageLimits
 import dvnkquizz.sharedui.generated.resources.Res
-import dvnkquizz.sharedui.generated.resources.add_category_to_round
-import dvnkquizz.sharedui.generated.resources.add_question_to_category
+import dvnkquizz.sharedui.generated.resources.add_category
+import dvnkquizz.sharedui.generated.resources.add_question
 import dvnkquizz.sharedui.generated.resources.add_round
 import dvnkquizz.sharedui.generated.resources.ic_add
 import dvnkquizz.sharedui.generated.resources.ic_arrow_down
+import dvnkquizz.sharedui.generated.resources.no_categories_yet
 import dvnkquizz.sharedui.generated.resources.package_description_text_field_label
+import dvnkquizz.sharedui.generated.resources.package_details
+import dvnkquizz.sharedui.generated.resources.package_difficulty_text_field_label
 import dvnkquizz.sharedui.generated.resources.package_title_text_field_label
 import dvnkquizz.sharedui.generated.resources.round_title
-import dvnkquizz.sharedui.generated.resources.toggle_round_expand
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.uuid.Uuid
@@ -102,7 +113,6 @@ fun EditGamePackageContent(
         modifier = modifier
     )
 }
-
 @Composable
 private fun Content(
     gamePackage: FullGamePackage,
@@ -115,69 +125,75 @@ private fun Content(
     onQuestionClick: (questionId: Uuid) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val focusManager = LocalFocusManager.current
     val (title, difficulty, description) = remember { FocusRequester.createRefs() }
-
     val collapsedRounds = rememberSaveable { mutableStateSetOf<Uuid>() }
 
     LazyColumn(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        contentPadding = PaddingValues(16.dp), // Overall page padding
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // --- Package Info Section ---
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            OutlinedCard(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                OutlinedTextField(
-                    value = gamePackage.title,
-                    onValueChange = onTitleChanged,
-                    label = { Text(stringResource(Res.string.package_title_text_field_label)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(onNext = { difficulty.requestFocus() }),
-                    modifier = Modifier.weight(2 / 3f).focusRequester(title)
-                )
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = stringResource(Res.string.package_details),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = gamePackage.title,
+                            onValueChange = onTitleChanged,
+                            label = { Text(stringResource(Res.string.package_title_text_field_label)) },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { difficulty.requestFocus() }),
+                            modifier = Modifier.weight(3f).focusRequester(title),
+                            supportingText = textLengthLimitText(gamePackage.title.length, GamePackageLimits.TITLE_MAX_LENGTH)
+                        )
 
-                OutlinedTextField(
-                    value = gamePackage.difficulty.toString(),
-                    onValueChange = { it.toIntOrNull()?.let(onDifficultyChanged) },
-                    label = { Text(stringResource(Res.string.package_description_text_field_label)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Next
-                    ),
-                    keyboardActions = KeyboardActions(onNext = { description.requestFocus() }),
-                    modifier = Modifier.weight(1 / 3f).focusRequester(difficulty)
-                )
+                        DifficultySelector(
+                            value = gamePackage.difficulty,
+                            onValueChange = onDifficultyChanged,
+                            label = { Text(stringResource(Res.string.package_difficulty_text_field_label)) },
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { description.requestFocus() }),
+                            modifier = Modifier.weight(1f).focusRequester(difficulty)
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = gamePackage.description,
+                        onValueChange = onDescriptionChanged,
+                        label = { Text(stringResource(Res.string.package_description_text_field_label)) },
+                        modifier = Modifier.fillMaxWidth().focusRequester(description),
+                        supportingText = textLengthLimitText(gamePackage.description.length, GamePackageLimits.DESCRIPTION_MAX_LENGTH)
+                    )
+                }
             }
         }
-        item {
-            OutlinedTextField(
-                value = gamePackage.description,
-                onValueChange = onDescriptionChanged,
-                label = { Text(stringResource(Res.string.package_description_text_field_label)) },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                modifier = Modifier.fillMaxWidth().focusRequester(description)
-            )
-        }
 
+        // --- Rounds Section ---
         items(
             items = gamePackage.rounds,
             key = { it.id }
         ) { round ->
             val isExpanded = round.id !in collapsedRounds
 
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceContainer,
-                shape = MaterialTheme.shapes.large
+            OutlinedCard(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
+                Column(Modifier.fillMaxWidth()) {
                     RoundHeader(
                         roundOrdinal = round.ordinal,
                         roundTitle = round.name,
@@ -186,43 +202,62 @@ private fun Content(
                             if (expand) collapsedRounds.remove(round.id)
                             else collapsedRounds.add(round.id)
                         },
-                        onAddCategoryClick = { onAddCategoryToRound(round.id) },
-                        modifier = Modifier.fillMaxWidth()
+                        onAddCategoryClick = { onAddCategoryToRound(round.id) }
                     )
 
-                    round.categories.forEach { category ->
-                        HorizontalDivider()
+                    AnimatedVisibility(isExpanded) {
+                        Column(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp)
+                        ) {
+                            if (round.categories.isEmpty()) {
+                                Text(
+                                    text = stringResource(Res.string.no_categories_yet),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(16.dp).align(Alignment.CenterHorizontally),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
 
-                        CategoryListItem(
-                            category = category,
-                            onQuestionClick = onQuestionClick,
-                            onAddQuestionClick = { onAddQuestion(category.id) },
-                            modifier = Modifier.fillMaxWidth().animateItem()
-                        )
+                            round.categories.forEach { category ->
+                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+
+                                CategoryListItem(
+                                    category = category,
+                                    onQuestionClick = onQuestionClick,
+                                    onAddQuestionClick = { onAddQuestion(category.id) },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
 
+        // --- Footer Action ---
         item {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Button(
-                    onClick = onAddRound,
-                    modifier = Modifier.align(Alignment.Center)
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_add),
-                        contentDescription = null,
-                        modifier = Modifier.size(ButtonDefaults.IconSize)
-                    )
-                    Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                    Text(
-                        text = stringResource(Res.string.add_round),
-                        maxLines = 1
-                    )
-                }
+            Button(
+                onClick = onAddRound,
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(12.dp)
+            ) {
+                Icon(painterResource(Res.drawable.ic_add), null)
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(Res.string.add_round))
             }
         }
+    }
+}
+
+private fun textLengthLimitText(currentLength: Int, maxLength: Int): @Composable (() -> Unit)? {
+    if (currentLength < (maxLength * 2 / 3)) return null
+    return {
+        Text(
+            text = "$currentLength/$maxLength",
+            color = if (currentLength == maxLength) MaterialTheme.colorScheme.error else Color.Unspecified
+        )
     }
 }
 
@@ -233,33 +268,33 @@ private fun RoundHeader(
     isExpanded: Boolean,
     onExpandChanged: (Boolean) -> Unit,
     onAddCategoryClick: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(
-            onClick = { onExpandChanged(!isExpanded) }
-        ) {
-            val rotation by animateFloatAsState(if (isExpanded) 0f else -90f)
-            Icon(
-                painter = painterResource(Res.drawable.ic_arrow_down),
-                contentDescription = stringResource(Res.string.toggle_round_expand),
-                modifier = Modifier.graphicsLayer { rotationZ = rotation }
-            )
-        }
-
         Text(
             text = stringResource(Res.string.round_title, roundOrdinal, roundTitle),
-            maxLines = 1,
-            modifier = Modifier.weight(1f)
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 8.dp).weight(1f)
         )
 
         IconButton(onClick = onAddCategoryClick) {
             Icon(
                 painter = painterResource(Res.drawable.ic_add),
-                contentDescription = stringResource(Res.string.add_category_to_round)
+                contentDescription = stringResource(Res.string.add_category)
+            )
+        }
+
+        IconButton(onClick = { onExpandChanged(!isExpanded) }) {
+            val rotation by animateFloatAsState(if (isExpanded) 0f else 180f)
+            Icon(
+                painter = painterResource(Res.drawable.ic_arrow_down),
+                contentDescription = null,
+                modifier = Modifier.graphicsLayer { rotationZ = rotation }
             )
         }
     }
@@ -272,34 +307,88 @@ private fun CategoryListItem(
     onAddQuestionClick: () -> Unit,
     modifier: Modifier
 ) {
-    Column(modifier = modifier) {
-        Row {
+    Column(modifier = modifier.padding(vertical = 8.dp)) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Text(
                 text = category.name,
-                modifier = Modifier.weight(1f)
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.secondary
             )
-            IconButton(onClick = onAddQuestionClick) {
+            TextButton(onClick = onAddQuestionClick) {
                 Icon(
                     painter = painterResource(Res.drawable.ic_add),
-                    contentDescription = stringResource(Res.string.add_question_to_category)
+                    contentDescription = null,
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )
+                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                Text(
+                    text = stringResource(Res.string.add_question),
+                    style = MaterialTheme.typography.labelMedium
                 )
             }
         }
 
-        Spacer(Modifier.height(8.dp))
-
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(
-                items = category.questions,
-                key = { it.id }
-            ) { question ->
+            items(category.questions) { question ->
                 QuestionCard(
                     question = question,
-                    onClick = { onQuestionClick(question.id) }
+                    onClick = { onQuestionClick(question.id) },
+                    modifier = Modifier.width(180.dp)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DifficultySelector(
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    label: @Composable (() -> Unit)? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    modifier: Modifier = Modifier
+) {
+    val minValue = GamePackageLimits.DIFFICULTY_MIN_VALUE
+    val maxValue = GamePackageLimits.DIFFICULTY_MAX_VALUE
+
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = value.toString(),
+            onValueChange = {  },
+            readOnly = true,
+            singleLine = true,
+            label = label,
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            (minValue..maxValue).forEach {
+                DropdownMenuItem(
+                    text = { Text(text = it.toString()) },
+                    onClick = { onValueChange(it) }
                 )
             }
         }

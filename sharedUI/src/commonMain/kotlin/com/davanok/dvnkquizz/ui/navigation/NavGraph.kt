@@ -56,7 +56,8 @@ fun AppNavDisplay(
             entry<Route.EditUserGamePackage> { (packageId) ->
                 EditGamePackageScreen(
                     viewModel = assistedMetroViewModel<EditGamePackageViewModel, EditGamePackageViewModel.Factory>(key = packageId.toString()) { create(packageId) },
-                    navigateBack = back                )
+                    navigateBack = back
+                )
             }
         }
     )
