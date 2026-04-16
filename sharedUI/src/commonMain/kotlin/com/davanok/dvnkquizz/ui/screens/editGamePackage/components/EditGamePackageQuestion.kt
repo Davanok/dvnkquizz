@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -21,13 +23,16 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,8 +49,10 @@ import com.davanok.dvnkquizz.core.domain.entities.Question
 import com.davanok.dvnkquizz.core.domain.entities.QuestionMedia
 import com.davanok.dvnkquizz.core.domain.enums.MediaKind
 import com.davanok.dvnkquizz.core.domain.enums.QuestionType
+import com.davanok.dvnkquizz.ui.screens.editGamePackage.GamePackageLimits
 import com.davanok.dvnkquizz.ui.utils.enumStrings.stringRes
 import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.cancel
 import dvnkquizz.sharedui.generated.resources.change_question_media
 import dvnkquizz.sharedui.generated.resources.ic_delete
 import dvnkquizz.sharedui.generated.resources.ic_edit
@@ -57,6 +64,7 @@ import dvnkquizz.sharedui.generated.resources.question_price_label
 import dvnkquizz.sharedui.generated.resources.question_text_label
 import dvnkquizz.sharedui.generated.resources.question_type_label
 import dvnkquizz.sharedui.generated.resources.remove_question_media
+import dvnkquizz.sharedui.generated.resources.save
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -100,46 +108,105 @@ private fun Content(
     var price by remember { mutableIntStateOf(question.price) }
     var type by remember { mutableStateOf(question.type) }
 
-    Column(modifier = modifier.verticalScroll(rememberScrollState())) {
-        OutlinedTextField(
-            value = questionText,
-            onValueChange = { questionText = it },
-            label = { Text(stringResource(Res.string.question_text_label)) },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = answerText,
-            onValueChange = { answerText = it },
-            label = { Text(stringResource(Res.string.question_answer_label)) },
-            modifier = Modifier.fillMaxWidth()
-        )
+    val changed by remember {
+        derivedStateOf {
+            questionText != question.questionText ||
+                    answerText != question.answerText ||
+                    price != question.price ||
+                    type != question.type
+        }
+    }
 
-        MediaSelectorCard(
-            media = question.media,
-            errorMessage = questionMediaErrorMessage,
-            onChangeMedia = openMediaSelector,
-            onRemoveMedia = removeMedia,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Column(modifier) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
         ) {
             OutlinedTextField(
-                value = price.toString(),
-                onValueChange = { value ->
-                    value.toIntOrNull()
-                        ?.takeIf { it >= 0 }
-                        ?.let { price = it }
+                value = questionText,
+                onValueChange = { text ->
+                    if (text.length <= GamePackageLimits.QUESTION_TEXT_MAX_LENGTH)
+                        questionText = text
+                                },
+                label = { Text(stringResource(Res.string.question_text_label)) },
+                supportingText = textLengthLimitText(questionText.length, GamePackageLimits.QUESTION_TEXT_MAX_LENGTH),
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = answerText,
+                onValueChange = {  text ->
+                    if (text.length <= GamePackageLimits.QUESTION_ANSWER_MAX_LENGTH)
+                        answerText = text
+                                },
+                label = { Text(stringResource(Res.string.question_answer_label)) },
+                supportingText = textLengthLimitText(
+                    answerText.length,
+                    GamePackageLimits.QUESTION_ANSWER_MAX_LENGTH
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            MediaSelectorCard(
+                media = question.media,
+                errorMessage = questionMediaErrorMessage,
+                onChangeMedia = openMediaSelector,
+                onRemoveMedia = removeMedia,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = price.toString(),
+                    onValueChange = { value ->
+                        value.toIntOrNull()
+                            ?.takeIf { it in GamePackageLimits.QUESTION_PRICE_RANGE }
+                            ?.let { price = it }
+                    },
+                    label = { Text(stringResource(Res.string.question_price_label)) },
+                    modifier = Modifier.weight(1f)
+                )
+                QuestionTypeSelector(
+                    value = type,
+                    onValueChanged = { type = it }
+                )
+            }
+        }
+
+        HorizontalDivider()
+
+        FlowRow(
+            modifier = Modifier.align(Alignment.End),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            TextButton(
+                onClick = {
+                    if (changed) {
+                        val q = question.copy(
+                            questionText = questionText,
+                            answerText = answerText,
+                            price = price,
+                            type = type
+                        )
+                        onSave(q)
+                    }
                 },
-                label = { Text(stringResource(Res.string.question_price_label)) },
-                modifier = Modifier.weight(1f)
-            )
-            QuestionTypeSelector(
-                value = type,
-                onValueChanged = { type = it }
-            )
+                enabled = changed
+            ) {
+                Text(stringResource(Res.string.save))
+            }
+
+            TextButton(
+                onClick = onDismissRequest,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text(stringResource(Res.string.cancel))
+            }
         }
     }
 }

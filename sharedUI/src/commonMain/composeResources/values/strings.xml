@@ -93,6 +93,7 @@
     <string name="title_cannot_be_empty">Title cannot be empty</string>
     <string name="add">Add</string>
     <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
 
     <string name="add_round_dialog_title">Add round</string>
     <string name="add_category_dialog_title">Add category</string>

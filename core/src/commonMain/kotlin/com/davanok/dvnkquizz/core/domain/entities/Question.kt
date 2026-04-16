@@ -32,6 +32,7 @@ internal data class QuestionDto(
     }
     fun toDomain(mediaUrl: String, progress: Float): Question {
         check(mediaKind != MediaKind.NONE)
+        checkNotNull(this.mediaUrl)
 
         return Question(
             id = id,
@@ -41,6 +42,7 @@ internal data class QuestionDto(
             price = price,
             type = type,
             media = QuestionMedia(
+                filename = this.mediaUrl,
                 url = mediaUrl,
                 kind = mediaKind,
                 progress = progress
@@ -60,6 +62,7 @@ data class Question(
 )
 
 data class QuestionMedia(
+    val filename: String,
     val url: String,
     val kind: MediaKind,
     val progress: Float

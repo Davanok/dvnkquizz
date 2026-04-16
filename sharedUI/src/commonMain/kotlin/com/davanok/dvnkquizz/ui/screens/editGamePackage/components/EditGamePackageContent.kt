@@ -41,11 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component1
-import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component2
-import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component3
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -251,16 +247,6 @@ private fun Content(
     }
 }
 
-private fun textLengthLimitText(currentLength: Int, maxLength: Int): @Composable (() -> Unit)? {
-    if (currentLength < (maxLength * 2 / 3)) return null
-    return {
-        Text(
-            text = "$currentLength/$maxLength",
-            color = if (currentLength == maxLength) MaterialTheme.colorScheme.error else Color.Unspecified
-        )
-    }
-}
-
 @Composable
 private fun RoundHeader(
     roundOrdinal: Int,
@@ -360,9 +346,6 @@ private fun DifficultySelector(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     modifier: Modifier = Modifier
 ) {
-    val minValue = GamePackageLimits.DIFFICULTY_MIN_VALUE
-    val maxValue = GamePackageLimits.DIFFICULTY_MAX_VALUE
-
     var expanded by remember { mutableStateOf(false) }
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -385,7 +368,7 @@ private fun DifficultySelector(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            (minValue..maxValue).forEach {
+            GamePackageLimits.DIFFICULTY_RANGE.forEach {
                 DropdownMenuItem(
                     text = { Text(text = it.toString()) },
                     onClick = { onValueChange(it) }

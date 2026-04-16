@@ -98,7 +98,7 @@ private fun EditDialog(
             )
         },
         confirmButton = {
-            val buttonEnabled by remember(oldName, newName) {
+            val buttonEnabled by remember {
                 derivedStateOf { newName.isNotBlank() && newName != oldName }
             }
             TextButton(

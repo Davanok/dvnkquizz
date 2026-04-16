@@ -3,7 +3,9 @@ package com.davanok.dvnkquizz.ui.screens.editGamePackage
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
+import com.davanok.dvnkquizz.core.domain.entities.FullGameCategory
 import com.davanok.dvnkquizz.core.domain.entities.FullGamePackage
+import com.davanok.dvnkquizz.core.domain.entities.FullGameRound
 import com.davanok.dvnkquizz.core.domain.entities.GameCategory
 import com.davanok.dvnkquizz.core.domain.entities.GameRound
 import com.davanok.dvnkquizz.core.domain.entities.Question
@@ -29,6 +31,7 @@ import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.mimeType
 import io.github.vinceglb.filekit.readBytes
 import io.github.vinceglb.filekit.size
+import io.github.vinceglb.filekit.withScopedAccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -101,7 +104,7 @@ class EditGamePackageViewModel(
                 }
 
                 is EditGamePackageUiEvent.SetDifficulty -> {
-                    if (event.difficulty in GamePackageLimits.DIFFICULTY_MIN_VALUE..GamePackageLimits.DIFFICULTY_MAX_VALUE)
+                    if (event.difficulty in GamePackageLimits.DIFFICULTY_RANGE)
                         _gamePackage.update {
                             it.copy(difficulty = event.difficulty)
                         }
@@ -115,7 +118,7 @@ class EditGamePackageViewModel(
                 is EditGamePackageUiEvent.UpdateQuestion -> TODO()
 
                 EditGamePackageUiEvent.OpenQuestionMediaSelector -> openMediaSelector()
-                EditGamePackageUiEvent.RemoveQuestionMedia -> TODO()
+                EditGamePackageUiEvent.RemoveQuestionMedia -> deleteQuestionMedia()
             }
         }.onFailure { thr ->
             Logger.e(thr) { "failed to process uiEvent $event" }
@@ -200,31 +203,141 @@ class EditGamePackageViewModel(
         return null
     }
 
-    private fun openMediaSelector() = viewModelScope.launch {
-        val file = FileKit.openFilePicker(
-            type = FileKitType.File(GamePackageLimits.allowedMediaFileExtensions)
-        ) ?: return@launch
+    private inline fun updateGamePackageQuestion(questionId: Uuid, block: (Question) -> Question) = runCatching {
+        val updatedGamePackage = FullGamePackageUtils.updateQuestion(
+            _gamePackage.value,
+            questionId,
+            block
+        )
+        _gamePackage.value = updatedGamePackage
+    }.onFailure { thr ->
+        _uiState.update {
+            it.copy(
+                errorMessage = thr.message
+            )
+        }
+    }
+    private inline fun updateGamePackageCategory(categoryId: Uuid, block: (FullGameCategory) -> FullGameCategory) = runCatching {
+        val updatedGamePackage = FullGamePackageUtils.updateCategory(
+            _gamePackage.value,
+            categoryId,
+            block
+        )
+        _gamePackage.value = updatedGamePackage
+    }.onFailure { thr ->
+        _uiState.update {
+            it.copy(
+                errorMessage = thr.message
+            )
+        }
+    }
+    private inline fun updateGamePackageRound(roundId: Uuid, block: (FullGameRound) -> FullGameRound) = runCatching {
+        val updatedGamePackage = FullGamePackageUtils.updateRound(
+            _gamePackage.value,
+            roundId,
+            block
+        )
+        _gamePackage.value = updatedGamePackage
+    }.onFailure { thr ->
+        _uiState.update {
+            it.copy(
+                errorMessage = thr.message
+            )
+        }
+    }
 
-        val errorMessage = validateMedia(file)
-        if (errorMessage != null) {
-            _uiState.update { it.copy(errorMessage = errorMessage) }
+    private fun openMediaSelector() {
+        val dialog = uiState.value.dialog
+        if (dialog !is EditGamePackageDialog.EditQuestion) return
+        val question = dialog.question
 
-            return@launch
+        viewModelScope.launch {
+            val file = FileKit.openFilePicker(
+                type = FileKitType.File(GamePackageLimits.allowedMediaFileExtensions)
+            ) ?: return@launch
+
+            file.withScopedAccess {
+                val errorMessage = validateMedia(file)
+                if (errorMessage != null) {
+                    _uiState.update { it.copy(errorMessage = errorMessage) }
+
+                    return@launch
+                }
+
+                repository.uploadQuestionMedia(
+                    packageId = packageId,
+                    bytes = file.readBytes(),
+                    mimeType = file.mimeType().toString(),
+                ).collect { uploadResult ->
+                    uploadResult.fold(
+                        onFailure = { thr ->
+                            _uiState.update { it.copy(errorMessage = thr.message) }
+                        },
+                        onSuccess = { media ->
+                            val currentDialog = uiState.value.dialog
+                            if (currentDialog is EditGamePackageDialog.EditQuestion) {
+                                _uiState.update {
+                                    it.copy(
+                                        dialog = currentDialog.copy(question = currentDialog.question.copy(media = media))
+                                    )
+                                }
+                            }
+
+                            if (media.progress >= 1f)
+                                updateGamePackageQuestion(question.id) {
+                                    it.copy(media = media)
+                                }
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    private fun deleteQuestionMedia() {
+        val dialog = uiState.value.dialog
+        if (dialog !is EditGamePackageDialog.EditQuestion) return
+
+        val media = dialog.question.media ?: return
+
+        _uiState.update {
+            it.copy(
+                dialog = dialog.copy(
+                    question = dialog.question.copy(
+                        media = media.copy(
+                            progress = 0.5f
+                        )
+                    )
+                )
+            )
         }
 
-        repository.uploadQuestionMedia(
-            packageId = packageId,
-            bytes = file.readBytes(),
-            mimeType = file.mimeType().toString(),
-        ).collect { uploadResult ->
-            val currentDialog = uiState.value.dialog
+        viewModelScope.launch {
+            repository.deleteQuestionMedia(dialog.question.id).fold(
+                onSuccess = {
+                    val currentDialog = uiState.value.dialog
 
-            uploadResult.fold(
+                    if (currentDialog is EditGamePackageDialog.EditQuestion && currentDialog.question.media?.url == media.url) {
+                        _uiState.update {
+                            it.copy(
+                                dialog = currentDialog.copy(
+                                    question = currentDialog.question.copy(
+                                        media = null
+                                    )
+                                )
+                            )
+                        }
+                    }
+                    updateGamePackageQuestion(dialog.question.id) {
+                        it.copy(media = null)
+                    }
+                },
                 onFailure = { thr ->
                     _uiState.update { it.copy(errorMessage = thr.message) }
-                },
-                onSuccess = { media ->
-                    if (currentDialog is EditGamePackageDialog.EditQuestion) {
+
+                    val currentDialog = uiState.value.dialog
+
+                    if (currentDialog is EditGamePackageDialog.EditQuestion && currentDialog.question.media?.url == media.url) {
                         _uiState.update {
                             it.copy(
                                 dialog = currentDialog.copy(

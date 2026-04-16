@@ -120,8 +120,7 @@ class UserGamePackagesRepositoryImpl(
                     .insert(gamePackage)
             }
         }.onFailure { thr ->
-            emit(Result.failure(thr))
-            return@flow
+            throw thr
         }
 
         storage.from("questions")
@@ -129,17 +128,50 @@ class UserGamePackagesRepositoryImpl(
             .map { status ->
                 when (status) {
                     is UploadStatus.Progress -> QuestionMedia(
+                        filename = path,
                         url = path,
                         kind = mediaKind,
                         progress = status.totalBytesSend.toFloat() / status.contentLength
                     )
                     is UploadStatus.Success -> QuestionMedia(
+                        filename = path,
                         url = path,
                         kind = mediaKind,
                         progress = 1f
                     )
                 }
-            }.toResultFLow().collect(this)
+            }.collect(this)
+
+        val mediaUrl = storage.from("questions")
+            .createSignedUrl(path, MEDIA_URL_EXPIRE_DURATION)
+        emit(
+            QuestionMedia(
+                filename = path,
+                url = mediaUrl,
+                kind = mediaKind,
+                progress = 1f
+            )
+        )
+    }.toResultFLow()
+
+    override suspend fun deleteQuestionMedia(
+        questionId: Uuid
+    ): Result<Unit> = runCatching {
+        val question = postgrest
+            .from("questions")
+            .select {
+                filter { QuestionDto::id eq questionId }
+                single()
+            }
+            .decodeSingleOrNull<QuestionDto>()
+
+        checkNotNull(question) { "Question with id '$questionId' not found" }
+        checkNotNull(question.mediaUrl) { "Question with id '$questionId' have not media" }
+
+        storage.from("questions")
+            .delete(question.mediaUrl)
+    }.onFailure {
+        logger.e(it) { "failed to delete question media" }
     }
 
     override suspend fun updateGamePackage(gamePackage: FullGamePackage): Result<Unit> {
