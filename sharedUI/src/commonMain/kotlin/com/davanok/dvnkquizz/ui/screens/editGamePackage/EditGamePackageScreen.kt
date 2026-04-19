@@ -110,7 +110,7 @@ private fun Content(
                     },
                     isSaveInProgress = uiState.isSaveInProgress,
                     onSaveClick = { eventSink(EditGamePackageUiEvent.SaveDraft) },
-                    uploadProgress = uiState.uploadProgress,
+                    isUploadInProgress = uiState.isUploadInProgress,
                     onUploadClick = { eventSink(EditGamePackageUiEvent.UploadPackage) }
                 )
             }
@@ -170,7 +170,7 @@ private fun EditPackageTopBar(
     onBackClick: () -> Unit,
     isSaveInProgress: Boolean,
     onSaveClick: () -> Unit,
-    uploadProgress: Float?,
+    isUploadInProgress: Boolean,
     onUploadClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -200,8 +200,8 @@ private fun EditPackageTopBar(
                     )
                 }
 
-            if (uploadProgress != null)
-                LoadingIndicator(progress = { uploadProgress })
+            if (isUploadInProgress)
+                LoadingIndicator()
             else
                 IconButton(onClick = onUploadClick) {
                     Icon(

@@ -16,15 +16,12 @@ internal inline fun FullGameCategoryDto.toFullGameCategory(
     questions = questions.map(transformQuestion)
 )
 
-internal inline fun FullGameCategory.toFullGameCategoryDto(
-    roundId: Uuid,
-    transformQuestion: (Question) -> QuestionDto
-) = FullGameCategoryDto(
+internal fun FullGameCategory.toFullGameCategoryDto(roundId: Uuid) = FullGameCategoryDto(
     id = id,
     roundId = roundId,
     name = name,
     ordinal = ordinal,
-    questions = questions.map(transformQuestion)
+    questions = questions.map { it.toQuestionDto() }
 )
 
 fun FullGameCategory.toGameCategory() = GameCategory(

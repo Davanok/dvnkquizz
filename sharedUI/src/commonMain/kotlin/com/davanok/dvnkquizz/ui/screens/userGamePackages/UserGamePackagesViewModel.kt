@@ -7,6 +7,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -18,34 +19,37 @@ import kotlinx.coroutines.launch
 @ContributesIntoMap(AppScope::class)
 class UserGamePackagesViewModel(
     private val repository: UserGamePackagesRepository
-): ViewModel() {
+) : ViewModel() {
+
     private val _uiState = MutableStateFlow(UserGamePackagesScreenUiState())
     val uiState = _uiState.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            loadGamePackages()
-        }
+        loadData()
     }
 
-    private suspend fun loadGamePackages() {
-        _uiState.update { it.copy(isLoading = true) }
+    fun loadData() {
+        viewModelScope.launch {
+            val draftsDeferred = async { repository.getAllPackageDrafts() }
+            val externalDeferred = async { repository.getUserGamePackages() }
 
-        repository.getUserGamePackages().let { result ->
+            val draftsResult = draftsDeferred.await()
+            val externalResult = externalDeferred.await()
+
             _uiState.update { state ->
-                result.fold(
-                    onSuccess = { packages ->
-                        state.copy(
-                            isLoading = false,
-                            gamePackages = packages
-                        )
-                    },
-                    onFailure = { thr ->
-                        state.copy(
-                            isLoading = false,
-                            errorMessage = thr.message
-                        )
-                    }
+                val externalValue = externalResult.getOrElse { emptyList() }
+                val externalException = externalResult.exceptionOrNull()
+
+                val draftValue = draftsResult.getOrElse { emptyList() }
+                val draftException = draftsResult.exceptionOrNull()
+
+                state.copy(
+                    isExternalLoading = false,
+                    isDraftsLoading = false,
+                    externalError = externalException?.message,
+                    draftsError = draftException?.message,
+                    external = externalValue,
+                    drafts = draftValue
                 )
             }
         }

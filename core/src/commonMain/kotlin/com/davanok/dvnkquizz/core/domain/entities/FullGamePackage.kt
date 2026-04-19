@@ -22,6 +22,7 @@ internal data class FullGamePackageDto(
     val rounds: List<FullGameRoundDto>
 )
 
+
 data class FullGamePackage(
     val id: Uuid,
     val createdAt: Instant? = null,

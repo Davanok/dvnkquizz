@@ -123,4 +123,17 @@
     <string name="add_round">Add round</string>
     <string name="add_category">Add category</string>
     <string name="add_question">Add question</string>
+
+    <string name="drafts_section_title">Drafts</string>
+    <string name="external_section_title">Pushed</string>
+
+    <string name="reload_packages">Reload packages</string>
+
+    <string name="error_failed_to_process_event">Failed to process UI event: %1$s</string>
+    <string name="error_failed_to_update_question">Failed to update question</string>
+    <string name="error_failed_to_update_category">Failed to update category</string>
+    <string name="error_failed_to_update_round">Failed to update round</string>
+    <string name="error_upload_failed">Upload failed</string>
+    <string name="error_delete_media_failed">Failed to delete media</string>
+    <string name="error_package_upload_failed">Failed to upload game package</string>
 </resources>

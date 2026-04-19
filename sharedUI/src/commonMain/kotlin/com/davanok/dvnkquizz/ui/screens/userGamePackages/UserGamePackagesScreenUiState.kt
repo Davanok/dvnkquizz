@@ -5,7 +5,10 @@ import com.davanok.dvnkquizz.core.domain.entities.GamePackage
 
 @Immutable
 data class UserGamePackagesScreenUiState(
-    val isLoading: Boolean = true,
-    val errorMessage: String? = null,
-    val gamePackages: List<GamePackage> = emptyList()
+    val isExternalLoading: Boolean = true,
+    val external: List<GamePackage> = emptyList(),
+    val externalError: String? = null,
+    val isDraftsLoading: Boolean = true,
+    val drafts: List<GamePackage> = emptyList(),
+    val draftsError: String? = null
 )

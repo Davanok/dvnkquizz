@@ -2,11 +2,12 @@ package com.davanok.dvnkquizz.core.domain.mappers
 
 import com.davanok.dvnkquizz.core.domain.entities.FullGamePackage
 import com.davanok.dvnkquizz.core.domain.entities.FullGamePackageDto
-import com.davanok.dvnkquizz.core.domain.entities.FullGameRound
-import com.davanok.dvnkquizz.core.domain.entities.FullGameRoundDto
+import com.davanok.dvnkquizz.core.domain.entities.GamePackage
+import com.davanok.dvnkquizz.core.domain.entities.Question
+import com.davanok.dvnkquizz.core.domain.entities.QuestionDto
 
 internal inline fun FullGamePackageDto.toFullGamePackage(
-    transformRound: (FullGameRoundDto) -> FullGameRound
+    transformQuestion: (QuestionDto) -> Question
 ) = FullGamePackage(
     id = id,
     createdAt = createdAt,
@@ -16,12 +17,10 @@ internal inline fun FullGamePackageDto.toFullGamePackage(
     difficulty = difficulty,
     isPublic = isPublic,
     author = author,
-    rounds = rounds.map(transformRound)
+    rounds = rounds.map { it.toFullGameRound(transformQuestion) }
 )
 
-internal inline fun FullGamePackage.toFullGamePackageDto(
-    transformRound: (FullGameRound) -> FullGameRoundDto
-) = FullGamePackageDto(
+internal fun FullGamePackage.toFullGamePackageDto() = FullGamePackageDto(
     id = id,
     createdAt = createdAt,
     title = title,
@@ -30,5 +29,16 @@ internal inline fun FullGamePackage.toFullGamePackageDto(
     difficulty = difficulty,
     isPublic = isPublic,
     author = author,
-    rounds = rounds.map(transformRound)
+    rounds = rounds.map { it.toFullGameRoundDto(id) }
+)
+
+internal fun FullGamePackageDto.toGamePackage() = GamePackage(
+    id = id,
+    createdAt = createdAt,
+    title = title,
+    description = description,
+    authorId = authorId,
+    difficulty = difficulty,
+    isPublic = isPublic,
+    author = author
 )

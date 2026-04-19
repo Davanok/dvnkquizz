@@ -14,4 +14,8 @@ interface UserGamePackagesRepository {
     suspend fun deleteQuestionMedia(questionId: Uuid): Result<Unit>
 
     suspend fun updateGamePackage(gamePackage: FullGamePackage): Result<Unit>
+
+    suspend fun updatePackageDraft(draft: FullGamePackage): Result<Unit>
+    suspend fun getPackageDraft(draftId: Uuid): Result<FullGamePackage?>
+    suspend fun getAllPackageDrafts(): Result<List<GamePackage>>
 }

@@ -371,7 +371,10 @@ private fun DifficultySelector(
             GamePackageLimits.DIFFICULTY_RANGE.forEach {
                 DropdownMenuItem(
                     text = { Text(text = it.toString()) },
-                    onClick = { onValueChange(it) }
+                    onClick = {
+                        expanded = false
+                        onValueChange(it)
+                    }
                 )
             }
         }

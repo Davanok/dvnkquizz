@@ -18,7 +18,8 @@ data class EditGamePackageUiState(
     val gamePackage: FullGamePackage = FullGamePackage.Empty,
     val dialog: EditGamePackageDialog? = null,
     val isSaveInProgress: Boolean = false,
-    val uploadProgress: Float? = null
+    val isUploaded: Boolean = false,
+    val isUploadInProgress: Boolean = false
 )
 
 sealed interface EditGamePackageUiEvent {
@@ -77,10 +78,6 @@ object GamePackageLimits {
 
     const val QUESTION_MEDIA_MAX_SIZE = 200L * 1024 * 1024 // 200 Mib in bytes
 
-    val allowedMediaFileExtensions = with(AllowedExtensions) {
-        ImageExtensions + AudioExtensions + VideoExtensions
-    }
-    val allowedMediaFileMimeTypes = with(AllowedMimeTypes) {
-        ImageMimeTypes + AudioMimeTypes + VideoMimeTypes
-    }.map { MimeType.parse(it) }.toSet()
+    val allowedMediaFileExtensions = AllowedExtensions.All
+    val allowedMediaFileMimeTypes = AllowedMimeTypes.All.map { MimeType.parse(it) }.toSet()
 }

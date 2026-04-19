@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Card
@@ -41,9 +42,13 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.back
 import dvnkquizz.sharedui.generated.resources.create_new_game_package
+import dvnkquizz.sharedui.generated.resources.drafts_section_title
+import dvnkquizz.sharedui.generated.resources.external_section_title
 import dvnkquizz.sharedui.generated.resources.ic_add
 import dvnkquizz.sharedui.generated.resources.ic_arrow_back
+import dvnkquizz.sharedui.generated.resources.ic_sync
 import dvnkquizz.sharedui.generated.resources.no_user_game_packages
+import dvnkquizz.sharedui.generated.resources.reload_packages
 import dvnkquizz.sharedui.generated.resources.user_game_packages_list_title
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
@@ -72,6 +77,7 @@ fun UserGamePackagesScreen(
     Content(
         uiState = uiState,
         onBackClick = onBackClick,
+        onReloadPackagesClick = viewModel::loadData,
         onPackageClick = { navigateToPackage(it.id) },
         onNewPackageClick = navigateToNewPackage,
         modifier = Modifier.fillMaxSize()
@@ -83,10 +89,13 @@ fun UserGamePackagesScreen(
 private fun Content(
     uiState: UserGamePackagesScreenUiState,
     onBackClick: () -> Unit,
+    onReloadPackagesClick: () -> Unit,
     onNewPackageClick: () -> Unit,
     onPackageClick: (GamePackage) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val hasAnyPackages = uiState.drafts.isNotEmpty() || uiState.external.isNotEmpty()
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -99,12 +108,19 @@ private fun Content(
                             contentDescription = stringResource(Res.string.back)
                         )
                     }
+                },
+                actions = {
+                    IconButton(onClick = onReloadPackagesClick) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_sync),
+                            contentDescription = stringResource(Res.string.reload_packages)
+                        )
+                    }
                 }
             )
         },
         floatingActionButton = {
-            // Hide FAB if list is empty to avoid two "Add" buttons competing on screen
-            if (uiState.gamePackages.isNotEmpty()) {
+            if (hasAnyPackages) {
                 FloatingActionButton(onClick = onNewPackageClick) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_add),
@@ -118,22 +134,23 @@ private fun Content(
             .padding(paddingValues)
             .fillMaxSize()
 
+        val isCompletelyEmpty = !hasAnyPackages
+                && !uiState.isDraftsLoading
+                && !uiState.isExternalLoading
+                && uiState.externalError == null
+
+        val isInitialLoading = !hasAnyPackages
+                && uiState.isDraftsLoading
+                && uiState.isExternalLoading
+
         when {
-            uiState.isLoading -> Box(contentModifier) {
+            // 1. Both lists are loading for the first time
+            isInitialLoading -> Box(contentModifier) {
                 LoadingIndicator(modifier = Modifier.align(Alignment.Center))
             }
 
-            uiState.errorMessage != null -> Box(contentModifier.padding(24.dp)) {
-                Text(
-                    text = uiState.errorMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-
-            uiState.gamePackages.isEmpty() -> Column(
+            // 2. Both lists are entirely empty (no errors, no loading)
+            isCompletelyEmpty -> Column(
                 modifier = contentModifier.padding(24.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -156,8 +173,9 @@ private fun Content(
                 }
             }
 
-            else -> PackagesList(
-                gamePackages = uiState.gamePackages,
+            // 3. Display the grid with sections for Drafts and External packages
+            else -> PackagesGridList(
+                uiState = uiState,
                 onPackageClick = onPackageClick,
                 modifier = contentModifier
             )
@@ -165,30 +183,98 @@ private fun Content(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun PackagesList(
-    gamePackages: List<GamePackage>,
+private fun PackagesGridList(
+    uiState: UserGamePackagesScreenUiState,
     onPackageClick: (GamePackage) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
         modifier = modifier,
-        columns = GridCells.Adaptive(160.dp), // Slightly wider to better fit internal padding and text
+        columns = GridCells.Adaptive(160.dp),
         contentPadding = PaddingValues(16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(
-            items = gamePackages,
-            key = { it.id }
-        ) { pkg ->
-            PackageItem(
-                gamePackage = pkg,
-                onClick = { onPackageClick(pkg) },
-                modifier = Modifier.fillMaxWidth()
-            )
+        // --- Drafts Section ---
+        if (uiState.drafts.isNotEmpty() || uiState.isDraftsLoading) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                SectionHeader(text = stringResource(Res.string.drafts_section_title)) // Note: You'll need to define this string resource
+            }
+
+            if (uiState.isDraftsLoading && uiState.drafts.isEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(32.dp)) {
+                        LoadingIndicator(modifier = Modifier.align(Alignment.Center))
+                    }
+                }
+            } else {
+                items(
+                    items = uiState.drafts,
+                    key = { "draft:${it.id}" } // Prefixed to avoid ID collisions with external list
+                ) { pkg ->
+                    PackageItem(
+                        gamePackage = pkg,
+                        onClick = { onPackageClick(pkg) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+
+        // --- External Section ---
+        if (uiState.external.isNotEmpty() || uiState.isExternalLoading || uiState.externalError != null) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                SectionHeader(
+                    text = stringResource(Res.string.external_section_title), // Note: You'll need to define this string resource
+                    modifier = Modifier.padding(top = if (uiState.drafts.isNotEmpty()) 16.dp else 0.dp)
+                )
+            }
+
+            if (uiState.isExternalLoading && uiState.external.isEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(32.dp)) {
+                        LoadingIndicator(modifier = Modifier.align(Alignment.Center))
+                    }
+                }
+            } else if (uiState.externalError != null && uiState.external.isEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Text(
+                        text = uiState.externalError,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.fillMaxWidth().padding(24.dp)
+                    )
+                }
+            } else {
+                items(
+                    items = uiState.external,
+                    key = { "ext:${it.id}" } // Prefixed to avoid ID collisions with drafts list
+                ) { pkg ->
+                    PackageItem(
+                        gamePackage = pkg,
+                        onClick = { onPackageClick(pkg) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun SectionHeader(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = modifier.padding(bottom = 4.dp, top = 8.dp)
+    )
 }
 
 @Composable
