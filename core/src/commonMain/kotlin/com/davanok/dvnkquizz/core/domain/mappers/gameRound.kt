@@ -1,5 +1,6 @@
 package com.davanok.dvnkquizz.core.domain.mappers
 
+import com.davanok.dvnkquizz.core.domain.entities.FullGameCategory
 import com.davanok.dvnkquizz.core.domain.entities.FullGameRound
 import com.davanok.dvnkquizz.core.domain.entities.FullGameRoundDto
 import com.davanok.dvnkquizz.core.domain.entities.GameRound
@@ -28,4 +29,10 @@ fun FullGameRound.toGameRound() = GameRound(
     id = id,
     name = name,
     ordinal = ordinal
+)
+fun GameRound.toFullGameRound(categories: List<FullGameCategory> = emptyList()) = FullGameRound(
+    id = id,
+    name = name,
+    ordinal = ordinal,
+    categories = categories
 )

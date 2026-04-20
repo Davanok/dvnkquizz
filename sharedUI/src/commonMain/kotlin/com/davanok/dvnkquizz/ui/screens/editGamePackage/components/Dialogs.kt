@@ -18,10 +18,10 @@ import androidx.compose.ui.text.input.ImeAction
 import com.davanok.dvnkquizz.core.domain.entities.GameCategory
 import com.davanok.dvnkquizz.core.domain.entities.GameRound
 import dvnkquizz.sharedui.generated.resources.Res
-import dvnkquizz.sharedui.generated.resources.add
 import dvnkquizz.sharedui.generated.resources.add_category_dialog_title
 import dvnkquizz.sharedui.generated.resources.add_round_dialog_title
 import dvnkquizz.sharedui.generated.resources.cancel
+import dvnkquizz.sharedui.generated.resources.save
 import dvnkquizz.sharedui.generated.resources.title_cannot_be_empty
 import dvnkquizz.sharedui.generated.resources.title_text_field_label
 import org.jetbrains.compose.resources.stringResource
@@ -105,7 +105,7 @@ private fun EditDialog(
                 onClick = onDismiss,
                 enabled = buttonEnabled
             ) {
-                Text(stringResource(Res.string.add))
+                Text(stringResource(Res.string.save))
             }
         },
         dismissButton = {

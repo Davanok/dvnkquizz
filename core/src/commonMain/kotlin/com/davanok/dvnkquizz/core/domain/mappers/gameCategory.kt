@@ -21,11 +21,18 @@ internal fun FullGameCategory.toFullGameCategoryDto(roundId: Uuid) = FullGameCat
     roundId = roundId,
     name = name,
     ordinal = ordinal,
-    questions = questions.map { it.toQuestionDto() }
+    questions = questions.map { it.toQuestionDto(id) }
 )
 
 fun FullGameCategory.toGameCategory() = GameCategory(
     id = id,
     name = name,
     ordinal = ordinal
+)
+
+fun GameCategory.toFullGameCategory(questions: List<Question> = emptyList()) = FullGameCategory(
+    id = id,
+    name = name,
+    ordinal = ordinal,
+    questions = questions
 )

@@ -5,10 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.davanok.dvnkquizz.core.domain.entities.FullGameCategory
 import com.davanok.dvnkquizz.core.domain.entities.FullGamePackage
 import com.davanok.dvnkquizz.core.domain.entities.FullGameRound
-import com.davanok.dvnkquizz.core.domain.entities.GameCategory
-import com.davanok.dvnkquizz.core.domain.entities.GameRound
 import com.davanok.dvnkquizz.core.domain.entities.Question
-import com.davanok.dvnkquizz.core.domain.enums.QuestionType
+import com.davanok.dvnkquizz.core.domain.mappers.toFullGameCategory
+import com.davanok.dvnkquizz.core.domain.mappers.toFullGameRound
 import com.davanok.dvnkquizz.core.domain.mappers.toGameCategory
 import com.davanok.dvnkquizz.core.domain.mappers.toGameRound
 import com.davanok.dvnkquizz.core.domain.repositories.UserGamePackagesRepository
@@ -116,6 +115,10 @@ class EditGamePackageViewModel(
                         event.question
                     }
 
+                    is EditGamePackageUiEvent.AddRound -> addGamePackageRound(event.round.toFullGameRound())
+                    is EditGamePackageUiEvent.AddCategory -> addGamePackageCategory(event.roundId, event.category.toFullGameCategory())
+                    is EditGamePackageUiEvent.AddQuestion -> addGamePackageQuestion(event.categoryId, event.question)
+
                     EditGamePackageUiEvent.OpenQuestionMediaSelector -> openMediaSelector()
                     EditGamePackageUiEvent.RemoveQuestionMedia -> deleteQuestionMedia()
                 }
@@ -179,24 +182,17 @@ class EditGamePackageViewModel(
     }
 
     private fun showDialog(dialogRequest: EditGamePackageDialogRequest) {
-        val currentPackage = _gamePackage.value
-
         val dialog = when (dialogRequest) {
-            EditGamePackageDialogRequest.AddRound -> {
-                val ordinal = currentPackage.rounds.maxOfOrNull { it.ordinal }?.plus(1) ?: 0
-                EditGamePackageDialog.EditRound(GameRound(ordinal = ordinal))
-            }
+            EditGamePackageDialogRequest.AddRound ->
+                EditGamePackageDialog.AddRound
 
             is EditGamePackageDialogRequest.EditRound -> {
                 val round = getRoundOrNull(dialogRequest.roundId) ?: return
                 EditGamePackageDialog.EditRound(round.toGameRound())
             }
 
-            is EditGamePackageDialogRequest.AddCategory -> {
-                val round = getRoundOrNull(dialogRequest.roundId) ?: return
-                val ordinal = round.categories.maxOfOrNull { it.ordinal }?.plus(1) ?: 0
-                EditGamePackageDialog.EditCategory(GameCategory(ordinal = ordinal))
-            }
+            is EditGamePackageDialogRequest.AddCategory ->
+                EditGamePackageDialog.AddCategory(dialogRequest.roundId)
 
             is EditGamePackageDialogRequest.EditCategory -> {
                 val category = getCategoryOrNull(dialogRequest.categoryId) ?: return
@@ -204,16 +200,7 @@ class EditGamePackageViewModel(
             }
 
             is EditGamePackageDialogRequest.AddQuestion -> {
-                val question = Question(
-                    id = Uuid.random(),
-                    categoryId = dialogRequest.categoryId,
-                    questionText = "",
-                    answerText = "",
-                    price = 0,
-                    type = QuestionType.NORMAL,
-                    media = null
-                )
-                EditGamePackageDialog.EditQuestion(question, null)
+                EditGamePackageDialog.AddQuestion(dialogRequest.categoryId, null)
             }
 
             is EditGamePackageDialogRequest.EditQuestion -> {
@@ -246,7 +233,6 @@ class EditGamePackageViewModel(
             getString(Res.string.error_failed_to_update_question)
         }
     }
-
     private fun updateGamePackageCategory(categoryId: Uuid, block: (FullGameCategory) -> FullGameCategory) = viewModelScope.launch {
         runCatching {
             _gamePackage.update { FullGamePackageUtils.updateCategory(it, categoryId, block) }
@@ -254,10 +240,31 @@ class EditGamePackageViewModel(
             getString(Res.string.error_failed_to_update_category)
         }
     }
-
     private fun updateGamePackageRound(roundId: Uuid, block: (FullGameRound) -> FullGameRound) = viewModelScope.launch {
         runCatching {
             _gamePackage.update { FullGamePackageUtils.updateRound(it, roundId, block) }
+        }.handleFailure {
+            getString(Res.string.error_failed_to_update_round)
+        }
+    }
+
+    private fun addGamePackageQuestion(categoryId: Uuid, question: Question) = viewModelScope.launch {
+        runCatching {
+            _gamePackage.update { FullGamePackageUtils.addQuestion(it, categoryId, question) }
+        }.handleFailure {
+            getString(Res.string.error_failed_to_update_question)
+        }
+    }
+    private fun addGamePackageCategory(roundId: Uuid, category: FullGameCategory) = viewModelScope.launch {
+        runCatching {
+            _gamePackage.update { FullGamePackageUtils.addCategory(it, roundId, category) }
+        }.handleFailure {
+            getString(Res.string.error_failed_to_update_category)
+        }
+    }
+    private fun addGamePackageRound(round: FullGameRound) = viewModelScope.launch {
+        runCatching {
+            _gamePackage.update { FullGamePackageUtils.addRound(it, round) }
         }.handleFailure {
             getString(Res.string.error_failed_to_update_round)
         }

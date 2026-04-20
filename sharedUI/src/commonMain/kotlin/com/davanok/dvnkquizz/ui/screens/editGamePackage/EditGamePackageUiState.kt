@@ -37,6 +37,10 @@ sealed interface EditGamePackageUiEvent {
     data class UpdateCategory(val category: GameCategory): EditGamePackageUiEvent
     data class UpdateQuestion(val question: Question): EditGamePackageUiEvent
 
+    data class AddRound(val round: GameRound) : EditGamePackageUiEvent
+    data class AddCategory(val roundId: Uuid, val category: GameCategory) : EditGamePackageUiEvent
+    data class AddQuestion(val categoryId: Uuid, val question: Question) : EditGamePackageUiEvent
+
     data object OpenQuestionMediaSelector: EditGamePackageUiEvent
     data object RemoveQuestionMedia: EditGamePackageUiEvent
 }
@@ -55,10 +59,12 @@ sealed interface EditGamePackageDialogRequest {
 @Immutable
 sealed interface EditGamePackageDialog {
     data class EditRound(val round: GameRound): EditGamePackageDialog
-
     data class EditCategory(val category: GameCategory): EditGamePackageDialog
-
     data class EditQuestion(val question: Question, val mediaErrorMessage: String?): EditGamePackageDialog
+
+    data object AddRound: EditGamePackageDialog
+    data class AddCategory(val roundId: Uuid): EditGamePackageDialog
+    data class AddQuestion(val categoryId: Uuid, val mediaErrorMessage: String?): EditGamePackageDialog
 }
 
 object GamePackageLimits {

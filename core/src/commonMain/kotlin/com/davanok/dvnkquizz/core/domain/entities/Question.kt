@@ -22,7 +22,6 @@ internal data class QuestionDto(
 
         return Question(
             id = id,
-            categoryId = categoryId,
             questionText = questionText,
             answerText = answerText,
             price = price,
@@ -36,7 +35,6 @@ internal data class QuestionDto(
 
         return Question(
             id = id,
-            categoryId = categoryId,
             questionText = questionText,
             answerText = answerText,
             price = price,
@@ -52,13 +50,12 @@ internal data class QuestionDto(
 }
 
 data class Question(
-    val id: Uuid,
-    val categoryId: Uuid,
-    val questionText: String,
-    val answerText: String,
-    val price: Int,
-    val type: QuestionType,
-    val media: QuestionMedia?
+    val id: Uuid = Uuid.random(),
+    val questionText: String = "",
+    val answerText: String = "",
+    val price: Int = 0,
+    val type: QuestionType = QuestionType.NORMAL,
+    val media: QuestionMedia? = null
 )
 
 data class QuestionMedia(

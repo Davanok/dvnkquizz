@@ -55,8 +55,11 @@ import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.add_category
 import dvnkquizz.sharedui.generated.resources.add_question
 import dvnkquizz.sharedui.generated.resources.add_round
+import dvnkquizz.sharedui.generated.resources.edit_category
+import dvnkquizz.sharedui.generated.resources.edit_question
 import dvnkquizz.sharedui.generated.resources.ic_add
 import dvnkquizz.sharedui.generated.resources.ic_arrow_down
+import dvnkquizz.sharedui.generated.resources.ic_edit
 import dvnkquizz.sharedui.generated.resources.no_categories_yet
 import dvnkquizz.sharedui.generated.resources.package_description_text_field_label
 import dvnkquizz.sharedui.generated.resources.package_details
@@ -85,10 +88,24 @@ fun EditGamePackageContent(
                 )
             )
                      },
+        onEditRound = {
+            eventSink(
+                EditGamePackageUiEvent.ShowDialog(
+                    EditGamePackageDialogRequest.EditRound(it)
+                )
+            )
+        },
         onAddCategoryToRound = {
             eventSink(
                 EditGamePackageUiEvent.ShowDialog(
                     EditGamePackageDialogRequest.AddCategory(it)
+                )
+            )
+        },
+        onEditCategory = {
+            eventSink(
+                EditGamePackageUiEvent.ShowDialog(
+                    EditGamePackageDialogRequest.EditCategory(it)
                 )
             )
         },
@@ -116,7 +133,9 @@ private fun Content(
     onDescriptionChanged: (String) -> Unit,
     onDifficultyChanged: (Int) -> Unit,
     onAddRound: () -> Unit,
+    onEditRound: (Uuid) -> Unit,
     onAddCategoryToRound: (roundId: Uuid) -> Unit,
+    onEditCategory: (Uuid) -> Unit,
     onAddQuestion: (categoryId: Uuid) -> Unit,
     onQuestionClick: (questionId: Uuid) -> Unit,
     modifier: Modifier = Modifier
@@ -198,6 +217,7 @@ private fun Content(
                             if (expand) collapsedRounds.remove(round.id)
                             else collapsedRounds.add(round.id)
                         },
+                        onEditRoundClick = { onEditRound(round.id) },
                         onAddCategoryClick = { onAddCategoryToRound(round.id) }
                     )
 
@@ -222,6 +242,7 @@ private fun Content(
                                 CategoryListItem(
                                     category = category,
                                     onQuestionClick = onQuestionClick,
+                                    onEditCategoryClick = { onEditCategory(category.id) },
                                     onAddQuestionClick = { onAddQuestion(category.id) },
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -252,6 +273,7 @@ private fun RoundHeader(
     roundOrdinal: Int,
     roundTitle: String,
     isExpanded: Boolean,
+    onEditRoundClick: () -> Unit,
     onExpandChanged: (Boolean) -> Unit,
     onAddCategoryClick: () -> Unit,
 ) {
@@ -274,6 +296,12 @@ private fun RoundHeader(
                 contentDescription = stringResource(Res.string.add_category)
             )
         }
+        IconButton(onClick = onEditRoundClick) {
+            Icon(
+                painter = painterResource(Res.drawable.ic_edit),
+                contentDescription = stringResource(Res.string.edit_question)
+            )
+        }
 
         IconButton(onClick = { onExpandChanged(!isExpanded) }) {
             val rotation by animateFloatAsState(if (isExpanded) 0f else 180f)
@@ -290,6 +318,7 @@ private fun RoundHeader(
 private fun CategoryListItem(
     category: FullGameCategory,
     onQuestionClick: (Uuid) -> Unit,
+    onEditCategoryClick: () -> Unit,
     onAddQuestionClick: () -> Unit,
     modifier: Modifier
 ) {
@@ -298,14 +327,20 @@ private fun CategoryListItem(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = category.name,
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.secondary
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.weight(1f)
             )
+            IconButton(onClick = onEditCategoryClick) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_edit),
+                    contentDescription = stringResource(Res.string.edit_category)
+                )
+            }
             TextButton(onClick = onAddQuestionClick) {
                 Icon(
                     painter = painterResource(Res.drawable.ic_add),
