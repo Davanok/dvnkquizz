@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 
 @Inject
-@ViewModelKey(PackagePickerViewModel::class)
+@ViewModelKey
 @ContributesIntoMap(AppScope::class)
 class PackagePickerViewModel(
     private val packageRepository: GamePackageRepository

@@ -20,7 +20,7 @@ kotlin {
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         androidResources.enable = true
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
+            jvmTarget.set(JvmTarget.JVM_21)
         }
     }
 

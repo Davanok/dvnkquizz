@@ -44,7 +44,7 @@ internal fun AppTheme(
                     snackbarHost = { SnackbarHost(snackbarHostState) },
                     modifier = Modifier.fillMaxSize()
                 ) { paddingValues ->
-                    Box(modifier = Modifier.padding(paddingValues)) {
+                    Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
                         content()
                     }
                 }

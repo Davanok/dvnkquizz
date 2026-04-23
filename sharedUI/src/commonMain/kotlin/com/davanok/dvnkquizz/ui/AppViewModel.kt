@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @Inject
-@ViewModelKey(AppViewModel::class)
+@ViewModelKey
 @ContributesIntoMap(AppScope::class)
 class AppViewModel(
     private val settingsRepository: SettingsRepository,

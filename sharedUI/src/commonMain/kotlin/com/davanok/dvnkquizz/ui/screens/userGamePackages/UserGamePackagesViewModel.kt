@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 
 
 @Inject
-@ViewModelKey(UserGamePackagesViewModel::class)
+@ViewModelKey
 @ContributesIntoMap(AppScope::class)
 class UserGamePackagesViewModel(
     private val repository: UserGamePackagesRepository

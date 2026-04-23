@@ -225,7 +225,7 @@ class GameViewModel(
     }
 
     @AssistedFactory
-    @ManualViewModelAssistedFactoryKey(Factory::class)
+    @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)
     fun interface Factory : ManualViewModelAssistedFactory {
         fun create(@Assisted sessionId: Uuid): GameViewModel

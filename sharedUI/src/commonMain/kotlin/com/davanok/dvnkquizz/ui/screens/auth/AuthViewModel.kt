@@ -20,7 +20,7 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 
 @Inject
-@ViewModelKey(AuthViewModel::class)
+@ViewModelKey
 @ContributesIntoMap(AppScope::class)
 class AuthViewModel(
     private val repository: AuthRepository

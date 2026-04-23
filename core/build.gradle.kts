@@ -18,7 +18,7 @@ kotlin {
         minSdk = libs.versions.android.minSdk.get().toInt()
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
+            jvmTarget.set(JvmTarget.JVM_21)
         }
     }
 
@@ -92,4 +92,8 @@ buildConfig {
     }
 
     buildConfigField("APP_ID", "com.davanok.dvnkquizz")
+
+    buildConfigField("LOG_LEVEL", "WARN")
+
+    buildConfigField("APP_VERSION", libs.versions.project.version.get())
 }

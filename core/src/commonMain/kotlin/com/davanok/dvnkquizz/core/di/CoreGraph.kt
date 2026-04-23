@@ -1,7 +1,12 @@
 package com.davanok.dvnkquizz.core.di
 
 import co.touchlab.kermit.Logger
+import co.touchlab.kermit.Severity
+import co.touchlab.kermit.mutableLoggerConfigInit
+import co.touchlab.kermit.platformLogWriter
 import com.davanok.dvnkquizz.core.BuildConfig
+import com.davanok.dvnkquizz.core.data.RemoteLogWriter
+import com.davanok.dvnkquizz.core.utils.LOG_SEVERITY
 import com.russhwolf.settings.ExperimentalSettingsApi
 import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.Settings
@@ -47,7 +52,15 @@ interface CoreGraph {
     fun provideStorage(supabase: SupabaseClient): Storage = supabase.storage
     @Provides
     @SingleIn(AppScope::class)
-    fun provideLogger(): Logger = Logger
+    fun provideLogger(
+        postgrest: Postgrest
+    ): Logger = Logger(
+        mutableLoggerConfigInit(
+            platformLogWriter(),
+            RemoteLogWriter(Severity.Warn, postgrest),
+            minSeverity = BuildConfig.LOG_SEVERITY
+        )
+    )
 
     @OptIn(ExperimentalSettingsApi::class)
     @Provides

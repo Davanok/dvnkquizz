@@ -12,7 +12,6 @@ import kotlinx.serialization.decodeFromHexString
 import kotlinx.serialization.encodeToHexString
 import kotlinx.serialization.protobuf.ProtoBuf
 import kotlinx.serialization.serializer
-import kotlin.reflect.typeOf
 
 internal object SettingsUtils {
     @OptIn(ExperimentalSerializationApi::class)
@@ -64,7 +63,7 @@ internal object SettingsUtils {
     @OptIn(ExperimentalSerializationApi::class)
     @ExperimentalSettingsApi
     suspend inline fun <reified T> SuspendSettings.putObject(key: String, value: T) = putObject(
-        serializer = format.serializersModule.serializer(typeOf<T>()),
+        serializer = format.serializersModule.serializer<T>(),
         key = key,
         value = value
     )
@@ -74,7 +73,7 @@ internal object SettingsUtils {
     @ExperimentalSettingsApi
     suspend inline fun <reified T> SuspendSettings.getObject(key: String, defaultValue: T): T =
         getObject(
-            serializer = format.serializersModule.serializer(typeOf<T>()) as KSerializer<T>,
+            serializer = format.serializersModule.serializer<T>(),
             key = key,
             defaultValue = defaultValue
         )
@@ -83,7 +82,7 @@ internal object SettingsUtils {
     @ExperimentalSettingsApi
     suspend inline fun <reified T> SuspendSettings.getObjectOrNull(key: String): T? =
         getObjectOrNull(
-            serializer = format.serializersModule.serializer(typeOf<T>()) as KSerializer<T>,
+            serializer = format.serializersModule.serializer<T>(),
             key = key
         )
 
@@ -114,7 +113,7 @@ internal object SettingsUtils {
         defaultValue: T
     ): Flow<T> =
         getObjectFlow(
-            serializer = format.serializersModule.serializer(typeOf<T>()) as KSerializer<T>,
+            serializer = format.serializersModule.serializer<T>(),
             key = key,
             defaultValue = defaultValue
         )

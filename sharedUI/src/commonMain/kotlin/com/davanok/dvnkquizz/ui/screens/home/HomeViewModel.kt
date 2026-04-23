@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 import kotlin.uuid.Uuid
 
 @Inject
-@ViewModelKey(HomeViewModel::class)
+@ViewModelKey
 @ContributesIntoMap(AppScope::class)
 class HomeViewModel(
     private val authRepository: AuthRepository,

@@ -115,7 +115,7 @@ class GameProcessRepositoryImpl(
                 question.mediaKind == MediaKind.NONE || question.mediaUrl == null ->
                     emit(question.toDomain())
 
-                Platform.currentPlatform() == Platform.Web ->
+                Platform.currentPlatform() is Platform.Web ->
                     emit(question.toDomain(
                         mediaUrl = storage.from("questions")
                             .createSignedUrl(question.mediaUrl, MEDIA_URL_EXPIRE_DURATION),
