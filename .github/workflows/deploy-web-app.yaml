@@ -1,0 +1,39 @@
+name: Deploy Web App
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'jetbrains'
+          java-version: '25'
+          cache: 'gradle'
+      
+      - name: Create config.properties
+        run: |
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> config.properties
+          echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> config.properties
+
+      - name: Build
+        run: ./gradlew :webApp:composeCompatibilityBrowserDistribution
+
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: webApp/build/dist/composeWebCompatibility/productionExecutable
