@@ -7,21 +7,22 @@ import dev.zacsweers.metro.Named
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import kotlinx.io.files.Path
+import kotlinx.io.files.SystemTemporaryDirectory
 import kotlinx.serialization.json.Json
 
 actual interface PlatformGraph {
 
     @Named(name = "dataDir")
     @Provides
-    actual fun provideDataDir(): Path = error("Web platform does not have access to files")
+    actual fun provideDataDir(): Path = SystemTemporaryDirectory
 
     @Named(name = "tempDir")
     @Provides
-    actual fun provideTempDir(): Path = error("Web platform does not have access to files")
+    actual fun provideTempDir(): Path = SystemTemporaryDirectory
 
     @Named(name = "logsDir")
     @Provides
-    actual fun provideLogsDir(): Path = error("Web platform does not have access to files")
+    actual fun provideLogsDir(): Path = SystemTemporaryDirectory
 
     @Provides
     @SingleIn(scope = AppScope::class)
