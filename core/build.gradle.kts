@@ -104,7 +104,7 @@ buildConfig {
 
     buildConfigField("APP_ID", "com.davanok.dvnkquizz")
 
-    buildConfigField("LOG_LEVEL", "VERBOSE")
+    buildConfigField("LOG_LEVEL", "WARN")
 
     buildConfigField("APP_VERSION", libs.versions.project.version.get())
 }

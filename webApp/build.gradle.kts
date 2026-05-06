@@ -11,6 +11,7 @@ kotlin {
     js {
         browser()
         binaries.executable()
+        useCommonJs()
     }
 
     @OptIn(ExperimentalWasmDsl::class)
