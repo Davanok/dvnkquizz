@@ -21,9 +21,11 @@ materialKolor = "4.1.1"
 supabase = "3.5.0"
 ktor = "3.4.3"
 paging = "3.4.0-beta01"
-filekit = "0.13.0"
+filekit = "0.14.0"
 coil = "3.4.0"
-composeHotReload = "1.1.0-beta02"
+composeHotReload = "1.1.0"
+kstore = "1.0.0"
+app-dirs = "2.0.0"
 
 [libraries]
 # Compose
@@ -79,6 +81,12 @@ kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 settings = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettings" }
 settings-observable = { module = "com.russhwolf:multiplatform-settings-make-observable", version.ref = "multiplatformSettings" }
 settings-coroutines = { module = "com.russhwolf:multiplatform-settings-coroutines", version.ref = "multiplatformSettings" }
+
+kstore = { module = "io.github.xxfast:kstore", version.ref = "kstore" }
+kstore-file = { module = "io.github.xxfast:kstore-file", version.ref = "kstore" }
+kstore-storage = { module = "io.github.xxfast:kstore-storage", version.ref = "kstore" }
+
+app-dirs = { module = "ca.gosyer:kotlin-multiplatform-appdirs", version.ref = "app-dirs" }
 
 androidx-paging-common = { group = "androidx.paging", name = "paging-common", version.ref = "paging" }
 androidx-paging-compose = { group = "androidx.paging", name = "paging-compose", version.ref = "paging" }

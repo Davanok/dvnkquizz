@@ -16,7 +16,7 @@ android {
 
         applicationId = "com.davanok.dvnkquizz.androidApp"
         versionCode = 1
-        versionName = "1.0.0"
+        versionName = libs.versions.project.version.get()
     }
 
     compileOptions {

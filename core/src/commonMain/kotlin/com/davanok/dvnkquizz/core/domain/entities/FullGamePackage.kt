@@ -9,14 +9,14 @@ import kotlin.uuid.Uuid
 internal data class FullGamePackageDto(
     val id: Uuid,
     @SerialName("created_at")
-    val createdAt: Instant? = null,
+    val createdAt: Instant?,
     val title: String,
     val description: String,
     @SerialName("author_id")
-    val authorId: Uuid? = null,
-    val difficulty: Int = 1,
+    val authorId: Uuid?,
+    val difficulty: Int,
     @SerialName("is_public")
-    val isPublic: Boolean = false,
+    val isPublic: Boolean,
 
     val author: UserProfile?,
     val rounds: List<FullGameRoundDto>

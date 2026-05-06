@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.davanok.dvnkquizz.core.domain.enums.AppTheme
 import com.davanok.dvnkquizz.core.domain.repositories.AuthRepository
 import com.davanok.dvnkquizz.core.domain.repositories.GameSessionRepository
-import com.davanok.dvnkquizz.core.domain.repositories.SettingsRepository
+import com.davanok.dvnkquizz.core.domain.repositories.AppSettingsRepository
 import com.davanok.dvnkquizz.core.domain.repositories.UserProfileRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
@@ -24,7 +24,7 @@ class HomeViewModel(
     private val authRepository: AuthRepository,
     private val userProfileRepository: UserProfileRepository,
     private val gameSessionRepository: GameSessionRepository,
-    private val settingsRepository: SettingsRepository
+    private val appSettingsRepository: AppSettingsRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeScreenUiState())
     val uiState = _uiState.asStateFlow()
@@ -125,7 +125,7 @@ class HomeViewModel(
     }
 
     fun observeAppSettings() = viewModelScope.launch {
-        settingsRepository.observeAppSettings().collect { settings ->
+        appSettingsRepository.observeAppSettings().collect { settings ->
             _uiState.update {
                 it.copy(
                     appSettings = settings
@@ -134,7 +134,7 @@ class HomeViewModel(
         }
     }
     fun setAppTheme(theme: AppTheme) = viewModelScope.launch {
-        settingsRepository.updateAppSettings(
+        appSettingsRepository.updateAppSettings(
             uiState.value.appSettings.copy(theme = theme)
         )
     }

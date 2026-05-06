@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.davanok.dvnkquizz.core.domain.entities.User
 import com.davanok.dvnkquizz.core.domain.repositories.AuthRepository
-import com.davanok.dvnkquizz.core.domain.repositories.SettingsRepository
+import com.davanok.dvnkquizz.core.domain.repositories.AppSettingsRepository
 import com.davanok.dvnkquizz.ui.navigation.Route
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 @ViewModelKey
 @ContributesIntoMap(AppScope::class)
 class AppViewModel(
-    private val settingsRepository: SettingsRepository,
+    private val appSettingsRepository: AppSettingsRepository,
     private val authRepository: AuthRepository
 ): ViewModel() {
     private val _uiState = MutableStateFlow(AppUiState())
@@ -81,7 +81,7 @@ class AppViewModel(
     }
 
     fun observeSettings() = viewModelScope.launch {
-        settingsRepository.observeAppSettings().collect { appSettings ->
+        appSettingsRepository.observeAppSettings().collect { appSettings ->
             _uiState.update {
                 it.copy(
                     theme = appSettings.theme

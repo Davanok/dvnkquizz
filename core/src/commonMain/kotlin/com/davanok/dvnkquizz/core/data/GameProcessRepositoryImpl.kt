@@ -17,6 +17,7 @@ import com.davanok.dvnkquizz.core.utils.toResultFLow
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.Named
 import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.postgrest.Postgrest
@@ -44,8 +45,8 @@ import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlinx.io.buffered
+import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
-import kotlinx.io.files.SystemTemporaryDirectory
 import kotlin.time.Duration.Companion.hours
 import kotlin.uuid.Uuid
 
@@ -56,6 +57,8 @@ class GameProcessRepositoryImpl(
     private val realtime: Realtime,
     private val storage: Storage,
     private val auth: Auth,
+    @Named("tempDir")
+    private val tempDir: Path,
     logger: Logger
 ) : GameProcessRepository {
 
@@ -71,8 +74,8 @@ class GameProcessRepositoryImpl(
         val extension = mediaUrl.substringAfterLast('.', "bin")
         val filename = "${question.id}_${mediaUrl.hashCode()}.$extension"
 
-        val localPath = SystemTemporaryDirectory / filename
-        val tmpPath = SystemTemporaryDirectory / "$filename.tmp"
+        val localPath = tempDir / filename
+        val tmpPath = tempDir / "$filename.tmp"
 
         // 1. Check Cache
         if (SystemFileSystem.exists(localPath)) {

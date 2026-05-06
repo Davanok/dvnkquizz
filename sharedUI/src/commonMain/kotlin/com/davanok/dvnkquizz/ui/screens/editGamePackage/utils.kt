@@ -19,6 +19,7 @@ object FullGamePackageUtils {
 
                     val updatedQuestions = category.questions.toMutableList()
                     updatedQuestions[qIndex] = updatedQuestion
+                    updatedQuestions.sortBy { it.price }
                     val updatedCategory = category.copy(questions = updatedQuestions)
 
                     val updatedCategories = round.categories.toMutableList()
@@ -47,6 +48,7 @@ object FullGamePackageUtils {
 
                 val updatedCategories = round.categories.toMutableList()
                 updatedCategories[cIndex] = updatedCategory
+                updatedCategories.sortBy { it.ordinal }
                 val updatedRound = round.copy(categories = updatedCategories)
 
                 val updatedRounds = rounds.toMutableList()
@@ -67,6 +69,7 @@ object FullGamePackageUtils {
 
         val updatedRound = transform(rounds[index])
         rounds[index] = updatedRound
+        rounds.sortBy { it.ordinal }
 
         return gamePackage.copy(rounds = rounds)
     }
@@ -84,12 +87,10 @@ object FullGamePackageUtils {
 
                 val updatedCategories = round.categories.toMutableList()
                 updatedCategories[cIndex] = updatedCategory
-                updatedCategories.sortBy { it.ordinal }
                 val updatedRound = round.copy(categories = updatedCategories)
 
                 val updatedRounds = rounds.toMutableList()
                 updatedRounds[rIndex] = updatedRound
-                updatedRounds.sortBy { it.ordinal }
 
                 return gamePackage.copy(rounds = updatedRounds)
             }
@@ -110,7 +111,6 @@ object FullGamePackageUtils {
         val updatedRound = round.copy(categories = updatedCategories)
         val updatedRounds = rounds.toMutableList()
         updatedRounds[roundIndex] = updatedRound
-        updatedRounds.sortBy { it.ordinal }
 
         return gamePackage.copy(rounds = updatedRounds)
     }

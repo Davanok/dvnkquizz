@@ -5,11 +5,15 @@ import co.touchlab.kermit.Severity
 import co.touchlab.kermit.mutableLoggerConfigInit
 import co.touchlab.kermit.platformLogWriter
 import com.davanok.dvnkquizz.core.BuildConfig
+import com.davanok.dvnkquizz.core.data.FileLogWriter
 import com.davanok.dvnkquizz.core.data.RemoteLogWriter
+import com.davanok.dvnkquizz.core.platform.Platform
+import com.davanok.dvnkquizz.core.platform.currentPlatform
 import com.davanok.dvnkquizz.core.utils.LOG_SEVERITY
 import com.russhwolf.settings.ExperimentalSettingsApi
-import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.Settings
+import com.russhwolf.settings.coroutines.FlowSettings
+import com.russhwolf.settings.coroutines.toFlowSettings
 import com.russhwolf.settings.observable.makeObservable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Provides
@@ -25,7 +29,8 @@ import io.github.jan.supabase.realtime.realtime
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.storage
 
-interface CoreGraph {
+interface CoreGraph: PlatformGraph {
+
     @Provides
     @SingleIn(AppScope::class)
     fun provideSupabase(): SupabaseClient = createSupabaseClient(
@@ -50,20 +55,29 @@ interface CoreGraph {
     @Provides
     @SingleIn(AppScope::class)
     fun provideStorage(supabase: SupabaseClient): Storage = supabase.storage
-    @Provides
-    @SingleIn(AppScope::class)
-    fun provideLogger(
-        postgrest: Postgrest
-    ): Logger = Logger(
-        mutableLoggerConfigInit(
-            platformLogWriter(),
-            RemoteLogWriter(Severity.Warn, postgrest),
-            minSeverity = BuildConfig.LOG_SEVERITY
-        )
-    )
 
     @OptIn(ExperimentalSettingsApi::class)
     @Provides
     @SingleIn(AppScope::class)
-    fun provideUiSettings(): ObservableSettings = Settings().makeObservable()
+    fun provideSettings(): FlowSettings = Settings().makeObservable().toFlowSettings()
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun provideLogger(
+        postgrest: Postgrest
+    ): Logger {
+        val logWriters = mutableListOf(
+            platformLogWriter(),
+            RemoteLogWriter(Severity.Warn, postgrest)
+        )
+        if (Platform.currentPlatform() is Platform.Jvm)
+            logWriters.add(FileLogWriter(provideLogsDir()))
+
+        return Logger(
+            mutableLoggerConfigInit(
+                logWriters = logWriters.toTypedArray(),
+                minSeverity = BuildConfig.LOG_SEVERITY
+            )
+        )
+    }
 }

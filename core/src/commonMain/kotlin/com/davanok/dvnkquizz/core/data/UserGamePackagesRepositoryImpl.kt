@@ -1,7 +1,6 @@
 package com.davanok.dvnkquizz.core.data
 
 import co.touchlab.kermit.Logger
-import com.davanok.dvnkquizz.core.BuildConfig
 import com.davanok.dvnkquizz.core.domain.entities.FullGamePackage
 import com.davanok.dvnkquizz.core.domain.entities.FullGamePackageDto
 import com.davanok.dvnkquizz.core.domain.entities.GamePackage
@@ -12,18 +11,12 @@ import com.davanok.dvnkquizz.core.domain.entities.QuestionMedia
 import com.davanok.dvnkquizz.core.domain.enums.MediaKind
 import com.davanok.dvnkquizz.core.domain.mappers.toFullGamePackage
 import com.davanok.dvnkquizz.core.domain.mappers.toFullGamePackageDto
-import com.davanok.dvnkquizz.core.domain.mappers.toGamePackage
 import com.davanok.dvnkquizz.core.domain.repositories.UserGamePackagesRepository
-import com.davanok.dvnkquizz.core.utils.SettingsUtils.getObject
-import com.davanok.dvnkquizz.core.utils.SettingsUtils.getObjectOrNull
-import com.davanok.dvnkquizz.core.utils.SettingsUtils.putObject
 import com.davanok.dvnkquizz.core.utils.currentUserId
 import com.davanok.dvnkquizz.core.utils.mediaKindForMimeType
 import com.davanok.dvnkquizz.core.utils.mimeTypeToFileExtension
 import com.davanok.dvnkquizz.core.utils.toResultFLow
 import com.russhwolf.settings.ExperimentalSettingsApi
-import com.russhwolf.settings.ObservableSettings
-import com.russhwolf.settings.coroutines.toSuspendSettings
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -34,9 +27,6 @@ import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.UploadStatus
 import io.github.jan.supabase.storage.uploadAsFlow
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -45,11 +35,11 @@ import kotlin.uuid.Uuid
 
 @Inject
 @ContributesBinding(AppScope::class)
-class UserGamePackagesRepositoryImpl(
-    private val settings: ObservableSettings,
+class UserGamePackagesRepositoryImpl internal constructor(
     private val postgrest: Postgrest,
     private val storage: Storage,
     private val auth: Auth,
+    private val draftsStorage: DraftsStorage,
     logger: Logger
 ) : UserGamePackagesRepository {
     private val logger = logger.withTag(TAG)
@@ -186,71 +176,31 @@ class UserGamePackagesRepositoryImpl(
 
         return runCatching<Unit> {
             postgrest.rpc(
-                "upsert_full_game_package",
-                gamePackage.toFullGamePackageDto()
+                "upsert_game_package_new",
+                mapOf("p_data" to gamePackage.toFullGamePackageDto())
             )
         }.onFailure {
-            logger.e(it) { "failed to get user packages" }
+            logger.e(it) { "failed to upsert use package" }
         }
     }
 
     @OptIn(ExperimentalSettingsApi::class)
     override suspend fun updatePackageDraft(draft: FullGamePackage): Result<Unit> = runCatching {
-        val settings = settings.toSuspendSettings()
-
-        settings
-            .putObject(
-                buildDraftKey(draft.id),
-                draft.toFullGamePackageDto()
-            )
-
-        val keys = settings
-            .getObject(
-                key = SAVED_DRAFTS_KEY,
-                defaultValue = emptySet<Uuid>()
-            )
-        if (draft.id !in keys) {
-            val updatedKeys = keys + draft.id
-
-            settings.putObject(
-                key = SAVED_DRAFTS_KEY,
-                updatedKeys
-            )
-        }
+        draftsStorage.setDraft(draft.toFullGamePackageDto())
     }.onFailure {
         logger.e(it) { "failed to update package draft" }
     }
 
     @OptIn(ExperimentalSettingsApi::class)
     override suspend fun getPackageDraft(draftId: Uuid): Result<FullGamePackage?> = runCatching {
-        settings.toSuspendSettings()
-            .getObjectOrNull<FullGamePackageDto>(
-                key = buildDraftKey(draftId)
-            )?.toFullGamePackage { it.toQuestion() }
+        draftsStorage.getDraft(draftId)?.toFullGamePackage { it.toQuestion() }
     }.onFailure {
         logger.e(it) { "failed to get package draft" }
     }
 
     @OptIn(ExperimentalSettingsApi::class)
     override suspend fun getAllPackageDrafts(): Result<List<GamePackage>> = runCatching {
-        val settings = settings.toSuspendSettings()
-
-
-        val keys = runCatching {
-            settings
-                .getObject(
-                    key = SAVED_DRAFTS_KEY,
-                    defaultValue = emptySet<Uuid>()
-                )
-        }.getOrElse { emptySet() }
-
-        coroutineScope {
-            keys.map { key ->
-                async {
-                    settings.getObjectOrNull<FullGamePackageDto>(key = buildDraftKey(key))
-                }
-            }.awaitAll()
-        }.mapNotNull { it?.toGamePackage() }
+        draftsStorage.getSavedDrafts()
     }.onFailure {
         logger.e(it) { "failed to get all package drafts" }
     }
@@ -272,9 +222,5 @@ class UserGamePackagesRepositoryImpl(
             )
             """.trimIndent()
         private val MEDIA_URL_EXPIRE_DURATION = 1.hours
-
-        private const val SAVED_DRAFTS_KEY = "${BuildConfig.APP_ID}:saved_drafts"
-        private const val DRAFT_KEY_PREFIX = "${BuildConfig.APP_ID}:package"
-        private fun buildDraftKey(packageId: Uuid) = "$DRAFT_KEY_PREFIX:${packageId}"
     }
 }

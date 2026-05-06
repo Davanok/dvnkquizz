@@ -13,9 +13,9 @@ internal data class QuestionDto(
     @SerialName("question_text") val questionText: String,
     @SerialName("answer_text") val answerText: String,
     val price: Int,
-    val type: QuestionType = QuestionType.NORMAL,
-    @SerialName("media_url") val mediaUrl: String? = null,
-    @SerialName("media_kind") val mediaKind: MediaKind = MediaKind.NONE
+    val type: QuestionType,
+    @SerialName("media_url") val mediaUrl: String?,
+    @SerialName("media_kind") val mediaKind: MediaKind
 ) {
     fun toDomain(): Question {
         check(mediaKind == MediaKind.NONE)

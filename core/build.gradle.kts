@@ -46,6 +46,7 @@ kotlin {
 
             implementation(libs.androidx.paging.common)
 
+            implementation(libs.kstore)
             implementation(libs.bundles.settings)
         }
 
@@ -56,10 +57,18 @@ kotlin {
 
         androidMain.dependencies {
             implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.kstore.file)
         }
-
         jvmMain.dependencies {
             implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.app.dirs)
+            implementation(libs.kstore.file)
+        }
+        iosMain.dependencies {
+            implementation(libs.kstore.file)
+        }
+        webMain.dependencies {
+            implementation(libs.kstore.storage)
         }
     }
 
@@ -91,9 +100,11 @@ buildConfig {
         buildConfigField(key, properties[key]!!.toString())
     }
 
+    buildConfigField("APP_NAME", project.rootProject.name)
+
     buildConfigField("APP_ID", "com.davanok.dvnkquizz")
 
-    buildConfigField("LOG_LEVEL", "WARN")
+    buildConfigField("LOG_LEVEL", "VERBOSE")
 
     buildConfigField("APP_VERSION", libs.versions.project.version.get())
 }

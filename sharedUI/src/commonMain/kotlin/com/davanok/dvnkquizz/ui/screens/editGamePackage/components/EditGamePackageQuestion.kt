@@ -78,7 +78,10 @@ fun EditGamePackageQuestionDialog(
     onDismissRequest: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
-        Surface {
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            modifier = Modifier.padding(vertical = 16.dp)
+        ) {
             Content(
                 question = question,
                 questionMediaErrorMessage = questionMediaErrorMessage,
@@ -122,13 +125,13 @@ private fun Content(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedTextField(
                 value = questionText,
                 onValueChange = { text ->
-                    if (text.length <= GamePackageLimits.QUESTION_TEXT_MAX_LENGTH)
-                        questionText = text
+                    questionText = text.take(GamePackageLimits.QUESTION_TEXT_MAX_LENGTH)
                                 },
                 label = { Text(stringResource(Res.string.question_text_label)) },
                 supportingText = textLengthLimitText(questionText.length, GamePackageLimits.QUESTION_TEXT_MAX_LENGTH),
@@ -137,8 +140,7 @@ private fun Content(
             OutlinedTextField(
                 value = answerText,
                 onValueChange = {  text ->
-                    if (text.length <= GamePackageLimits.QUESTION_ANSWER_MAX_LENGTH)
-                        answerText = text
+                    answerText = text.take(GamePackageLimits.QUESTION_ANSWER_MAX_LENGTH)
                                 },
                 label = { Text(stringResource(Res.string.question_answer_label)) },
                 supportingText = textLengthLimitText(
@@ -195,6 +197,7 @@ private fun Content(
                         )
                         onSave(q)
                     }
+                    onDismissRequest()
                 },
                 enabled = changed
             ) {
