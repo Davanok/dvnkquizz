@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -68,18 +67,16 @@ fun ParticipantCard(
                     style = MaterialTheme.typography.titleSmall,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Box(modifier = Modifier.height(16.dp)) {
                     if (participant.role == ParticipantRole.PLAYER) {
-                        ParticipantScore(
-                            score = participant.score,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                        )
+                        ParticipantScore(score = participant.score)
                     }
                 }
+
+                Spacer(Modifier.height(8.dp))
             }
         }
 

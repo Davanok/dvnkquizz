@@ -7,7 +7,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.davanok.dvnkquizz.core.domain.entities.Participant
 import com.davanok.dvnkquizz.ui.platform.ClipEntry
@@ -93,20 +94,7 @@ private fun Content(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = state.gamePackage?.title ?: stringResource(Res.string.unknown_game_package))
-
-                        Spacer(Modifier.width(8.dp))
-
-                        state.inviteCode?.let { inviteCode ->
-                            InviteCode(
-                                code = inviteCode,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                        },
+                title = { Title(state.gamePackage?.title, state.inviteCode) },
                 navigationIcon = {
                     IconButton(
                         onClick = navigateBack
@@ -151,8 +139,9 @@ private fun Content(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun InviteCode(
-    code: String,
+private fun Title(
+    title: String?,
+    code: String?,
     modifier: Modifier = Modifier
 ) {
     val clipboard = LocalClipboard.current
@@ -161,39 +150,51 @@ private fun InviteCode(
 
     val tooltipState = rememberTooltipState()
 
-    Column(modifier = modifier) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+    ) {
         Text(
-            text = stringResource(Res.string.invite_code),
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.padding(bottom = 8.dp)
+            text = title ?: stringResource(Res.string.unknown_game_package),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
 
-        TooltipBox(
-            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
-            tooltip = {
-                PlainTooltip {
-                    Text(stringResource(Res.string.copied_to_clipboard))
-                }
-            },
-            state = tooltipState,
-            enableUserInput = false
-        ) {
+        if (code != null) {
             Text(
-                text = code,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.clickable {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-
-                    scope.launch {
-                        clipboard.setClipEntry(ClipEntry(code))
-                    }
-                    scope.launch {
-                        tooltipState.show()
-                    }
-                }
+                text = stringResource(Res.string.invite_code),
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
+
+            TooltipBox(
+                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
+                tooltip = {
+                    PlainTooltip {
+                        Text(stringResource(Res.string.copied_to_clipboard))
+                    }
+                },
+                state = tooltipState,
+                enableUserInput = false
+            ) {
+                Text(
+                    text = code,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.clickable {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+
+                        scope.launch {
+                            clipboard.setClipEntry(ClipEntry(code))
+                        }
+                        scope.launch {
+                            tooltipState.show()
+                        }
+                    }
+                )
+            }
         }
     }
 }

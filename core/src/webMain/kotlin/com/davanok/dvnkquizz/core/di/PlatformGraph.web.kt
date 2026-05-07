@@ -7,22 +7,21 @@ import dev.zacsweers.metro.Named
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import kotlinx.io.files.Path
-import kotlinx.io.files.SystemTemporaryDirectory
 import kotlinx.serialization.json.Json
 
 actual interface PlatformGraph {
 
     @Named(name = "dataDir")
     @Provides
-    actual fun provideDataDir(): Path = SystemTemporaryDirectory
+    actual fun provideDataDir(): Path = Path("")
 
     @Named(name = "tempDir")
     @Provides
-    actual fun provideTempDir(): Path = SystemTemporaryDirectory
+    actual fun provideTempDir(): Path = Path("")
 
     @Named(name = "logsDir")
     @Provides
-    actual fun provideLogsDir(): Path = SystemTemporaryDirectory
+    actual fun provideLogsDir(): Path = Path("")
 
     @Provides
     @SingleIn(scope = AppScope::class)
