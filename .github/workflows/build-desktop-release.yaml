@@ -48,6 +48,10 @@ jobs:
           distribution: 'jetbrains'
           java-version: '25'
           cache: 'gradle'
+      - name: Create config.properties
+        run: |
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> config.properties
+          echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> config.properties
       - name: Build with Gradle
         shell: bash
         run: |
