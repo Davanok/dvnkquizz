@@ -1,6 +1,6 @@
 package com.davanok.dvnkquizz.ui.utils.enumStrings
 
-import com.davanok.dvnkquizz.core.domain.enums.AppTheme
+import com.davanok.dvnkquizz.core.domain.settings.enums.AppTheme
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.ic_theme_dark
 import dvnkquizz.sharedui.generated.resources.ic_theme_light

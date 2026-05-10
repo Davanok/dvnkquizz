@@ -1,12 +1,12 @@
 package com.davanok.dvnkquizz.ui.screens.editGamePackage
 
 import androidx.compose.runtime.Immutable
-import com.davanok.dvnkquizz.core.domain.entities.FullGamePackage
-import com.davanok.dvnkquizz.core.domain.entities.GameCategory
-import com.davanok.dvnkquizz.core.domain.entities.GameRound
-import com.davanok.dvnkquizz.core.domain.entities.Question
-import com.davanok.dvnkquizz.core.utils.AllowedExtensions
-import com.davanok.dvnkquizz.core.utils.AllowedMimeTypes
+import com.davanok.dvnkquizz.core.domain.gamePackage.entities.FullGamePackage
+import com.davanok.dvnkquizz.core.domain.game.entities.GameCategory
+import com.davanok.dvnkquizz.core.domain.game.entities.GameRound
+import com.davanok.dvnkquizz.core.domain.game.entities.Question
+import com.davanok.dvnkquizz.core.core.media.AllowedExtensions
+import com.davanok.dvnkquizz.core.core.media.AllowedMimeTypes
 import io.github.vinceglb.filekit.mimeType.MimeType
 import kotlin.uuid.Uuid
 

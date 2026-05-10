@@ -30,10 +30,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.davanok.dvnkquizz.core.domain.entities.Participant
-import com.davanok.dvnkquizz.core.domain.entities.Question
-import com.davanok.dvnkquizz.core.domain.enums.MediaKind
-import com.davanok.dvnkquizz.core.domain.enums.ParticipantRole
+import com.davanok.dvnkquizz.core.domain.game.entities.Participant
+import com.davanok.dvnkquizz.core.domain.game.entities.Question
+import com.davanok.dvnkquizz.core.domain.gamePackage.enums.MediaKind
+import com.davanok.dvnkquizz.core.domain.game.enums.ParticipantRole
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.ic_error
 import dvnkquizz.sharedui.generated.resources.ic_person

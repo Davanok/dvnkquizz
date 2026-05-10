@@ -1,6 +1,6 @@
 package com.davanok.dvnkquizz.core.di
 
-import com.davanok.dvnkquizz.core.domain.repositories.Storage
+import com.davanok.dvnkquizz.core.data.storage.Storage
 import kotlinx.io.files.Path
 
 expect interface PlatformGraph {

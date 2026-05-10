@@ -1,10 +1,10 @@
 package com.davanok.dvnkquizz.core.di
 
 import android.content.Context
-import com.davanok.dvnkquizz.core.data.FilesStorage
-import com.davanok.dvnkquizz.core.domain.repositories.Storage
-import com.davanok.dvnkquizz.core.utils.div
-import com.davanok.dvnkquizz.core.utils.toPath
+import com.davanok.dvnkquizz.core.data.storage.FilesStorage
+import com.davanok.dvnkquizz.core.data.storage.Storage
+import com.davanok.dvnkquizz.core.core.filesystem.div
+import com.davanok.dvnkquizz.core.core.filesystem.toPath
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Named
 import dev.zacsweers.metro.Provides

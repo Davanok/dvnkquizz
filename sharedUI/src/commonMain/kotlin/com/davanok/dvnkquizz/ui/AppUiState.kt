@@ -1,7 +1,7 @@
 package com.davanok.dvnkquizz.ui
 
-import com.davanok.dvnkquizz.core.domain.entities.User
-import com.davanok.dvnkquizz.core.domain.enums.AppTheme
+import com.davanok.dvnkquizz.core.domain.auth.entities.User
+import com.davanok.dvnkquizz.core.domain.settings.enums.AppTheme
 import com.davanok.dvnkquizz.ui.navigation.Route
 
 data class AppUiState(

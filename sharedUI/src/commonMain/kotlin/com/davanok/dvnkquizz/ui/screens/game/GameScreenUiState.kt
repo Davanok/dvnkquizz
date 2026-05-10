@@ -1,11 +1,11 @@
 package com.davanok.dvnkquizz.ui.screens.game
 
 import androidx.compose.runtime.Immutable
-import com.davanok.dvnkquizz.core.domain.entities.GameBoardItem
-import com.davanok.dvnkquizz.core.domain.entities.GamePackage
-import com.davanok.dvnkquizz.core.domain.entities.Participant
-import com.davanok.dvnkquizz.core.domain.entities.SessionAnswer
-import com.davanok.dvnkquizz.core.domain.enums.ParticipantRole
+import com.davanok.dvnkquizz.core.domain.game.entities.GameBoardItem
+import com.davanok.dvnkquizz.core.domain.gamePackage.entities.GamePackage
+import com.davanok.dvnkquizz.core.domain.game.entities.Participant
+import com.davanok.dvnkquizz.core.domain.game.entities.SessionAnswer
+import com.davanok.dvnkquizz.core.domain.game.enums.ParticipantRole
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -70,7 +70,7 @@ sealed interface GameScreenUiState {
         override val message: String? = null,
 
         val showQuestionAt: Instant?,
-        val question: com.davanok.dvnkquizz.core.domain.entities.Question
+        val question: com.davanok.dvnkquizz.core.domain.game.entities.Question
     ) : GameScreenUiState {
         override fun copyState(message: String?): GameScreenUiState = copy(message = message)
     }
@@ -82,7 +82,7 @@ sealed interface GameScreenUiState {
         override val participants: List<Participant>,
         override val message: String? = null,
 
-        val question: com.davanok.dvnkquizz.core.domain.entities.Question,
+        val question: com.davanok.dvnkquizz.core.domain.game.entities.Question,
         val answer: SessionAnswer,
         val buzzedParticipant: Participant,
     ) : GameScreenUiState {
@@ -96,7 +96,7 @@ sealed interface GameScreenUiState {
         override val participants: List<Participant>,
         override val message: String? = null,
 
-        val question: com.davanok.dvnkquizz.core.domain.entities.Question,
+        val question: com.davanok.dvnkquizz.core.domain.game.entities.Question,
         val answer: SessionAnswer,
         val answeredParticipant: Participant,
     ) : GameScreenUiState {

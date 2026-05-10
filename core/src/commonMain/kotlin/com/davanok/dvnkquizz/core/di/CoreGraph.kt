@@ -5,11 +5,11 @@ import co.touchlab.kermit.Severity
 import co.touchlab.kermit.mutableLoggerConfigInit
 import co.touchlab.kermit.platformLogWriter
 import com.davanok.dvnkquizz.core.BuildConfig
-import com.davanok.dvnkquizz.core.data.FileLogWriter
-import com.davanok.dvnkquizz.core.data.RemoteLogWriter
+import com.davanok.dvnkquizz.core.data.logging.FileLogWriter
+import com.davanok.dvnkquizz.core.data.logging.RemoteLogWriter
 import com.davanok.dvnkquizz.core.platform.Platform
 import com.davanok.dvnkquizz.core.platform.currentPlatform
-import com.davanok.dvnkquizz.core.utils.LOG_SEVERITY
+import com.davanok.dvnkquizz.core.core.logging.LOG_SEVERITY
 import com.russhwolf.settings.ExperimentalSettingsApi
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.coroutines.FlowSettings
@@ -26,8 +26,10 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.realtime.realtime
+import io.github.jan.supabase.serializer.KotlinXSerializer
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.storage
+import kotlinx.serialization.json.Json
 
 interface CoreGraph: PlatformGraph {
 
@@ -41,6 +43,13 @@ interface CoreGraph: PlatformGraph {
         install(Postgrest)
         install(Realtime)
         install(Storage)
+
+        defaultSerializer = KotlinXSerializer(
+            Json {
+                ignoreUnknownKeys = true
+                encodeDefaults = true
+            }
+        )
     }
 
     @Provides

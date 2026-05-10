@@ -46,8 +46,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import com.davanok.dvnkquizz.core.domain.entities.FullGameCategory
-import com.davanok.dvnkquizz.core.domain.entities.FullGamePackage
+import com.davanok.dvnkquizz.core.domain.game.entities.FullGameCategory
+import com.davanok.dvnkquizz.core.domain.gamePackage.entities.FullGamePackage
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.EditGamePackageDialogRequest
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.EditGamePackageUiEvent
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.GamePackageLimits

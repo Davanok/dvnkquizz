@@ -27,7 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.davanok.dvnkquizz.core.domain.entities.Participant
+import com.davanok.dvnkquizz.core.domain.game.entities.Participant
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.leave
 import org.jetbrains.compose.resources.stringResource

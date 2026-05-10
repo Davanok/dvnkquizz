@@ -42,7 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.davanok.dvnkquizz.core.domain.entities.Participant
+import com.davanok.dvnkquizz.core.domain.game.entities.Participant
 import com.davanok.dvnkquizz.ui.platform.ClipEntry
 import com.davanok.dvnkquizz.ui.screens.game.components.AnswerScreen
 import com.davanok.dvnkquizz.ui.screens.game.components.AnsweringScreen

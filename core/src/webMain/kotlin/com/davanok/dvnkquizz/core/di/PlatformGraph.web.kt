@@ -1,7 +1,7 @@
 package com.davanok.dvnkquizz.core.di
 
-import com.davanok.dvnkquizz.core.data.StorageStorage
-import com.davanok.dvnkquizz.core.domain.repositories.Storage
+import com.davanok.dvnkquizz.core.data.storage.WebStorage
+import com.davanok.dvnkquizz.core.data.storage.Storage
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Named
 import dev.zacsweers.metro.Provides
@@ -26,5 +26,5 @@ actual interface PlatformGraph {
     @Provides
     @SingleIn(scope = AppScope::class)
     actual fun provideGamePackageDraftsStorage(): Storage =
-        StorageStorage(prefix = "drafts", format = Json)
+        WebStorage(prefix = "drafts", format = Json)
 }

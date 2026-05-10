@@ -47,8 +47,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import com.davanok.dvnkquizz.core.domain.entities.GamePackage
-import com.davanok.dvnkquizz.core.domain.enums.AppTheme
+import com.davanok.dvnkquizz.core.domain.gamePackage.entities.GamePackage
+import com.davanok.dvnkquizz.core.domain.settings.enums.AppTheme
 import com.davanok.dvnkquizz.ui.screens.packagePicker.PackagePicker
 import com.davanok.dvnkquizz.ui.utils.enumStrings.drawableRes
 import com.davanok.dvnkquizz.ui.utils.enumStrings.titleRes

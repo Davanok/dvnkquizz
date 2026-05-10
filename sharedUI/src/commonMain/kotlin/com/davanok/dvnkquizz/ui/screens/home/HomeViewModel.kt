@@ -2,11 +2,11 @@ package com.davanok.dvnkquizz.ui.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.davanok.dvnkquizz.core.domain.enums.AppTheme
-import com.davanok.dvnkquizz.core.domain.repositories.AuthRepository
-import com.davanok.dvnkquizz.core.domain.repositories.GameSessionRepository
-import com.davanok.dvnkquizz.core.domain.repositories.AppSettingsRepository
-import com.davanok.dvnkquizz.core.domain.repositories.UserProfileRepository
+import com.davanok.dvnkquizz.core.domain.settings.enums.AppTheme
+import com.davanok.dvnkquizz.core.domain.auth.repositories.AuthRepository
+import com.davanok.dvnkquizz.core.domain.game.repositories.GameSessionRepository
+import com.davanok.dvnkquizz.core.domain.settings.repositories.AppSettingsRepository
+import com.davanok.dvnkquizz.core.domain.auth.repositories.UserProfileRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject

@@ -20,9 +20,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.davanok.dvnkquizz.core.domain.entities.Question
-import com.davanok.dvnkquizz.core.domain.entities.QuestionMedia
-import com.davanok.dvnkquizz.core.domain.enums.MediaKind
+import com.davanok.dvnkquizz.core.domain.game.entities.Question
+import com.davanok.dvnkquizz.core.domain.game.entities.QuestionMedia
+import com.davanok.dvnkquizz.core.domain.gamePackage.enums.MediaKind
 import com.davanok.dvnkquizz.ui.utils.enumStrings.stringRes
 import org.jetbrains.compose.resources.stringResource
 

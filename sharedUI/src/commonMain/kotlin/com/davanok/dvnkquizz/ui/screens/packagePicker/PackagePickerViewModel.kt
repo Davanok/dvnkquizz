@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.davanok.dvnkquizz.core.domain.entities.GamePackage
-import com.davanok.dvnkquizz.core.domain.repositories.GamePackageRepository
+import com.davanok.dvnkquizz.core.domain.gamePackage.entities.GamePackage
+import com.davanok.dvnkquizz.core.domain.gamePackage.repositories.GamePackagesRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 @ViewModelKey
 @ContributesIntoMap(AppScope::class)
 class PackagePickerViewModel(
-    private val packageRepository: GamePackageRepository
+    private val packageRepository: GamePackagesRepository
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")

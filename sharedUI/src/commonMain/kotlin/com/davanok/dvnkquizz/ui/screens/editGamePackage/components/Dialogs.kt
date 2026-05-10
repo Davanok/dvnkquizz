@@ -15,8 +15,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.ImeAction
-import com.davanok.dvnkquizz.core.domain.entities.GameCategory
-import com.davanok.dvnkquizz.core.domain.entities.GameRound
+import com.davanok.dvnkquizz.core.domain.game.entities.GameCategory
+import com.davanok.dvnkquizz.core.domain.game.entities.GameRound
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.add_category_dialog_title
 import dvnkquizz.sharedui.generated.resources.add_round_dialog_title

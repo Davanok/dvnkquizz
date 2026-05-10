@@ -37,7 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.davanok.dvnkquizz.core.domain.entities.GamePackage
+import com.davanok.dvnkquizz.core.domain.gamePackage.entities.GamePackage
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.back

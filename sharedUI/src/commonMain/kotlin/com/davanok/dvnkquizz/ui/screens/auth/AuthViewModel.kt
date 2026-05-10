@@ -2,8 +2,8 @@ package com.davanok.dvnkquizz.ui.screens.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.davanok.dvnkquizz.core.domain.repositories.AuthRepository
-import com.davanok.dvnkquizz.core.utils.EmailPattern
+import com.davanok.dvnkquizz.core.domain.auth.repositories.AuthRepository
+import com.davanok.dvnkquizz.core.core.regex.EmailPattern
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject

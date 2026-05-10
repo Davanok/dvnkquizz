@@ -2,7 +2,7 @@ package com.davanok.dvnkquizz.ui.screens.userGamePackages
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.davanok.dvnkquizz.core.domain.repositories.UserGamePackagesRepository
+import com.davanok.dvnkquizz.core.domain.gamePackage.repositories.GamePackagesRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 @ViewModelKey
 @ContributesIntoMap(AppScope::class)
 class UserGamePackagesViewModel(
-    private val repository: UserGamePackagesRepository
+    private val repository: GamePackagesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UserGamePackagesScreenUiState())

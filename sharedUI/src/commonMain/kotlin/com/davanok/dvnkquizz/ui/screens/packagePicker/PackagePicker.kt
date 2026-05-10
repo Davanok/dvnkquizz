@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
-import com.davanok.dvnkquizz.core.domain.entities.GamePackage
+import com.davanok.dvnkquizz.core.domain.gamePackage.entities.GamePackage
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.anonymous_package_author

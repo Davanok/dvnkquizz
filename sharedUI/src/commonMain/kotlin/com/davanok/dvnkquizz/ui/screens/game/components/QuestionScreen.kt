@@ -29,7 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
-import com.davanok.dvnkquizz.core.domain.entities.Question
+import com.davanok.dvnkquizz.core.domain.game.entities.Question
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.answer
 import dvnkquizz.sharedui.generated.resources.buzz

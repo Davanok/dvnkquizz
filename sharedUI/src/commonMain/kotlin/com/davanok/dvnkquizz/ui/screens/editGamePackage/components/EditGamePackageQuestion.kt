@@ -45,10 +45,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import coil3.compose.AsyncImage
-import com.davanok.dvnkquizz.core.domain.entities.Question
-import com.davanok.dvnkquizz.core.domain.entities.QuestionMedia
-import com.davanok.dvnkquizz.core.domain.enums.MediaKind
-import com.davanok.dvnkquizz.core.domain.enums.QuestionType
+import com.davanok.dvnkquizz.core.domain.game.entities.Question
+import com.davanok.dvnkquizz.core.domain.game.entities.QuestionMedia
+import com.davanok.dvnkquizz.core.domain.gamePackage.enums.MediaKind
+import com.davanok.dvnkquizz.core.domain.gamePackage.enums.QuestionType
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.GamePackageLimits
 import com.davanok.dvnkquizz.ui.utils.enumStrings.stringRes
 import dvnkquizz.sharedui.generated.resources.Res

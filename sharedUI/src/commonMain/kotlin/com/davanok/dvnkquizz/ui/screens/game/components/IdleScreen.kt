@@ -18,7 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.davanok.dvnkquizz.core.domain.entities.Participant
+import com.davanok.dvnkquizz.core.domain.game.entities.Participant
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.next_round
 import org.jetbrains.compose.resources.stringResource

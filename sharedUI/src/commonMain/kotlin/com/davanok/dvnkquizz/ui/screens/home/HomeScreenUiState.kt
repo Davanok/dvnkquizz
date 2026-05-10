@@ -1,7 +1,7 @@
 package com.davanok.dvnkquizz.ui.screens.home
 
 import androidx.compose.runtime.Immutable
-import com.davanok.dvnkquizz.core.domain.entities.AppSettings
+import com.davanok.dvnkquizz.core.domain.settings.entities.AppSettings
 
 @Immutable
 data class HomeScreenUiState(

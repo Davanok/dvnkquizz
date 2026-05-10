@@ -2,9 +2,9 @@ package com.davanok.dvnkquizz.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.davanok.dvnkquizz.core.domain.entities.User
-import com.davanok.dvnkquizz.core.domain.repositories.AuthRepository
-import com.davanok.dvnkquizz.core.domain.repositories.AppSettingsRepository
+import com.davanok.dvnkquizz.core.domain.auth.entities.User
+import com.davanok.dvnkquizz.core.domain.auth.repositories.AuthRepository
+import com.davanok.dvnkquizz.core.domain.settings.repositories.AppSettingsRepository
 import com.davanok.dvnkquizz.ui.navigation.Route
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap

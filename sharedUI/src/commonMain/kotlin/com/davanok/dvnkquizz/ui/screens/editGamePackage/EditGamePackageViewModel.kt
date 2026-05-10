@@ -2,15 +2,15 @@ package com.davanok.dvnkquizz.ui.screens.editGamePackage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.davanok.dvnkquizz.core.domain.entities.FullGameCategory
-import com.davanok.dvnkquizz.core.domain.entities.FullGamePackage
-import com.davanok.dvnkquizz.core.domain.entities.FullGameRound
-import com.davanok.dvnkquizz.core.domain.entities.Question
-import com.davanok.dvnkquizz.core.domain.mappers.toFullGameCategory
-import com.davanok.dvnkquizz.core.domain.mappers.toFullGameRound
-import com.davanok.dvnkquizz.core.domain.mappers.toGameCategory
-import com.davanok.dvnkquizz.core.domain.mappers.toGameRound
-import com.davanok.dvnkquizz.core.domain.repositories.UserGamePackagesRepository
+import com.davanok.dvnkquizz.core.domain.game.entities.FullGameCategory
+import com.davanok.dvnkquizz.core.domain.gamePackage.entities.FullGamePackage
+import com.davanok.dvnkquizz.core.domain.game.entities.FullGameRound
+import com.davanok.dvnkquizz.core.domain.game.entities.Question
+import com.davanok.dvnkquizz.core.domain.game.mappers.toFullGameCategory
+import com.davanok.dvnkquizz.core.domain.game.mappers.toFullGameRound
+import com.davanok.dvnkquizz.core.domain.game.mappers.toGameCategory
+import com.davanok.dvnkquizz.core.domain.game.mappers.toGameRound
+import com.davanok.dvnkquizz.core.domain.gamePackage.repositories.GamePackagesRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -52,7 +52,7 @@ import kotlin.uuid.Uuid
 @AssistedInject
 class EditGamePackageViewModel(
     @Assisted packageId: Uuid?,
-    private val repository: UserGamePackagesRepository
+    private val repository: GamePackagesRepository
 ) : ViewModel() {
 
     private val isNew = packageId == null

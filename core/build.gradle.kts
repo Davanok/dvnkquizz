@@ -43,10 +43,10 @@ kotlin {
             implementation(libs.kotlinx.datetime)
 
             implementation(libs.bundles.supabase)
+            implementation(libs.ktor.core)
 
             implementation(libs.androidx.paging.common)
 
-            implementation(libs.kstore)
             implementation(libs.bundles.settings)
         }
 
@@ -57,18 +57,18 @@ kotlin {
 
         androidMain.dependencies {
             implementation(libs.kotlinx.coroutines.android)
-            implementation(libs.kstore.file)
+            implementation(libs.ktor.client.okhttp)
         }
         jvmMain.dependencies {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.app.dirs)
-            implementation(libs.kstore.file)
+            implementation(libs.ktor.client.okhttp)
         }
         iosMain.dependencies {
-            implementation(libs.kstore.file)
+            implementation(libs.ktor.client.darwin)
         }
         webMain.dependencies {
-            implementation(libs.kstore.storage)
+            implementation(libs.ktor.client.cio)
         }
     }
 

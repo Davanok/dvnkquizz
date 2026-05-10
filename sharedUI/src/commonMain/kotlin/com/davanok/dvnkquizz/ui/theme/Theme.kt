@@ -16,7 +16,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.davanok.dvnkquizz.core.domain.enums.AppTheme
+import com.davanok.dvnkquizz.core.domain.settings.enums.AppTheme
 import com.davanok.dvnkquizz.ui.LocalSnackBarHostState
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)

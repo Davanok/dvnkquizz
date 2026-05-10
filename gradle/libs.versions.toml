@@ -24,7 +24,6 @@ paging = "3.4.0-beta01"
 filekit = "0.14.0"
 coil = "3.4.0"
 composeHotReload = "1.1.0"
-kstore = "1.0.0"
 app-dirs = "2.0.0"
 
 [libraries]
@@ -69,6 +68,9 @@ supabase-storage = { group = "io.github.jan-tennert.supabase", name = "storage-k
 supabase-realtime = { group = "io.github.jan-tennert.supabase", name = "realtime-kt", version.ref = "supabase" }
 
 ktor-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
+
+ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-darwin = { group = "io.ktor", name = "ktor-client-darwin", version.ref = "ktor" }
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
 
 # di
@@ -81,10 +83,6 @@ kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 settings = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettings" }
 settings-observable = { module = "com.russhwolf:multiplatform-settings-make-observable", version.ref = "multiplatformSettings" }
 settings-coroutines = { module = "com.russhwolf:multiplatform-settings-coroutines", version.ref = "multiplatformSettings" }
-
-kstore = { module = "io.github.xxfast:kstore", version.ref = "kstore" }
-kstore-file = { module = "io.github.xxfast:kstore-file", version.ref = "kstore" }
-kstore-storage = { module = "io.github.xxfast:kstore-storage", version.ref = "kstore" }
 
 app-dirs = { module = "ca.gosyer:kotlin-multiplatform-appdirs", version.ref = "app-dirs" }
 
@@ -130,9 +128,7 @@ supabase = [
     "supabase-auth",
     "supabase-postgrest",
     "supabase-realtime",
-    "supabase-storage",
-    "ktor-core",
-    "ktor-client-cio"
+    "supabase-storage"
 ]
 
 filekit = [

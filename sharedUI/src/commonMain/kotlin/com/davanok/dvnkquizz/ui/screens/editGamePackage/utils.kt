@@ -1,9 +1,9 @@
 package com.davanok.dvnkquizz.ui.screens.editGamePackage
 
-import com.davanok.dvnkquizz.core.domain.entities.FullGameCategory
-import com.davanok.dvnkquizz.core.domain.entities.FullGamePackage
-import com.davanok.dvnkquizz.core.domain.entities.FullGameRound
-import com.davanok.dvnkquizz.core.domain.entities.Question
+import com.davanok.dvnkquizz.core.domain.game.entities.FullGameCategory
+import com.davanok.dvnkquizz.core.domain.gamePackage.entities.FullGamePackage
+import com.davanok.dvnkquizz.core.domain.game.entities.FullGameRound
+import com.davanok.dvnkquizz.core.domain.game.entities.Question
 import kotlin.uuid.Uuid
 
 object FullGamePackageUtils {

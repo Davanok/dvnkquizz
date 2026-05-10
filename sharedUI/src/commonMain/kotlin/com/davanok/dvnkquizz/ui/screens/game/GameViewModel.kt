@@ -3,11 +3,11 @@ package com.davanok.dvnkquizz.ui.screens.game
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import com.davanok.dvnkquizz.core.domain.entities.FullGameSession
-import com.davanok.dvnkquizz.core.domain.entities.Participant
-import com.davanok.dvnkquizz.core.domain.enums.ParticipantRole
-import com.davanok.dvnkquizz.core.domain.enums.SessionStatus
-import com.davanok.dvnkquizz.core.domain.repositories.GameProcessRepository
+import com.davanok.dvnkquizz.core.domain.game.entities.FullGameSession
+import com.davanok.dvnkquizz.core.domain.game.entities.Participant
+import com.davanok.dvnkquizz.core.domain.game.enums.ParticipantRole
+import com.davanok.dvnkquizz.core.domain.game.enums.SessionStatus
+import com.davanok.dvnkquizz.core.domain.game.repositories.GameProcessRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory

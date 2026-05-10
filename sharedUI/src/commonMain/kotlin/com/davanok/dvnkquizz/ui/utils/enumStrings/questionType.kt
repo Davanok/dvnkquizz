@@ -1,6 +1,6 @@
 package com.davanok.dvnkquizz.ui.utils.enumStrings
 
-import com.davanok.dvnkquizz.core.domain.enums.QuestionType
+import com.davanok.dvnkquizz.core.domain.gamePackage.enums.QuestionType
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.question_type_auction
 import dvnkquizz.sharedui.generated.resources.question_type_cat_in_the_bag

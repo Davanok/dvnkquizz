@@ -1,0 +1,14 @@
+package com.davanok.dvnkquizz.core.domain.game.entities
+
+import com.davanok.dvnkquizz.core.domain.game.enums.ParticipantRole
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlin.uuid.Uuid
+
+
+@Serializable
+data class JoinSessionResponse(
+    @SerialName("o_session_id") val sessionId: Uuid,
+    @SerialName("o_participant_id") val participantId: Uuid,
+    @SerialName("o_assigned_role") val assignedRole: ParticipantRole
+)
