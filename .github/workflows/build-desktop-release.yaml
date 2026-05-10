@@ -1,8 +1,8 @@
 name: Build Desktop Release
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - master
 
 jobs:
   release:
