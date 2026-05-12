@@ -6,24 +6,26 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularWavyProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -31,7 +33,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.davanok.dvnkquizz.core.domain.game.entities.Question
 import dvnkquizz.sharedui.generated.resources.Res
-import dvnkquizz.sharedui.generated.resources.answer
 import dvnkquizz.sharedui.generated.resources.buzz
 import dvnkquizz.sharedui.generated.resources.waiting_other_participants
 import kotlinx.coroutines.delay
@@ -43,7 +44,7 @@ import kotlin.time.Instant
 @Composable
 fun QuestionScreen(
     isHost: Boolean,
-    onBuzz: () -> Unit,
+    onBuzz: (answer: String) -> Unit,
     showQuestionAt: Instant?,
     question: Question,
     modifier: Modifier = Modifier
@@ -60,105 +61,145 @@ fun QuestionScreen(
     }.value
 
     Box(modifier = modifier) {
-        if (showQuestionIn != null) {
-            if (showQuestionIn > 0) CountdownOverlay(showQuestionIn)
-            else Content(
+        when {
+            showQuestionIn == null -> ProgressBox(
+                progress = question.media?.progress,
+                modifier = Modifier.fillMaxSize()
+            )
+            showQuestionIn > 0 -> {
+                if (isHost)
+                    HostCountdown(
+                        showQuestionIn = showQuestionIn,
+                        question = question
+                    )
+                else
+                    CountdownText(
+                        seconds = showQuestionIn,
+                        modifier = Modifier.fillMaxSize()
+                    )
+            }
+            else -> Content(
                 isHost = isHost,
                 onBuzz = onBuzz,
                 question = question
             )
-        } else {
-            val progress = question.media?.progress
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                when  {
-                    progress == null -> CircularWavyProgressIndicator()
-                    progress < 1 -> CircularWavyProgressIndicator(progress = { progress })
-                    else -> Text(text = stringResource(Res.string.waiting_other_participants))
-                }
-            }
         }
     }
 }
 
 @Composable
-private fun CountdownOverlay(seconds: Int) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        AnimatedContent(
-            targetState = seconds,
-            transitionSpec = {
-                (fadeIn() + scaleIn()).togetherWith(fadeOut() + scaleOut())
-            }
-        ) { targetCount ->
-            Text(
-                text = targetCount.toString(),
-                style = MaterialTheme.typography.displayLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
+private fun HostCountdown(
+    showQuestionIn: Int,
+    question: Question,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        CountdownText(
+            seconds = showQuestionIn,
+            modifier = Modifier
+                .height(50.dp)
+                .align(Alignment.End)
+        )
+        Content(
+            isHost = true,
+            onBuzz = {  },
+            question = question
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ProgressBox(progress: Float?, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        when  {
+            progress == null -> CircularWavyProgressIndicator()
+            progress < 1 -> CircularWavyProgressIndicator(progress = { progress })
+            else -> Text(text = stringResource(Res.string.waiting_other_participants))
         }
+    }
+}
+
+@Composable
+private fun CountdownText(
+    seconds: Int,
+    modifier: Modifier
+) {
+    AnimatedContent(
+        modifier = modifier,
+        targetState = seconds,
+        transitionSpec = {
+            (fadeIn() + scaleIn()).togetherWith(fadeOut() + scaleOut())
+        }
+    ) { targetCount ->
+        Text(
+            text = targetCount.toString(),
+            style = MaterialTheme.typography.displayLarge,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 @Composable
 private fun Content(
     isHost: Boolean,
-    onBuzz: () -> Unit,
+    onBuzz: (answer: String) -> Unit,
     question: Question,
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        QuestionContent(
+        QuestionCard(
             question = question,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+                .widthIn(max = 600.dp)
         )
 
-        Spacer(Modifier.height(24.dp))
-
         if (isHost) {
-            ElevatedCard(
+            QuestionAnswerCard(
+                question = question,
                 modifier = Modifier
+                    .padding(horizontal = 16.dp)
                     .fillMaxWidth()
-                    .widthIn(max = 600.dp),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp)
-                ) {
-                    Text(
-                        text = stringResource(Res.string.answer),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    SelectionContainer {
-                        Text(
-                            text = question.answerText,
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
+                    .widthIn(max = 600.dp)
+            )
         } else {
-            val haptic = LocalHapticFeedback.current
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onBuzz()
-                }
-            ) {
-                Text(
-                    stringResource(Res.string.buzz),
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
+            PlayerSection(
+                onBuzz = onBuzz
+            )
         }
+    }
+}
+
+@Composable
+private fun PlayerSection(
+    onBuzz: (answer: String) -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+    var answerText by remember { mutableStateOf("") }
+
+    TextField(
+        value = answerText,
+        onValueChange = { answerText = it }
+    )
+
+    Button(
+        modifier = Modifier
+            .fillMaxWidth(),
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            onBuzz(answerText)
+        }
+    ) {
+        Text(
+            stringResource(Res.string.buzz),
+            style = MaterialTheme.typography.titleLarge
+        )
     }
 }

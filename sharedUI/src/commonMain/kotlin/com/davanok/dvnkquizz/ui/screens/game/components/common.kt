@@ -10,12 +10,17 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Badge
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -25,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -32,9 +38,10 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.davanok.dvnkquizz.core.domain.game.entities.Participant
 import com.davanok.dvnkquizz.core.domain.game.entities.Question
-import com.davanok.dvnkquizz.core.domain.gamePackage.enums.MediaKind
 import com.davanok.dvnkquizz.core.domain.game.enums.ParticipantRole
+import com.davanok.dvnkquizz.core.domain.gamePackage.enums.MediaKind
 import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.answer
 import dvnkquizz.sharedui.generated.resources.ic_error
 import dvnkquizz.sharedui.generated.resources.ic_person
 import dvnkquizz.sharedui.generated.resources.no_profile_image
@@ -49,11 +56,16 @@ fun ParticipantCard(
 ) {
     Box(modifier = modifier) {
         OutlinedCard(
-            shape = MaterialTheme.shapes.extraLarge, // Softer corners look more modern
+            shape = MaterialTheme.shapes.extraLarge,
+            border =
+                if (participant.isReady)
+                    CardDefaults.outlinedCardBorder()
+                else
+                    CardDefaults.outlinedCardBorder()
+                        .copy(brush = SolidColor(MaterialTheme.colorScheme.secondary)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // 2. Improved Image Presentation
                 ParticipantImage(
                     imageUrl = participant.user.image,
                     modifier = Modifier
@@ -150,41 +162,71 @@ private fun ParticipantScore(
 }
 
 @Composable
-fun QuestionContent(
+fun QuestionCard(
     question: Question,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        question.media?.let { media ->
-            when (media.kind) {
-                MediaKind.IMAGE -> AsyncImage(
-                    model = media.url,
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 300.dp)
-                        .clip(MaterialTheme.shapes.large)
-                )
-                MediaKind.AUDIO -> {
-                    Text(text = "Audio not supported yet") // TODO
+    ElevatedCard(modifier = modifier) {
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.Center
+        ) {
+            question.media?.let { media ->
+                when (media.kind) {
+                    MediaKind.IMAGE -> AsyncImage(
+                        model = media.url,
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 300.dp)
+                            .clip(MaterialTheme.shapes.large)
+                    )
+                    MediaKind.AUDIO -> {
+                        Text(text = "Audio not supported yet") // TODO
+                    }
+                    MediaKind.VIDEO -> {
+                        Text(text = "Video not supported yet") // TODO
+                    }
+                    MediaKind.NONE -> {}
                 }
-                MediaKind.VIDEO -> {
-                    Text(text = "Video not supported yet") // TODO
-                }
-                MediaKind.NONE -> {}
+                Spacer(Modifier.height(16.dp))
             }
-            Spacer(Modifier.height(16.dp))
-        }
 
-        Text(
-            text = question.questionText,
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
-        )
+            Text(
+                text = question.questionText,
+                style = MaterialTheme.typography.headlineMedium,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+fun QuestionAnswerCard(
+    question: Question,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(modifier = modifier) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Text(
+                text = stringResource(Res.string.answer),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            SelectionContainer {
+                Text(
+                    text = question.answerText,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
     }
 }

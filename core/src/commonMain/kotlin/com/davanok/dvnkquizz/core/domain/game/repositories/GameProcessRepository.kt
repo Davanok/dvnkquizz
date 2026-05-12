@@ -14,7 +14,7 @@ interface GameProcessRepository {
 
     suspend fun selectQuestion(sessionId: Uuid, questionId: Uuid): Result<Unit>
 
-    suspend fun buzzIn(sessionId: Uuid): Result<Boolean>
+    suspend fun buzzIn(sessionId: Uuid, answer: String): Result<Boolean>
 
     suspend fun judgeAnswer(sessionId: Uuid, answerId: Uuid, isCorrect: Boolean): Result<Unit>
 

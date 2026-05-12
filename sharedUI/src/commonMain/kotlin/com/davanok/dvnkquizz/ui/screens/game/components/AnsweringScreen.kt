@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -26,12 +25,12 @@ import com.davanok.dvnkquizz.core.domain.game.entities.Participant
 import com.davanok.dvnkquizz.core.domain.game.entities.Question
 import com.davanok.dvnkquizz.core.domain.game.entities.SessionAnswer
 import dvnkquizz.sharedui.generated.resources.Res
-import dvnkquizz.sharedui.generated.resources.answer
 import dvnkquizz.sharedui.generated.resources.answering
 import dvnkquizz.sharedui.generated.resources.correct_answer
 import dvnkquizz.sharedui.generated.resources.ic_check
 import dvnkquizz.sharedui.generated.resources.ic_close
 import dvnkquizz.sharedui.generated.resources.incorrect_answer
+import dvnkquizz.sharedui.generated.resources.participant_answer
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.uuid.Uuid
@@ -47,8 +46,17 @@ fun AnsweringScreen(
 ) {
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        QuestionCard(
+            question = question,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+                .widthIn(max = 600.dp)
+        )
+
         ParticipantCard(
             participant = participant,
             modifier = Modifier
@@ -56,45 +64,28 @@ fun AnsweringScreen(
                 .fillMaxWidth(0.5f)
         )
 
-        Spacer(Modifier.height(12.dp))
-
         Text(
             text = stringResource(Res.string.answering),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
+        UserAnswerCard(
+            answer = answer,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+                .widthIn(max = 600.dp)
+        )
+
         if (isHost) {
-            Spacer(Modifier.height(24.dp))
-
-            ElevatedCard(
+            QuestionAnswerCard(
+                question = question,
                 modifier = Modifier
+                    .padding(horizontal = 16.dp)
                     .fillMaxWidth()
-                    .widthIn(max = 600.dp),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp)
-                ) {
-                    Text(
-                        text = stringResource(Res.string.answer),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    SelectionContainer {
-                        Text(
-                            text = question.answerText,
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(24.dp))
+                    .widthIn(max = 600.dp)
+            )
 
             HostJudgingButtons(
                 judgeAnswer = { judgeAnswer(answer.id, it) },
@@ -105,6 +96,35 @@ fun AnsweringScreen(
         }
     }
 }
+
+@Composable
+private fun UserAnswerCard(
+    answer: SessionAnswer,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(modifier = modifier) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Text(
+                text = stringResource(Res.string.participant_answer),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            SelectionContainer {
+                Text(
+                    text = answer.answer,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun HostJudgingButtons(
     judgeAnswer: (isCorrect: Boolean) -> Unit,

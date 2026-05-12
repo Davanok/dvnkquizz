@@ -9,9 +9,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -42,9 +45,12 @@ fun SelectQuestionScreen(
 
     if (categories.isEmpty() || maxItems == 0) return
 
-    Column {
+    Column(modifier = modifier) {
         LazyHorizontalGrid(
-            modifier = modifier.fillMaxWidth().weight(1f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
             rows = GridCells.Fixed(categories.size),
             contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -60,23 +66,23 @@ fun SelectQuestionScreen(
                 }
             }
 
-            // Remaining Columns: The question cards
-            for (index in 0 until maxItems) {
+            repeat(maxItems) { index ->
                 categories.forEach { category ->
                     val item = questions[category]?.getOrNull(index)
 
                     if (item == null) {
                         item(contentType = "placeholder") {
-                            // Use a fresh modifier, NOT the screen's root modifier
                             Spacer(modifier = Modifier.width(100.dp).fillMaxHeight())
                         }
                     } else {
-                        item(contentType = "item", key = item.questionId) { // Use ID for better recomposition
-                            GameBoardCard( // Renamed to avoid shadowing
+                        item(contentType = "item", key = item.questionId) {
+                            GameBoardCard(
                                 item = item,
                                 isHost = isHost,
                                 onClick = { onSelectQuestion(item) },
-                                modifier = Modifier.width(100.dp).fillMaxHeight()
+                                modifier = Modifier
+                                    .size(width = 100.dp, height = 70.dp)
+                                    .fillMaxHeight()
                             )
                         }
                     }
@@ -100,7 +106,7 @@ private fun CategoryHeader(
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier.width(120.dp) // Give headers a consistent width
+        modifier = modifier.width(120.dp)
     ) {
         Text(
             text = title,
@@ -123,14 +129,12 @@ private fun GameBoardCard(
 
     Surface(
         modifier = modifier,
-        shape = MaterialTheme.shapes.medium, // 'medium' is standard for cards
-        // Dim the background if answered
+        shape = MaterialTheme.shapes.medium,
         color = if (item.isAnswered) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface,
         enabled = isEnabled,
         onClick = onClick,
         border = if (item.isAnswered) null else BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
     ) {
-        // Use a Box to perfectly center the price text
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize()
@@ -139,7 +143,6 @@ private fun GameBoardCard(
                 text = item.price.toString(),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                // Dim the text if answered
                 color = if (item.isAnswered) {
                     MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 } else {

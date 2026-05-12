@@ -88,7 +88,7 @@ private fun ParticipantResultItem(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(getRankColor(rank)),
+                    .background(getRankColor(rank, MaterialTheme.colorScheme.outline)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -118,12 +118,11 @@ private fun ParticipantResultItem(
     }
 }
 
-@Composable
-private fun getRankColor(rank: Int): Color {
+private fun getRankColor(rank: Int, default: Color): Color {
     return when (rank) {
         1 -> Color(0xFFFFD700) // gold
         2 -> Color(0xFFC0C0C0) // Silver
         3 -> Color(0xFFCD7F32) // Bronze
-        else -> MaterialTheme.colorScheme.outline
+        else -> default
     }
 }

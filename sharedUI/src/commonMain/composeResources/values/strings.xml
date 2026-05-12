@@ -56,7 +56,9 @@
     <string name="copied_to_clipboard">Copied to clipboard</string>
 
     <string name="answering">Answering</string>
+    <string name="question">Question</string>
     <string name="answer">Answer:</string>
+    <string name="participant_answer">Participant answer:</string>
     <string name="correct_answer">Correct</string>
     <string name="incorrect_answer">Incorrect</string>
 

@@ -127,7 +127,7 @@ sealed interface GameScreenUiEvent {
     data class SelectQuestion(val questionId: Uuid) : GameScreenUiEvent
 
     // Question
-    data object Buzz : GameScreenUiEvent
+    data class Buzz(val answer: String) : GameScreenUiEvent
 
     // Answering
     data class JudgeAnswer(val answerId: Uuid, val isCorrect: Boolean) : GameScreenUiEvent

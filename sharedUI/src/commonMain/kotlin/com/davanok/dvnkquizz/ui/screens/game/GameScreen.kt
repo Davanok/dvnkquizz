@@ -232,7 +232,7 @@ private fun PagesContent(
             )
             is GameScreenUiState.Question -> QuestionScreen(
                 isHost = state.isHost,
-                onBuzz = { eventSink(GameScreenUiEvent.Buzz) },
+                onBuzz = { eventSink(GameScreenUiEvent.Buzz(it)) },
                 showQuestionAt = state.showQuestionAt,
                 question = state.question,
                 modifier = modifier
@@ -275,7 +275,7 @@ private fun ParticipantsList(
         ) { participant ->
             ParticipantCard(
                 participant = participant,
-                modifier = Modifier.width(200.dp).animateItem()
+                modifier = Modifier.width(100.dp).animateItem()
             )
         }
     }

@@ -7,7 +7,7 @@ import co.touchlab.kermit.Logger
 import com.davanok.dvnkquizz.core.core.id.currentUserId
 import com.davanok.dvnkquizz.core.core.media.mediaKindForMimeType
 import com.davanok.dvnkquizz.core.core.media.mimeTypeToFileExtension
-import com.davanok.dvnkquizz.core.core.result.toResultFLow
+import com.davanok.dvnkquizz.core.core.result.toResultFlow
 import com.davanok.dvnkquizz.core.domain.game.entities.Question
 import com.davanok.dvnkquizz.core.domain.game.entities.QuestionDto
 import com.davanok.dvnkquizz.core.domain.game.entities.QuestionMedia
@@ -176,7 +176,7 @@ class GamePackagesRepositoryImpl internal constructor(
                 progress = 1f
             )
         )
-    }.toResultFLow()
+    }.toResultFlow()
 
     override suspend fun deleteQuestionMedia(
         questionId: Uuid

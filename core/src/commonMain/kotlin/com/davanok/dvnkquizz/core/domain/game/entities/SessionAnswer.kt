@@ -19,5 +19,7 @@ data class SessionAnswer(
     @SerialName("points_awarded")
     val pointsAwarded: Int?,
     @SerialName("answered_at")
-    val answeredAt: Instant
+    val answeredAt: Instant,
+
+    val answer: String
 )

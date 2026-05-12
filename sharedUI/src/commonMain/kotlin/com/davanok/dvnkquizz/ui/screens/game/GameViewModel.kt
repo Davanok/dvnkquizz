@@ -101,7 +101,8 @@ class GameViewModel(
             )
 
             else -> {
-                val activeAnswers = answers.filter { it.questionId == session.currentQuestionId }
+                val activeAnswers = answers
+                    .filter { it.questionId == session.currentQuestionId }
 
                 when {
                     activeAnswers.none { it.isCorrect != false } -> GameScreenUiState.Question(
@@ -191,13 +192,13 @@ class GameViewModel(
                 repository.selectQuestion(sessionId, event.questionId)
             }
 
-            GameScreenUiEvent.Buzz -> {
+            is GameScreenUiEvent.Buzz -> {
                 check(currentUiState is GameScreenUiState.Question)
                 check(currentUiState.role == ParticipantRole.PLAYER) {
                     getString(Res.string.only_player_can_buzz)
                 }
 
-                repository.buzzIn(sessionId)
+                repository.buzzIn(sessionId, event.answer)
             }
 
             is GameScreenUiEvent.JudgeAnswer -> {

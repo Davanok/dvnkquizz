@@ -13,7 +13,7 @@ import com.davanok.dvnkquizz.core.platform.Platform
 import com.davanok.dvnkquizz.core.platform.currentPlatform
 import com.davanok.dvnkquizz.core.core.id.currentUserId
 import com.davanok.dvnkquizz.core.core.filesystem.div
-import com.davanok.dvnkquizz.core.core.result.toResultFLow
+import com.davanok.dvnkquizz.core.core.result.toResultFlow
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -162,7 +162,7 @@ class GameProcessRepositoryImpl(
                 channel.unsubscribe()
             }
         }
-    }.toResultFLow().onEach { res ->
+    }.toResultFlow().onEach { res ->
         res.onFailure { logger.e(it) { "Error in game session flow" } }
     }
 
@@ -194,8 +194,14 @@ class GameProcessRepositoryImpl(
         ))
     }
 
-    override suspend fun buzzIn(sessionId: Uuid): Result<Boolean> = runCatching {
-        postgrest.rpc("buzz_in", mapOf("p_session_id" to sessionId)).decodeAs<Boolean>()
+    override suspend fun buzzIn(sessionId: Uuid, answer: String): Result<Boolean> = runCatching {
+        postgrest.rpc(
+            "buzz_in",
+            mapOf(
+                "p_session_id" to sessionId,
+                "p_answer" to answer
+            )
+        ).decodeAs<Boolean>()
     }
 
     override suspend fun judgeAnswer(sessionId: Uuid, answerId: Uuid, isCorrect: Boolean): Result<Unit> = runCatching {

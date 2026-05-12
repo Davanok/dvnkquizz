@@ -2,7 +2,7 @@ package com.davanok.dvnkquizz.core.data.user
 
 import co.touchlab.kermit.Logger
 import com.davanok.dvnkquizz.core.core.id.currentUserId
-import com.davanok.dvnkquizz.core.core.result.toResultFLow
+import com.davanok.dvnkquizz.core.core.result.toResultFlow
 import com.davanok.dvnkquizz.core.domain.auth.entities.UserProfile
 import com.davanok.dvnkquizz.core.domain.auth.repositories.UserProfileRepository
 import dev.zacsweers.metro.AppScope
@@ -43,7 +43,7 @@ class UserProfileRepositoryImpl(
 
                 profile.copy(image = profileImageUrl)
             }
-            .toResultFLow()
+            .toResultFlow()
 
     override suspend fun setNickname(nickname: String): Result<Unit> = runCatching<Unit> {
         postgrest.from("users")
