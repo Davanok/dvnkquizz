@@ -58,18 +58,18 @@ kotlin {
 
         androidMain.dependencies {
             implementation(libs.kotlinx.coroutines.android)
-//            implementation(libs.ktor.client.okhttp)
+            implementation(libs.ktor.client.okhttp)
         }
         jvmMain.dependencies {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.app.dirs)
-//            implementation(libs.ktor.client.okhttp)
+            implementation(libs.ktor.client.okhttp)
         }
         iosMain.dependencies {
-//            implementation(libs.ktor.client.darwin)
+            implementation(libs.ktor.client.darwin)
         }
         webMain.dependencies {
-//            implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.js)
         }
     }
 

@@ -17,7 +17,15 @@ compose.desktop {
         mainClass = "MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(
+                TargetFormat.Dmg,
+                TargetFormat.Msi,
+                TargetFormat.Deb,
+                TargetFormat.AppImage,
+                TargetFormat.Pkg,
+                TargetFormat.Exe,
+                TargetFormat.Rpm
+            )
             packageName = "DVNKQuizz"
             packageVersion = "1.0.0"
 

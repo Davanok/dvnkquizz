@@ -3,9 +3,7 @@ name: Build Desktop Release
 on:
   push:
     branches:
-      - master
-    tags:
-      - 'v*'
+      - test
 
 jobs:
   release:
@@ -84,16 +82,6 @@ jobs:
           path: |
             desktopApp/build/compose/logs/createReleaseDistributable/*-out.txt
             desktopApp/build/compose/logs/createReleaseDistributable/*-err.txt
-          if-no-files-found: ignore
-          
-      - name: Upload proguard logs
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: proguard-logs-${{ matrix.os }}
-          path: |
-            desktopApp/build/compose/logs/proguardReleaseJars/*-out.txt
-            desktopApp/build/compose/logs/proguardReleaseJars/*-err.txt
           if-no-files-found: ignore
 
       - name: Release

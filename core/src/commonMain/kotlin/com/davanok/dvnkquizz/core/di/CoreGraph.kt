@@ -29,13 +29,16 @@ import io.github.jan.supabase.realtime.realtime
 import io.github.jan.supabase.serializer.KotlinXSerializer
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.storage
+import io.ktor.client.engine.HttpClientEngine
 import kotlinx.serialization.json.Json
 
 interface CoreGraph: PlatformGraph {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun provideSupabase(): SupabaseClient = createSupabaseClient(
+    fun provideSupabase(
+        httpClientEngine: HttpClientEngine
+    ): SupabaseClient = createSupabaseClient(
         supabaseUrl = BuildConfig.SUPABASE_URL,
         supabaseKey = BuildConfig.SUPABASE_KEY,
     ) {
@@ -50,6 +53,8 @@ interface CoreGraph: PlatformGraph {
                 encodeDefaults = true
             }
         )
+
+        httpEngine = httpClientEngine
     }
 
     @Provides

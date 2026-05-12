@@ -6,6 +6,8 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Named
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.engine.js.Js
 import kotlinx.io.files.Path
 import kotlinx.serialization.json.Json
 
@@ -27,4 +29,8 @@ actual interface PlatformGraph {
     @SingleIn(scope = AppScope::class)
     actual fun provideGamePackageDraftsStorage(): Storage =
         WebStorage(prefix = "drafts", format = Json)
+
+    @Provides
+    @SingleIn(scope = AppScope::class)
+    actual fun provideHttpClientEngine(): HttpClientEngine = Js.create()
 }

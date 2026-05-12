@@ -8,6 +8,8 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Named
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.engine.darwin.Darwin
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.io.files.Path
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -53,4 +55,8 @@ actual interface PlatformGraph {
     @SingleIn(scope = AppScope::class)
     actual fun provideGamePackageDraftsStorage(): Storage =
         FilesStorage(dataDir = provideDataDir() / "drafts", format = ProtoBuf, "binpb")
+
+    @Provides
+    @SingleIn(scope = AppScope::class)
+    actual fun provideHttpClientEngine(): HttpClientEngine = Darwin.create()
 }

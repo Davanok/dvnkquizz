@@ -1,6 +1,7 @@
 package com.davanok.dvnkquizz.core.di
 
 import com.davanok.dvnkquizz.core.data.storage.Storage
+import io.ktor.client.engine.HttpClientEngine
 import kotlinx.io.files.Path
 
 expect interface PlatformGraph {
@@ -9,4 +10,6 @@ expect interface PlatformGraph {
     open fun provideLogsDir(): Path
 
     open fun provideGamePackageDraftsStorage(): Storage
+
+    open fun provideHttpClientEngine(): HttpClientEngine
 }
