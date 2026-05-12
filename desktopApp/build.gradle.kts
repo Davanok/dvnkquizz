@@ -16,6 +16,12 @@ compose.desktop {
     application {
         mainClass = "MainKt"
 
+        buildTypes.release.proguard {
+            configurationFiles.from(
+                project.file("proguard-rules.pro")
+            )
+        }
+
         nativeDistributions {
             targetFormats(
                 TargetFormat.Dmg,
