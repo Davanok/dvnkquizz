@@ -44,12 +44,12 @@ jobs:
           - os: ubuntu-latest
             arch: amd64
             task: packageReleaseAppImage
-            artifact_path: desktopApp/build/compose/binaries/main-release/appimage/*.deb
+            artifact_path: desktopApp/build/compose/binaries/main-release/appimage/*.AppImage
 
           - os: ubuntu-24.04-arm
             arch: arm64
             task: packageReleaseAppImage
-            artifact_path: desktopApp/build/compose/binaries/main-release/deb/*.deb
+            artifact_path: desktopApp/build/compose/binaries/main-release/appimage/*.AppImage
 
     runs-on: ${{ matrix.os }}
 
