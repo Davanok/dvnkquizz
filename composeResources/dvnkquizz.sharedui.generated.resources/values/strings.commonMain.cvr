@@ -73,6 +73,7 @@ string|package_details|UGFja2FnZSBkZXRhaWxz
 string|package_difficulty_text_field_label|RGlmZmljdWx0eQ==
 string|package_difficulty|RGlmZjogJTEkZA==
 string|package_title_text_field_label|VGl0bGU=
+string|participant_answer|UGFydGljaXBhbnQgYW5zd2VyOg==
 string|password_field_label|UGFzc3dvcmQ=
 string|profile_image|UHJvZmlsZSBpbWFnZQ==
 string|question_answer_label|QW5zd2Vy
@@ -84,6 +85,7 @@ string|question_type_cat_in_the_bag|Tm9ybWFs
 string|question_type_final|Tm9ybWFs
 string|question_type_label|VHlwZQ==
 string|question_type_normal|Tm9ybWFs
+string|question|UXVlc3Rpb24=
 string|reload_packages|UmVsb2FkIHBhY2thZ2Vz
 string|remove_question_media|UmVtb3ZlIHF1ZXN0aW9uIG1lZGlh
 string|resend_email_in|UmVzZW5kIGVtYWlsIGluICUxJHNz
