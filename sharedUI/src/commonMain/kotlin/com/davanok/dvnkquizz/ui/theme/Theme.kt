@@ -15,9 +15,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import com.davanok.dvnkquizz.core.domain.settings.enums.AppTheme
-import com.davanok.dvnkquizz.ui.LocalSnackBarHostState
+import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.copied_to_clipboard
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -34,9 +38,25 @@ internal fun AppTheme(
     LaunchedEffect(systemIsDark) {
         onThemeChanged(systemIsDark)
     }
+
+    val coroutineScope = rememberCoroutineScope()
+
     val snackbarHostState = remember { SnackbarHostState() }
 
-    CompositionLocalProvider(LocalSnackBarHostState provides snackbarHostState) {
+    val clipboardManager = rememberClipboardManager(
+        onSetString = { str ->
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = getString(Res.string.copied_to_clipboard, str)
+                )
+            }
+        }
+    )
+
+    CompositionLocalProvider(
+        LocalSnackBarHostState provides snackbarHostState,
+        LocalClipboardManager provides clipboardManager
+    ) {
         MaterialTheme(
             colorScheme = if (systemIsDark) darkColorScheme() else expressiveLightColorScheme(),
             content = {

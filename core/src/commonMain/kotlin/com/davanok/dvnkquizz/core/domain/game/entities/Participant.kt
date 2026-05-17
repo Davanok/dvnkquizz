@@ -22,10 +22,10 @@ internal data class ParticipantDto(
     val isReady: Boolean,
     val user: UserProfile
 ) {
-    fun toDomain(currentUserId: Uuid?) = Participant(
+    fun toDomain(currentUserId: Uuid?, profileImageUrl: String?) = Participant(
         id = id,
         sessionId = sessionId,
-        user = user,
+        user = user.copy(image = profileImageUrl),
         score = score,
         role = role,
         joinedAt = joinedAt,

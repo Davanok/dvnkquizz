@@ -1,7 +1,7 @@
 package com.davanok.dvnkquizz.ui.screens.game
 
 import androidx.compose.runtime.Immutable
-import com.davanok.dvnkquizz.core.domain.game.entities.GameBoardItem
+import com.davanok.dvnkquizz.core.domain.game.entities.GameBoardRow
 import com.davanok.dvnkquizz.core.domain.gamePackage.entities.GamePackage
 import com.davanok.dvnkquizz.core.domain.game.entities.Participant
 import com.davanok.dvnkquizz.core.domain.game.entities.SessionAnswer
@@ -45,7 +45,9 @@ sealed interface GameScreenUiState {
         override val inviteCode: String?,
         override val gamePackage: GamePackage?,
         override val participants: List<Participant>,
-        override val message: String? = null
+        override val message: String? = null,
+
+        val startEnabled: Boolean
     ) : GameScreenUiState {
         override fun copyState(message: String?): GameScreenUiState = copy(message = message)
     }
@@ -57,7 +59,7 @@ sealed interface GameScreenUiState {
         override val participants: List<Participant>,
         override val message: String? = null,
 
-        val board: Map<String, List<GameBoardItem>>
+        val board: List<GameBoardRow>
     ) : GameScreenUiState {
         override fun copyState(message: String?): GameScreenUiState = copy(message = message)
     }

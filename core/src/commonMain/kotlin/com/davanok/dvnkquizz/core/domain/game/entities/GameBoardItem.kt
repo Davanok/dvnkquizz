@@ -5,9 +5,16 @@ import kotlinx.serialization.Serializable
 import kotlin.uuid.Uuid
 
 @Serializable
-data class GameBoardItem(
+data class GameBoardRow(
+    @SerialName("category_id")
+    val categoryId: Uuid,
     @SerialName("category_name")
     val categoryName: String,
+    val questions: List<GameBoardQuestion>
+)
+
+@Serializable
+data class GameBoardQuestion(
     @SerialName("question_id")
     val questionId: Uuid,
     val price: Int,

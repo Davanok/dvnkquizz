@@ -4,10 +4,9 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,33 +16,24 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberTooltipState
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.davanok.dvnkquizz.core.domain.game.entities.Participant
-import com.davanok.dvnkquizz.ui.platform.ClipEntry
 import com.davanok.dvnkquizz.ui.screens.game.components.AnswerScreen
 import com.davanok.dvnkquizz.ui.screens.game.components.AnsweringScreen
 import com.davanok.dvnkquizz.ui.screens.game.components.FatalErrorScreen
@@ -53,11 +43,13 @@ import com.davanok.dvnkquizz.ui.screens.game.components.ParticipantCard
 import com.davanok.dvnkquizz.ui.screens.game.components.QuestionScreen
 import com.davanok.dvnkquizz.ui.screens.game.components.ResultsScreen
 import com.davanok.dvnkquizz.ui.screens.game.components.SelectQuestionScreen
+import com.davanok.dvnkquizz.ui.theme.LocalClipboardManager
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.back
-import dvnkquizz.sharedui.generated.resources.copied_to_clipboard
+import dvnkquizz.sharedui.generated.resources.copy_invite_code
 import dvnkquizz.sharedui.generated.resources.host
 import dvnkquizz.sharedui.generated.resources.ic_arrow_back
+import dvnkquizz.sharedui.generated.resources.ic_copy
 import dvnkquizz.sharedui.generated.resources.invite_code
 import dvnkquizz.sharedui.generated.resources.unknown_game_package
 import kotlinx.coroutines.launch
@@ -118,7 +110,6 @@ private fun Content(
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
             if (state !is GameScreenUiState.Idle) {
-                // in idle we show participants grid
                 ParticipantsList(
                     participants = state.participants,
                     modifier = Modifier.fillMaxWidth()
@@ -144,55 +135,45 @@ private fun Title(
     code: String?,
     modifier: Modifier = Modifier
 ) {
-    val clipboard = LocalClipboard.current
-    val haptics = LocalHapticFeedback.current
+    val clipboard = LocalClipboardManager.current
     val scope = rememberCoroutineScope()
 
-    val tooltipState = rememberTooltipState()
-
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Text(
             text = title ?: stringResource(Res.string.unknown_game_package),
+            style = MaterialTheme.typography.headlineSmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
 
         if (code != null) {
-            Text(
-                text = stringResource(Res.string.invite_code),
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            TooltipBox(
-                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
-                tooltip = {
-                    PlainTooltip {
-                        Text(stringResource(Res.string.copied_to_clipboard))
-                    }
-                },
-                state = tooltipState,
-                enableUserInput = false
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = code,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.clickable {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    text = stringResource(Res.string.invite_code),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
 
-                        scope.launch {
-                            clipboard.setClipEntry(ClipEntry(code))
-                        }
-                        scope.launch {
-                            tooltipState.show()
-                        }
-                    }
+                AssistChip(
+                    onClick = { scope.launch { clipboard.setString(code) } },
+                    label = { Text(text = code) },
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_copy),
+                            contentDescription = stringResource(Res.string.copy_invite_code)
+                        )
+                    },
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        labelColor = contentColorFor(MaterialTheme.colorScheme.primaryContainer),
+                        trailingIconContentColor = contentColorFor(MaterialTheme.colorScheme.primaryContainer)
+                    )
                 )
             }
         }
@@ -219,6 +200,7 @@ private fun PagesContent(
             is GameScreenUiState.FatalError -> FatalErrorScreen(message = state.message, modifier = modifier)
             is GameScreenUiState.Idle -> IdleScreen(
                 isHost = state.isHost,
+                nextRoundEnabled = state.startEnabled,
                 onNextRound = { eventSink(GameScreenUiEvent.NextRound) },
                 participants = state.participants,
                 modifier = modifier
@@ -227,7 +209,7 @@ private fun PagesContent(
                 isHost = state.isHost,
                 onSelectQuestion = { eventSink(GameScreenUiEvent.SelectQuestion(it.questionId)) },
                 onNextRound = { eventSink(GameScreenUiEvent.NextRound) },
-                questions = state.board,
+                gameBoard = state.board,
                 modifier = modifier
             )
             is GameScreenUiState.Question -> QuestionScreen(

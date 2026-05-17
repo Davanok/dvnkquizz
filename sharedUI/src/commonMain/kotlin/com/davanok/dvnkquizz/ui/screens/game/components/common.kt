@@ -56,7 +56,6 @@ fun ParticipantCard(
 ) {
     Box(modifier = modifier) {
         OutlinedCard(
-            shape = MaterialTheme.shapes.extraLarge,
             border =
                 if (participant.isReady)
                     CardDefaults.outlinedCardBorder()
@@ -113,7 +112,7 @@ private fun ParticipantImage(
 ) {
     Surface(
         modifier = modifier,
-        shape = MaterialTheme.shapes.extraLarge,
+        shape = CardDefaults.shape,
         color = MaterialTheme.colorScheme.surfaceDim
     ) {
         if (imageUrl == null) {

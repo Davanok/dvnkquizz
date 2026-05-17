@@ -43,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -236,6 +237,7 @@ private fun ProfilePart(
                 )
                 else -> AsyncImage(
                     model = imageUrl,
+                    contentScale = ContentScale.Crop,
                     contentDescription = stringResource(Res.string.profile_image),
                     error = painterResource(Res.drawable.ic_error)
                 )

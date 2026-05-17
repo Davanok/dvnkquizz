@@ -5,16 +5,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -25,68 +26,47 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import com.davanok.dvnkquizz.core.domain.game.entities.GameBoardItem
+import com.davanok.dvnkquizz.core.domain.game.entities.GameBoardQuestion
+import com.davanok.dvnkquizz.core.domain.game.entities.GameBoardRow
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.next_round
 import org.jetbrains.compose.resources.stringResource
 
+private val CellSize = DpSize(100.dp, 70.dp)
+
 @Composable
 fun SelectQuestionScreen(
     isHost: Boolean,
-    onSelectQuestion: (GameBoardItem) -> Unit,
+    onSelectQuestion: (GameBoardQuestion) -> Unit,
     onNextRound: () -> Unit,
-    questions: Map<String, List<GameBoardItem>>,
+    gameBoard: List<GameBoardRow>,
     modifier: Modifier = Modifier
 ) {
-    // 1. Create a stable list of categories to guarantee column/row mapping order
-    val categories = remember(questions) { questions.keys.toList() }
-    val maxItems = remember(questions) { questions.values.maxOfOrNull { it.size } ?: 0 }
+    val maxItems = remember(gameBoard) { gameBoard.maxOfOrNull { it.questions.size } } ?: 0
 
-    if (categories.isEmpty() || maxItems == 0) return
+    if (gameBoard.isEmpty() || maxItems == 0) return
+
+    val rowState = rememberLazyListState()
 
     Column(modifier = modifier) {
-        LazyHorizontalGrid(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
-            rows = GridCells.Fixed(categories.size),
-            contentPadding = PaddingValues(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        LazyColumn(
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            contentPadding = PaddingValues(12.dp)
         ) {
-            // First Column: Category Headers
-            categories.forEach { category ->
-                item {
-                    CategoryHeader(
-                        title = category,
-                        modifier = Modifier.fillMaxHeight()
-                    )
-                }
-            }
-
-            repeat(maxItems) { index ->
-                categories.forEach { category ->
-                    val item = questions[category]?.getOrNull(index)
-
-                    if (item == null) {
-                        item(contentType = "placeholder") {
-                            Spacer(modifier = Modifier.width(100.dp).fillMaxHeight())
-                        }
-                    } else {
-                        item(contentType = "item", key = item.questionId) {
-                            GameBoardCard(
-                                item = item,
-                                isHost = isHost,
-                                onClick = { onSelectQuestion(item) },
-                                modifier = Modifier
-                                    .size(width = 100.dp, height = 70.dp)
-                                    .fillMaxHeight()
-                            )
-                        }
-                    }
-                }
+            items(
+                items = gameBoard,
+                key = { it.categoryId }
+            ) { gameBoardRow ->
+                CategoryRow(
+                    isHost = isHost,
+                    row = gameBoardRow,
+                    maxRowItems = maxItems,
+                    lazyRowState = rowState,
+                    onItemClick = onSelectQuestion,
+                    modifier = Modifier.padding(vertical = 6.dp)
+                )
             }
         }
         if (isHost)
@@ -100,13 +80,54 @@ fun SelectQuestionScreen(
 }
 
 @Composable
+private fun CategoryRow(
+    isHost: Boolean,
+    row: GameBoardRow,
+    maxRowItems: Int,
+    lazyRowState: LazyListState,
+    onItemClick: (GameBoardQuestion) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier) {
+        CategoryHeader(
+            title = row.categoryName,
+            modifier = Modifier.size(CellSize)
+        )
+
+        LazyRow(
+            modifier = Modifier.weight(1f),
+            state = lazyRowState,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            repeat(maxRowItems) { index ->
+                if (index < row.questions.size) {
+                    val item = row.questions[index]
+                    item(key = item.questionId) {
+                        GameBoardCard(
+                            item = item,
+                            isHost = isHost,
+                            onClick = { onItemClick(item) },
+                            modifier = Modifier.size(CellSize)
+                        )
+                    }
+                } else {
+                    item {
+                        Spacer(Modifier.size(CellSize))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun CategoryHeader(
     title: String,
     modifier: Modifier = Modifier
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier.width(120.dp)
+        modifier = modifier
     ) {
         Text(
             text = title,
@@ -120,7 +141,7 @@ private fun CategoryHeader(
 
 @Composable
 private fun GameBoardCard(
-    item: GameBoardItem,
+    item: GameBoardQuestion,
     isHost: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -132,7 +153,7 @@ private fun GameBoardCard(
         shape = MaterialTheme.shapes.medium,
         color = if (item.isAnswered) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface,
         enabled = isEnabled,
-        onClick = onClick,
+        onClick = { if (isEnabled) onClick() },
         border = if (item.isAnswered) null else BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
     ) {
         Box(

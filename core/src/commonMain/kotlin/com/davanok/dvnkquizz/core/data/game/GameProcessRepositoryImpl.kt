@@ -48,6 +48,7 @@ import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.Uuid
 
 @Inject
@@ -150,17 +151,36 @@ class GameProcessRepositoryImpl(
                 session.activeQuestion?.let { getQuestionFlowHelper(sessionId, it) } ?: flowOf(null)
             }
 
+        val signedUrlCache = mutableMapOf<String, String>()
         combine(broadcastSharedFlow, questionStream) { status, question ->
-            status.toDomain(auth.currentUserId) { question }
-        }.collect {
-            send(it)
-        }
+            status.toDomain(
+                currentUserId = auth.currentUserId,
+                convertProfileImages = { profiles ->
+                    val missingPaths = profiles.values
+                        .filterNotNull()
+                        .distinct()
+                        .filter { it !in signedUrlCache }
+
+                    if (missingPaths.isNotEmpty()) {
+                        storage.from("profiles")
+                            .createSignedUrls(
+                                PROFILE_IMAGE_URL_EXPIRES_IN,
+                                missingPaths
+                            ).forEach { url ->
+                                signedUrlCache[url.path] = url.signedURL
+                            }
+                    }
+                    profiles.mapValues { (_, path) ->
+                        path?.let { signedUrlCache[it] }
+                    }
+                },
+                transformActiveQuestion = { question },
+            )
+        }.collect { send(it) }
 
         awaitClose {
             logger.d { "Closing game session observer for $sessionId" }
-            launch {
-                channel.unsubscribe()
-            }
+            launch { channel.unsubscribe() }
         }
     }.toResultFlow().onEach { res ->
         res.onFailure { logger.e(it) { "Error in game session flow" } }
@@ -211,6 +231,7 @@ class GameProcessRepositoryImpl(
     companion object {
         private const val TAG = "GameProcessRepository"
         private val MEDIA_URL_EXPIRE_DURATION = 1.hours
+        private val PROFILE_IMAGE_URL_EXPIRES_IN = 5.minutes
         private const val DOWNLOAD_MEDIA_RETRIES = 5L
         private const val STOP_TIMEOUT_MS = 5_000L
     }

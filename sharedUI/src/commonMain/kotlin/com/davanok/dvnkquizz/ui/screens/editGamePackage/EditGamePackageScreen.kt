@@ -29,7 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.davanok.dvnkquizz.core.domain.game.entities.GameCategory
 import com.davanok.dvnkquizz.core.domain.game.entities.GameRound
 import com.davanok.dvnkquizz.core.domain.game.entities.Question
-import com.davanok.dvnkquizz.ui.LocalSnackBarHostState
+import com.davanok.dvnkquizz.ui.theme.LocalSnackBarHostState
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditCategoryDialog
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditGamePackageContent
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditGamePackageQuestionDialog

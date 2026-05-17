@@ -15,7 +15,7 @@ internal data class FullGameSessionDto(
     val participants: List<ParticipantDto>,
     val answers: List<SessionAnswer>,
     @SerialName("game_board")
-    val gameBoard: List<GameBoardItem>,
+    val gameBoard: List<GameBoardRow>,
     @SerialName("active_question")
     val activeQuestion: QuestionDto?
 ) {
@@ -30,16 +30,22 @@ internal data class FullGameSessionDto(
 
     inline fun toDomain(
         currentUserId: Uuid?,
+        convertProfileImages: (Map<Uuid, String?>) -> Map<Uuid, String?>,
         transformActiveQuestion: (QuestionDto?) -> Question?
-    ): FullGameSession = FullGameSession(
-        session = session,
-        myRole = getMyRole(currentUserId),
-        gamePackage = gamePackage,
-        participants = participants.map { it.toDomain(currentUserId) },
-        answers = answers,
-        gameBoard = gameBoard,
-        activeQuestion = activeQuestion.let(transformActiveQuestion)
-    )
+    ): FullGameSession {
+        val profileImages = participants.associate {
+            it.id to it.user.image
+        }.let(convertProfileImages)
+        return FullGameSession(
+            session = session,
+            myRole = getMyRole(currentUserId),
+            gamePackage = gamePackage,
+            participants = participants.map { it.toDomain(currentUserId, profileImages[it.id]) },
+            answers = answers,
+            gameBoard = gameBoard,
+            activeQuestion = activeQuestion.let(transformActiveQuestion)
+        )
+    }
 
 }
 
@@ -49,6 +55,6 @@ data class FullGameSession(
     val gamePackage: GamePackage,
     val participants: List<Participant>,
     val answers: List<SessionAnswer>,
-    val gameBoard: List<GameBoardItem>,
+    val gameBoard: List<GameBoardRow>,
     val activeQuestion: Question?
 )

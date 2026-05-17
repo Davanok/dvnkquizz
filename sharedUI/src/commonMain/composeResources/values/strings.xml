@@ -53,7 +53,8 @@
     <string name="unknown_game_package">Unknown package</string>
     <string name="host">Host</string>
     <string name="invite_code">Invite code</string>
-    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="copy_invite_code">Copy invite code</string>
+    <string name="copied_to_clipboard">'%1$s' copied to clipboard</string>
 
     <string name="answering">Answering</string>
     <string name="question">Question</string>
@@ -62,6 +63,7 @@
     <string name="correct_answer">Correct</string>
     <string name="incorrect_answer">Incorrect</string>
 
+    <string name="start">Start</string>
     <string name="next_question">Next question</string>
     <string name="next_round">Next round</string>
 
@@ -104,9 +106,9 @@
     <string name="no_user_game_packages">You haven’t created packages yet</string>
 
     <string name="question_type_normal">Normal</string>
-    <string name="question_type_cat_in_the_bag">Normal</string>
-    <string name="question_type_auction">Normal</string>
-    <string name="question_type_final">Normal</string>
+    <string name="question_type_cat_in_the_bag">Cat in the bag</string>
+    <string name="question_type_auction">Auction</string>
+    <string name="question_type_final">Final</string>
 
     <string name="question_text_label">Question</string>
     <string name="question_answer_label">Answer</string>

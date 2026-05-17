@@ -20,12 +20,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.davanok.dvnkquizz.core.domain.game.entities.Participant
 import dvnkquizz.sharedui.generated.resources.Res
-import dvnkquizz.sharedui.generated.resources.next_round
+import dvnkquizz.sharedui.generated.resources.start
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun IdleScreen(
     isHost: Boolean,
+    nextRoundEnabled: Boolean,
     onNextRound: () -> Unit,
     participants: List<Participant>,
     modifier: Modifier = Modifier
@@ -40,6 +41,7 @@ fun IdleScreen(
 
         if (isHost) {
             HostBottomBar(
+                nextRoundEnabled = nextRoundEnabled,
                 onNextRound = onNextRound,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -51,15 +53,17 @@ fun IdleScreen(
 
 @Composable
 private fun HostBottomBar(
+    nextRoundEnabled: Boolean,
     onNextRound: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Button(
-        onClick = onNextRound,
+        enabled = nextRoundEnabled,
+        onClick = { if (nextRoundEnabled) onNextRound() },
         modifier = modifier
     ) {
         Text(
-            text = stringResource(Res.string.next_round),
+            text = stringResource(Res.string.start),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(vertical = 8.dp)
         )

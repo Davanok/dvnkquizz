@@ -42,9 +42,7 @@ class GameViewModel(
 
     private val _heartbeatJob: Job = startHeartbeat()
 
-    init {
-        observeSession()
-    }
+    init { observeSession() }
 
     private fun observeSession() {
         viewModelScope.launch {
@@ -85,7 +83,8 @@ class GameViewModel(
                 role = myRole,
                 inviteCode = session.inviteCode,
                 gamePackage = gamePackage,
-                participants = participants
+                participants = participants,
+                startEnabled = participants.count { it.role == ParticipantRole.PLAYER } >= MIN_PLAYERS_TO_START
             )
 
             currentQuestion == null -> GameScreenUiState.SelectQuestion(
@@ -94,10 +93,6 @@ class GameViewModel(
                 gamePackage = gamePackage,
                 participants = participants,
                 board = gameBoard
-                    .groupBy { it.categoryName }
-                    .mapValues { (_, value) ->
-                        value.sortedBy { it.price }
-                    }
             )
 
             else -> {
@@ -230,5 +225,9 @@ class GameViewModel(
     @ContributesIntoMap(AppScope::class)
     fun interface Factory : ManualViewModelAssistedFactory {
         fun create(@Assisted sessionId: Uuid): GameViewModel
+    }
+
+    companion object {
+        private const val MIN_PLAYERS_TO_START = 1
     }
 }
