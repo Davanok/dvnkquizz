@@ -18,7 +18,8 @@ string|change_profile_image|Q2hhbmdlIHByb2ZpbGUgaW1hZ2U=
 string|change_question_media|Q2hhbmdlIHF1ZXN0aW9uIG1lZGlh
 string|check_email|Q2hlY2sgeW91ciBlbWFpbA==
 string|clear_query|Q2xlYXIgcXVlcnk=
-string|copied_to_clipboard|Q29waWVkIHRvIGNsaXBib2FyZA==
+string|copied_to_clipboard|JyUxJHMnIGNvcGllZCB0byBjbGlwYm9hcmQ=
+string|copy_invite_code|Q29weSBpbnZpdGUgY29kZQ==
 string|correct_answer|Q29ycmVjdA==
 string|create_new_game_package|Q3JlYXRlIG5ldyBnYW1lIHBhY2thZ2U=
 string|delete_profile_image|RGVsZXRlIHByb2ZpbGUgaW1hZ2U=
@@ -80,9 +81,9 @@ string|question_answer_label|QW5zd2Vy
 string|question_no_media_selected_placeholder|U2VsZWN0IG1lZGlhIGZvciBxdWVzdGlvbg==
 string|question_price_label|UHJpY2U=
 string|question_text_label|UXVlc3Rpb24=
-string|question_type_auction|Tm9ybWFs
-string|question_type_cat_in_the_bag|Tm9ybWFs
-string|question_type_final|Tm9ybWFs
+string|question_type_auction|QXVjdGlvbg==
+string|question_type_cat_in_the_bag|Q2F0IGluIHRoZSBiYWc=
+string|question_type_final|RmluYWw=
 string|question_type_label|VHlwZQ==
 string|question_type_normal|Tm9ybWFs
 string|question|UXVlc3Rpb24=
@@ -96,6 +97,7 @@ string|saving_draft|c2F2ZSBkcmFmdCBpbiBwcm9ncmVzcw==
 string|search_package_field_placeholder|U2VhcmNoIGZvciBhIGdhbWUgcGFja2FnZS4uLg==
 string|sign_in|U2lnbiBpbg==
 string|sign_up|U2lnbiB1cA==
+string|start|U3RhcnQ=
 string|submit_nickname|U3VibWl0IG5pY2tuYW1l
 string|switch_to_sign_in|QWxyZWFkeSBoYXZlIGFuIGFjY291bnQ/IFNpZ24gSW4=
 string|switch_to_sign_up|RG9uJ3QgaGF2ZSBhbiBhY2NvdW50PyBTaWduIFVw
