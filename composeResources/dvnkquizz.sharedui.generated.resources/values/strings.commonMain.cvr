@@ -23,6 +23,7 @@ string|copy_invite_code|Q29weSBpbnZpdGUgY29kZQ==
 string|correct_answer|Q29ycmVjdA==
 string|create_new_game_package|Q3JlYXRlIG5ldyBnYW1lIHBhY2thZ2U=
 string|delete_profile_image|RGVsZXRlIHByb2ZpbGUgaW1hZ2U=
+string|download_game_package|RG93bmxvYWQgZ2FtZSBwYWNrYWdl
 string|draft_saved|RHJhZnQgc2F2ZWQ=
 string|drafts_section_title|RHJhZnRz
 string|edit_category|RWRpdCBjYXRlZ29yeQ==
@@ -39,6 +40,7 @@ string|error_failed_to_update_category|RmFpbGVkIHRvIHVwZGF0ZSBjYXRlZ29yeQ==
 string|error_failed_to_update_question|RmFpbGVkIHRvIHVwZGF0ZSBxdWVzdGlvbg==
 string|error_failed_to_update_round|RmFpbGVkIHRvIHVwZGF0ZSByb3VuZA==
 string|error_loading_packages|RXJyb3IgbG9hZGluZyBtb3JlLiBSZXRyeT8=
+string|error_package_download_failed|RmFpbGVkIHRvIGRvd25sb2FkIGdhbWUgcGFja2FnZQ==
 string|error_package_upload_failed|RmFpbGVkIHRvIHVwbG9hZCBnYW1lIHBhY2thZ2U=
 string|error_upload_failed|VXBsb2FkIGZhaWxlZA==
 string|external_section_title|UHVzaGVk
@@ -73,6 +75,7 @@ string|package_description_text_field_label|RGVzY3JpcHRpb24=
 string|package_details|UGFja2FnZSBkZXRhaWxz
 string|package_difficulty_text_field_label|RGlmZmljdWx0eQ==
 string|package_difficulty|RGlmZjogJTEkZA==
+string|package_is_public|UHVibGlj
 string|package_title_text_field_label|VGl0bGU=
 string|participant_answer|UGFydGljaXBhbnQgYW5zd2VyOg==
 string|password_field_label|UGFzc3dvcmQ=
@@ -86,7 +89,7 @@ string|question_type_cat_in_the_bag|Q2F0IGluIHRoZSBiYWc=
 string|question_type_final|RmluYWw=
 string|question_type_label|VHlwZQ==
 string|question_type_normal|Tm9ybWFs
-string|question|UXVlc3Rpb24=
+string|question|UXVlc3Rpb246
 string|reload_packages|UmVsb2FkIHBhY2thZ2Vz
 string|remove_question_media|UmVtb3ZlIHF1ZXN0aW9uIG1lZGlh
 string|resend_email_in|UmVzZW5kIGVtYWlsIGluICUxJHNz
@@ -107,6 +110,7 @@ string|theme_system|U3lzdGVt
 string|title_cannot_be_empty|VGl0bGUgY2Fubm90IGJlIGVtcHR5
 string|title_text_field_label|VGl0bGU=
 string|toggle_round_expand|VG9nZ2xlIHJvdW5kIGlzIGV4cGFuZGVk
+string|type_answer|VHlwZSBhbnN3ZXI=
 string|unknown_game_package|VW5rbm93biBwYWNrYWdl
 string|unnamed_game_package|VW5uYW1lZCBnYW1lIHBhY2thZ2U=
 string|unselect_game_package|VW5zZWxlY3QgZ2FtZSBwYWNrYWdl
