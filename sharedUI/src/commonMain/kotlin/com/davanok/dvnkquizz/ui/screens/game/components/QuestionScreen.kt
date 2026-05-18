@@ -14,12 +14,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.davanok.dvnkquizz.core.domain.game.entities.Question
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.buzz
+import dvnkquizz.sharedui.generated.resources.type_answer
 import dvnkquizz.sharedui.generated.resources.waiting_other_participants
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
@@ -64,7 +67,7 @@ fun QuestionScreen(
         when {
             showQuestionIn == null -> ProgressBox(
                 progress = question.media?.progress,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.align(Alignment.Center)
             )
             showQuestionIn > 0 -> {
                 if (isHost)
@@ -75,13 +78,14 @@ fun QuestionScreen(
                 else
                     CountdownText(
                         seconds = showQuestionIn,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.align(Alignment.Center)
                     )
             }
             else -> Content(
                 isHost = isHost,
                 onBuzz = onBuzz,
-                question = question
+                question = question,
+                modifier = Modifier.fillMaxSize()
             )
         }
     }
@@ -94,12 +98,13 @@ private fun HostCountdown(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        CountdownText(
-            seconds = showQuestionIn,
-            modifier = Modifier
-                .height(50.dp)
-                .align(Alignment.End)
-        )
+        Box(modifier = Modifier.padding(12.dp).align(Alignment.End)) {
+            CountdownText(
+                seconds = showQuestionIn,
+                modifier = Modifier
+                    .height(50.dp)
+            )
+        }
         Content(
             isHost = true,
             onBuzz = {  },
@@ -111,15 +116,10 @@ private fun HostCountdown(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ProgressBox(progress: Float?, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center
-    ) {
-        when  {
-            progress == null -> CircularWavyProgressIndicator()
-            progress < 1 -> CircularWavyProgressIndicator(progress = { progress })
-            else -> Text(text = stringResource(Res.string.waiting_other_participants))
-        }
+    when  {
+        progress == null -> CircularWavyProgressIndicator(modifier = modifier)
+        progress < 1 -> CircularWavyProgressIndicator(progress = { progress }, modifier = modifier)
+        else -> Text(text = stringResource(Res.string.waiting_other_participants), modifier = modifier)
     }
 }
 
@@ -147,32 +147,34 @@ private fun Content(
     isHost: Boolean,
     onBuzz: (answer: String) -> Unit,
     question: Question,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        QuestionCard(
-            question = question,
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth()
-                .widthIn(max = 600.dp)
-        )
-
-        if (isHost) {
-            QuestionAnswerCard(
+        Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            QuestionCard(
                 question = question,
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
                     .fillMaxWidth()
                     .widthIn(max = 600.dp)
             )
-        } else {
-            PlayerSection(
-                onBuzz = onBuzz
-            )
+
+            if (isHost) {
+                QuestionAnswerCard(
+                    question = question,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth()
+                        .widthIn(max = 600.dp)
+                )
+            }
+        }
+        if (!isHost) {
+            PlayerSection(onBuzz = onBuzz)
         }
     }
 }
@@ -184,9 +186,10 @@ private fun PlayerSection(
     val haptic = LocalHapticFeedback.current
     var answerText by remember { mutableStateOf("") }
 
-    TextField(
+    OutlinedTextField(
         value = answerText,
-        onValueChange = { answerText = it }
+        onValueChange = { answerText = it },
+        label = { Text(text = stringResource(Res.string.type_answer)) }
     )
 
     Button(

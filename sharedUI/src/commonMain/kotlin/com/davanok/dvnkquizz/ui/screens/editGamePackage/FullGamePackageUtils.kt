@@ -7,6 +7,17 @@ import com.davanok.dvnkquizz.core.domain.game.entities.Question
 import kotlin.uuid.Uuid
 
 object FullGamePackageUtils {
+    fun sortGamePackage(gamePackage: FullGamePackage): FullGamePackage {
+        val rounds = gamePackage.rounds.sortedBy { it.ordinal }.map { round ->
+            val categories = round.categories.sortedBy { it.ordinal }.map { category ->
+                val questions = category.questions.sortedBy { it.price }
+                category.copy(questions = questions)
+            }
+            round.copy(categories = categories)
+        }
+        return gamePackage.copy(rounds = rounds)
+    }
+
     inline fun updateQuestion(gamePackage: FullGamePackage, questionId: Uuid, transform: (Question) -> Question): FullGamePackage {
         val rounds = gamePackage.rounds
 

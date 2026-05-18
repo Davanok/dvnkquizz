@@ -138,10 +138,7 @@ private fun Title(
     val clipboard = LocalClipboardManager.current
     val scope = rememberCoroutineScope()
 
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
+    Column(modifier = modifier) {
         Text(
             text = title ?: stringResource(Res.string.unknown_game_package),
             style = MaterialTheme.typography.headlineSmall,

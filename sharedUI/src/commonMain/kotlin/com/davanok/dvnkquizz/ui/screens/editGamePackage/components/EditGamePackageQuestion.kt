@@ -120,12 +120,10 @@ private fun Content(
         }
     }
 
-    Column(modifier) {
+    Column(modifier.verticalScroll(rememberScrollState())) {
         Column(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
+                .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedTextField(
@@ -169,12 +167,18 @@ private fun Content(
                             ?.takeIf { it in GamePackageLimits.QUESTION_PRICE_RANGE }
                             ?.let { price = it }
                     },
-                    label = { Text(stringResource(Res.string.question_price_label)) },
-                    modifier = Modifier.weight(1f)
+                    label = {
+                        Text(
+                            text = stringResource(Res.string.question_price_label),
+                            maxLines = 1
+                        )
+                            },
+                    modifier = Modifier.weight(0.5f)
                 )
                 QuestionTypeSelector(
                     value = type,
-                    onValueChanged = { type = it }
+                    onValueChanged = { type = it },
+                    modifier = Modifier.weight(0.5f)
                 )
             }
         }

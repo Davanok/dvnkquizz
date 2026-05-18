@@ -23,6 +23,7 @@ internal inline fun FullGamePackageDto.toFullGamePackage(
 internal fun FullGamePackage.toFullGamePackageDto() = FullGamePackageDto(
     id = id,
     createdAt = createdAt,
+    updatedAt = updatedAt,
     title = title,
     description = description,
     authorId = authorId,

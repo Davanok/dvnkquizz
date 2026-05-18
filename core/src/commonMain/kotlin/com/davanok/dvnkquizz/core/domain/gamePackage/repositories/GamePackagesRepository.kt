@@ -11,7 +11,7 @@ interface GamePackagesRepository {
     fun getPagedPackages(query: String): Flow<PagingData<GamePackage>>
 
     suspend fun getUserGamePackages(): Result<List<GamePackage>>
-    suspend fun getGamePackage(packageId: Uuid): Result<FullGamePackage>
+    suspend fun getGamePackage(packageId: Uuid): Result<FullGamePackage?>
 
     fun uploadQuestionMedia(packageId: Uuid, bytes: ByteArray, mimeType: String): Flow<Result<QuestionMedia>>
     suspend fun deleteQuestionMedia(questionId: Uuid): Result<Unit>

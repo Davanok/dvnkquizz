@@ -96,7 +96,7 @@ class GamePackagesRepositoryImpl internal constructor(
         }
     }
 
-    override suspend fun getGamePackage(packageId: Uuid): Result<FullGamePackage> {
+    override suspend fun getGamePackage(packageId: Uuid): Result<FullGamePackage?> {
         logger.d { "get user game package: packageId=$packageId" }
 
         return runCatching {
@@ -104,9 +104,7 @@ class GamePackagesRepositoryImpl internal constructor(
                 .select(Columns.raw(FULL_GAME_PACKAGE_QUERY)) {
                     filter { FullGamePackageDto::id eq packageId }
                 }.decodeSingleOrNull<FullGamePackageDto>()
-                .let { pkg ->
-                    pkg?.toFullGamePackage { it.toQuestion() } ?: FullGamePackage.Empty
-                }
+                ?.toFullGamePackage { it.toQuestion() }
         }.onFailure {
             logger.e(it) { "failed to get user package" }
         }
@@ -203,7 +201,7 @@ class GamePackagesRepositoryImpl internal constructor(
 
         return runCatching<Unit> {
             postgrest.rpc(
-                "upsert_game_package_new",
+                "upsert_game_package",
                 mapOf("p_data" to gamePackage.toFullGamePackageDto())
             )
         }.onFailure {

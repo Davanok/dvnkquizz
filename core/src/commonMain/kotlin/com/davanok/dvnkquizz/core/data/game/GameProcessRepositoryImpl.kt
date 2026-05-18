@@ -14,6 +14,7 @@ import com.davanok.dvnkquizz.core.platform.currentPlatform
 import com.davanok.dvnkquizz.core.core.id.currentUserId
 import com.davanok.dvnkquizz.core.core.filesystem.div
 import com.davanok.dvnkquizz.core.core.result.toResultFlow
+import com.davanok.dvnkquizz.core.domain.game.entities.BuzzInRequest
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -192,40 +193,49 @@ class GameProcessRepositoryImpl(
         postgrest.rpc("mark_participant_ready", mapOf("p_session_id" to sessionId))
     }
 
-    override suspend fun sendHeartbeat(sessionId: Uuid): Result<Unit> = runCatching {
+    override suspend fun sendHeartbeat(sessionId: Uuid): Result<Unit> = runCatching<Unit> {
         postgrest.rpc("participant_heartbeat", mapOf("p_session_id" to sessionId))
+    }.onFailure {
+        logger.e(it) { "failed to send heartbeat" }
     }
 
-    override suspend fun nextRound(sessionId: Uuid): Result<Unit> = runCatching {
+    override suspend fun nextRound(sessionId: Uuid): Result<Unit> = runCatching<Unit> {
         postgrest.rpc("next_round", mapOf("p_session_id" to sessionId))
+    }.onFailure {
+        logger.e(it) { "failed to next round" }
     }
 
-    override suspend fun nextQuestion(sessionId: Uuid): Result<Unit> = runCatching {
+    override suspend fun nextQuestion(sessionId: Uuid): Result<Unit> = runCatching<Unit> {
         postgrest.from("game_sessions")
             .update({ GameSession::currentQuestionId setTo null }) {
                 filter { GameSession::id eq sessionId }
             }
+    }.onFailure {
+        logger.e(it) { "failed to next question" }
     }
 
-    override suspend fun selectQuestion(sessionId: Uuid, questionId: Uuid): Result<Unit> = runCatching {
+    override suspend fun selectQuestion(sessionId: Uuid, questionId: Uuid): Result<Unit> = runCatching<Unit> {
         postgrest.rpc("pick_question", mapOf(
             "p_session_id" to sessionId,
             "p_question_id" to questionId
         ))
+    }.onFailure {
+        logger.e(it) { "failed to select question" }
     }
 
     override suspend fun buzzIn(sessionId: Uuid, answer: String): Result<Boolean> = runCatching {
         postgrest.rpc(
             "buzz_in",
-            mapOf(
-                "p_session_id" to sessionId,
-                "p_answer" to answer
-            )
+            BuzzInRequest(sessionId, answer)
         ).decodeAs<Boolean>()
+    }.onFailure {
+        logger.e(it) { "failed to buzz" }
     }
 
-    override suspend fun judgeAnswer(sessionId: Uuid, answerId: Uuid, isCorrect: Boolean): Result<Unit> = runCatching {
+    override suspend fun judgeAnswer(sessionId: Uuid, answerId: Uuid, isCorrect: Boolean): Result<Unit> = runCatching<Unit> {
         postgrest.rpc("judge_answer", JudgeAnswerRequest(sessionId, answerId, isCorrect))
+    }.onFailure {
+        logger.e(it) { "failed to judge answer" }
     }
 
     companion object {

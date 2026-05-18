@@ -19,16 +19,20 @@ data class EditGamePackageUiState(
     val dialog: EditGamePackageDialog? = null,
     val isSaveInProgress: Boolean = false,
     val isUploaded: Boolean = false,
-    val isUploadInProgress: Boolean = false
+    val isDownloadAvailable: Boolean = false,
+    val isUploadInProgress: Boolean = false,
+    val isDownloadInProgress: Boolean = false
 )
 
 sealed interface EditGamePackageUiEvent {
     data object SaveDraft: EditGamePackageUiEvent
     data object UploadPackage: EditGamePackageUiEvent
+    data object DownloadPackage: EditGamePackageUiEvent
 
     data class SetTitle(val title: String): EditGamePackageUiEvent
     data class SetDescription(val description: String): EditGamePackageUiEvent
     data class SetDifficulty(val difficulty: Int): EditGamePackageUiEvent
+    data class SetIsPublic(val isPublic: Boolean): EditGamePackageUiEvent
 
     data class ShowDialog(val dialogRequest: EditGamePackageDialogRequest): EditGamePackageUiEvent
     data object CloseDialog: EditGamePackageUiEvent

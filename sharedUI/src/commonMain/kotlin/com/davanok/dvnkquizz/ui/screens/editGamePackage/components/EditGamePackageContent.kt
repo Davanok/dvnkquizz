@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -29,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -43,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -64,6 +67,7 @@ import dvnkquizz.sharedui.generated.resources.no_categories_yet
 import dvnkquizz.sharedui.generated.resources.package_description_text_field_label
 import dvnkquizz.sharedui.generated.resources.package_details
 import dvnkquizz.sharedui.generated.resources.package_difficulty_text_field_label
+import dvnkquizz.sharedui.generated.resources.package_is_public
 import dvnkquizz.sharedui.generated.resources.package_title_text_field_label
 import dvnkquizz.sharedui.generated.resources.round_title
 import org.jetbrains.compose.resources.painterResource
@@ -81,6 +85,7 @@ fun EditGamePackageContent(
         onTitleChanged = { eventSink(EditGamePackageUiEvent.SetTitle(it)) },
         onDescriptionChanged = { eventSink(EditGamePackageUiEvent.SetDescription(it)) },
         onDifficultyChanged = { eventSink(EditGamePackageUiEvent.SetDifficulty(it)) },
+        onIsPublicChanged = { eventSink(EditGamePackageUiEvent.SetIsPublic(it)) },
         onAddRound = {
             eventSink(
                 EditGamePackageUiEvent.ShowDialog(
@@ -132,6 +137,7 @@ private fun Content(
     onTitleChanged: (String) -> Unit,
     onDescriptionChanged: (String) -> Unit,
     onDifficultyChanged: (Int) -> Unit,
+    onIsPublicChanged: (Boolean) -> Unit,
     onAddRound: () -> Unit,
     onEditRound: (Uuid) -> Unit,
     onAddCategoryToRound: (roundId: Uuid) -> Unit,
@@ -184,6 +190,31 @@ private fun Content(
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                             keyboardActions = KeyboardActions(onNext = { description.requestFocus() }),
                             modifier = Modifier.weight(1f).focusRequester(difficulty)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .toggleable(
+                                value = gamePackage.isPublic,
+                                role = Role.Switch,
+                                onValueChange = onIsPublicChanged
+                            ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.package_is_public),
+                            maxLines = 1,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        Spacer(Modifier.width(8.dp))
+
+                        Switch(
+                            checked = gamePackage.isPublic,
+                            onCheckedChange = null,
+                            modifier = Modifier.padding(vertical = 4.dp)
                         )
                     }
 

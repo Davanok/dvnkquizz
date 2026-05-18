@@ -46,6 +46,7 @@ import dvnkquizz.sharedui.generated.resources.ic_error
 import dvnkquizz.sharedui.generated.resources.ic_person
 import dvnkquizz.sharedui.generated.resources.no_profile_image
 import dvnkquizz.sharedui.generated.resources.profile_image
+import dvnkquizz.sharedui.generated.resources.question
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -166,38 +167,46 @@ fun QuestionCard(
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(modifier = modifier) {
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.Center
-        ) {
-            question.media?.let { media ->
-                when (media.kind) {
-                    MediaKind.IMAGE -> AsyncImage(
-                        model = media.url,
-                        contentDescription = null,
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 300.dp)
-                            .clip(MaterialTheme.shapes.large)
-                    )
-                    MediaKind.AUDIO -> {
-                        Text(text = "Audio not supported yet") // TODO
-                    }
-                    MediaKind.VIDEO -> {
-                        Text(text = "Video not supported yet") // TODO
-                    }
-                    MediaKind.NONE -> {}
-                }
-                Spacer(Modifier.height(16.dp))
-            }
-
+        Column(Modifier.fillMaxWidth().padding(20.dp)) {
             Text(
-                text = question.questionText,
-                style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center
+                text = stringResource(Res.string.question),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
             )
+
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.Center
+            ) {
+                question.media?.let { media ->
+                    when (media.kind) {
+                        MediaKind.IMAGE -> AsyncImage(
+                            model = media.url,
+                            contentDescription = null,
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 300.dp)
+                                .clip(MaterialTheme.shapes.large)
+                        )
+                        MediaKind.AUDIO -> {
+                            Text(text = "Audio not supported yet") // TODO
+                        }
+                        MediaKind.VIDEO -> {
+                            Text(text = "Video not supported yet") // TODO
+                        }
+                        MediaKind.NONE -> {}
+                    }
+                    Spacer(Modifier.height(16.dp))
+                }
+
+                Text(
+                    text = question.questionText,
+                    style = MaterialTheme.typography.headlineMedium,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }

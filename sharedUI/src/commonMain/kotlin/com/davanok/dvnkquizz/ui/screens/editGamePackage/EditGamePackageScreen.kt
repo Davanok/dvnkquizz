@@ -36,9 +36,11 @@ import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditGamePacka
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditRoundDialog
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.back
+import dvnkquizz.sharedui.generated.resources.download_game_package
 import dvnkquizz.sharedui.generated.resources.draft_saved
 import dvnkquizz.sharedui.generated.resources.ic_arrow_back
 import dvnkquizz.sharedui.generated.resources.ic_check
+import dvnkquizz.sharedui.generated.resources.ic_download
 import dvnkquizz.sharedui.generated.resources.ic_upload
 import dvnkquizz.sharedui.generated.resources.saving_draft
 import dvnkquizz.sharedui.generated.resources.unnamed_game_package
@@ -114,7 +116,10 @@ private fun Content(
                     isSaveInProgress = uiState.isSaveInProgress,
                     onSaveClick = { eventSink(EditGamePackageUiEvent.SaveDraft) },
                     isUploadInProgress = uiState.isUploadInProgress,
-                    onUploadClick = { eventSink(EditGamePackageUiEvent.UploadPackage) }
+                    onUploadClick = { eventSink(EditGamePackageUiEvent.UploadPackage) },
+                    isDownloadAvailable = uiState.isUploaded,
+                    isDownloadInProgress = uiState.isDownloadInProgress,
+                    onDownloadClick = { eventSink(EditGamePackageUiEvent.DownloadPackage) }
                 )
             }
         ) { paddingValues ->
@@ -195,6 +200,9 @@ private fun EditPackageTopBar(
     onSaveClick: () -> Unit,
     isUploadInProgress: Boolean,
     onUploadClick: () -> Unit,
+    isDownloadAvailable: Boolean,
+    isDownloadInProgress: Boolean,
+    onDownloadClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
@@ -223,10 +231,28 @@ private fun EditPackageTopBar(
                     )
                 }
 
+            if (isDownloadAvailable) {
+                if (isDownloadInProgress)
+                    LoadingIndicator()
+                else
+                    IconButton(
+                        onClick = onDownloadClick,
+                        enabled = !isUploadInProgress
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_download),
+                            contentDescription = stringResource(Res.string.download_game_package)
+                        )
+                    }
+            }
+
             if (isUploadInProgress)
                 LoadingIndicator()
             else
-                IconButton(onClick = onUploadClick) {
+                IconButton(
+                    onClick = onUploadClick,
+                    enabled = !isDownloadInProgress
+                ) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_upload),
                         contentDescription = stringResource(Res.string.upload_game_package)

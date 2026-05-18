@@ -20,6 +20,8 @@ internal data class FullGamePackageDto(
     val difficulty: Int,
     @SerialName("is_public")
     val isPublic: Boolean,
+    @SerialName("updated_at")
+    val updatedAt: Instant?,
 
     val author: UserProfile?,
     val rounds: List<FullGameRoundDto>
@@ -29,6 +31,7 @@ internal data class FullGamePackageDto(
 data class FullGamePackage(
     val id: Uuid,
     val createdAt: Instant? = null,
+    val updatedAt: Instant? = null,
     val title: String,
     val description: String,
     val authorId: Uuid?,
@@ -42,6 +45,7 @@ data class FullGamePackage(
         val Empty = FullGamePackage(
             id = Uuid.random(),
             createdAt = null,
+            updatedAt = null,
             title = "",
             description = "",
             authorId = null,

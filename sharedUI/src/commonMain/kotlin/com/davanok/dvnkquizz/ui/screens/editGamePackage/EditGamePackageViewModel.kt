@@ -24,6 +24,7 @@ import dvnkquizz.sharedui.generated.resources.error_failed_to_process_event
 import dvnkquizz.sharedui.generated.resources.error_failed_to_update_category
 import dvnkquizz.sharedui.generated.resources.error_failed_to_update_question
 import dvnkquizz.sharedui.generated.resources.error_failed_to_update_round
+import dvnkquizz.sharedui.generated.resources.error_package_download_failed
 import dvnkquizz.sharedui.generated.resources.error_package_upload_failed
 import dvnkquizz.sharedui.generated.resources.error_upload_failed
 import dvnkquizz.sharedui.generated.resources.filetype_not_supported
@@ -83,6 +84,7 @@ class EditGamePackageViewModel(
                 when (event) {
                     EditGamePackageUiEvent.SaveDraft -> saveDraft()
                     EditGamePackageUiEvent.UploadPackage -> uploadPackage()
+                    EditGamePackageUiEvent.DownloadPackage -> downloadPackage()
 
                     is EditGamePackageUiEvent.SetTitle -> {
                         if (event.title.length <= GamePackageLimits.TITLE_MAX_LENGTH) {
@@ -100,6 +102,10 @@ class EditGamePackageViewModel(
                         if (event.difficulty in GamePackageLimits.DIFFICULTY_RANGE) {
                             _gamePackage.update { it.copy(difficulty = event.difficulty) }
                         }
+                    }
+
+                    is EditGamePackageUiEvent.SetIsPublic -> {
+                        _gamePackage.update { it.copy(isPublic = event.isPublic) }
                     }
 
                     is EditGamePackageUiEvent.ShowDialog -> showDialog(event.dialogRequest)
@@ -146,25 +152,30 @@ class EditGamePackageViewModel(
             return@launch
         }
 
+        val uploaded = repository.getGamePackage(packageId)
+        val downloadAvailable = uploaded.getOrNull() != null
         val draft = repository.getPackageDraft(packageId).getOrNull()
+
         if (draft != null) {
             _gamePackage.update { draft }
             _uiState.update {
                 it.copy(
                     isLoading = false,
                     criticalError = null,
-                    isUploaded = false
+                    isUploaded = false,
+                    isDownloadAvailable = downloadAvailable
                 )
             }
         } else {
             repository.getGamePackage(packageId).fold(
                 onSuccess = { gamePackage ->
-                    _gamePackage.update { gamePackage }
+                    _gamePackage.update { gamePackage ?: FullGamePackage.Empty }
                     _uiState.update { state ->
                         state.copy(
                             isLoading = false,
                             criticalError = null,
-                            isUploaded = true
+                            isUploaded = true,
+                            isDownloadAvailable = downloadAvailable
                         )
                     }
                 },
@@ -173,7 +184,8 @@ class EditGamePackageViewModel(
                         state.copy(
                             isLoading = false,
                             criticalError = thr.message,
-                            isUploaded = false
+                            isUploaded = false,
+                            isDownloadAvailable = downloadAvailable
                         )
                     }
                 }
@@ -387,6 +399,18 @@ class EditGamePackageViewModel(
             .handleFailure { getString(Res.string.error_package_upload_failed) }
 
         _uiState.update { it.copy(isUploadInProgress = false) }
+    }
+
+    private fun downloadPackage() = viewModelScope.launch {
+        _uiState.update { it.copy(isDownloadInProgress = true) }
+
+        repository.getGamePackage(packageId)
+            .onSuccess { gamePackage ->
+                if (gamePackage != null) _gamePackage.update { gamePackage }
+            }
+            .handleFailure { getString(Res.string.error_package_download_failed) }
+
+        _uiState.update { it.copy(isDownloadInProgress = false) }
     }
 
     // --- Helper Functions ---

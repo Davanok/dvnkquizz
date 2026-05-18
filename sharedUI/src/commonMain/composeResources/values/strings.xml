@@ -57,11 +57,12 @@
     <string name="copied_to_clipboard">'%1$s' copied to clipboard</string>
 
     <string name="answering">Answering</string>
-    <string name="question">Question</string>
+    <string name="question">Question:</string>
     <string name="answer">Answer:</string>
     <string name="participant_answer">Participant answer:</string>
     <string name="correct_answer">Correct</string>
     <string name="incorrect_answer">Incorrect</string>
+    <string name="type_answer">Type answer</string>
 
     <string name="start">Start</string>
     <string name="next_question">Next question</string>
@@ -84,12 +85,15 @@
     <string name="unnamed_game_package">Unnamed game package</string>
     <string name="draft_saved">Draft saved</string>
     <string name="upload_game_package">Upload game package</string>
+    <string name="download_game_package">Download game package</string>
 
     <string name="my_packages">My packages</string>
 
     <string name="package_title_text_field_label">Title</string>
     <string name="package_difficulty_text_field_label">Difficulty</string>
     <string name="package_description_text_field_label">Description</string>
+
+    <string name="package_is_public">Public</string>
 
     <string name="round_title">Round %1$d: %2$s</string>
     <string name="toggle_round_expand">Toggle round is expanded</string>
@@ -148,4 +152,5 @@
     <string name="error_upload_failed">Upload failed</string>
     <string name="error_delete_media_failed">Failed to delete media</string>
     <string name="error_package_upload_failed">Failed to upload game package</string>
+    <string name="error_package_download_failed">Failed to download game package</string>
 </resources>
