@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">DVNK Quizz</string>
+    <string name="app_name" translatable="false">DVNK Quizz</string>
 
     <string name="back">Back</string>
 
@@ -17,7 +17,7 @@
 
     <string name="join_game_title">Join game</string>
     <string name="invite_code_field_label">Invite code</string>
-    <string name="invite_code_field_placeholder">AB1234</string>
+    <string name="invite_code_field_placeholder" translatable="false">AB1234</string>
     <string name="join_lobby">Join lobby</string>
 
     <string name="host_game_title">Host new game</string>
