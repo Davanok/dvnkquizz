@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -44,6 +45,7 @@ import com.davanok.dvnkquizz.ui.screens.game.components.QuestionScreen
 import com.davanok.dvnkquizz.ui.screens.game.components.ResultsScreen
 import com.davanok.dvnkquizz.ui.screens.game.components.SelectQuestionScreen
 import com.davanok.dvnkquizz.ui.theme.LocalClipboardManager
+import com.davanok.dvnkquizz.ui.theme.LocalSnackBarHostState
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.back
 import dvnkquizz.sharedui.generated.resources.copy_invite_code
@@ -62,6 +64,13 @@ fun GameScreen(
     viewModel: GameViewModel
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    val snackbarState = LocalSnackBarHostState.current
+    LaunchedEffect(state.message) {
+        state.message?.let { message ->
+            snackbarState.showSnackbar(message)
+        }
+    }
 
     Content(
         state = state,

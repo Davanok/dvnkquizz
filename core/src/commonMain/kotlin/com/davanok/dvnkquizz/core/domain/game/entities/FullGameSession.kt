@@ -33,9 +33,10 @@ internal data class FullGameSessionDto(
         convertProfileImages: (Map<Uuid, String?>) -> Map<Uuid, String?>,
         transformActiveQuestion: (QuestionDto?) -> Question?
     ): FullGameSession {
-        val profileImages = participants.associate {
-            it.id to it.user.image
-        }.let(convertProfileImages)
+        val profileImages = participants
+            .associate { it.id to it.user.image }
+            .let(convertProfileImages)
+
         return FullGameSession(
             session = session,
             myRole = getMyRole(currentUserId),

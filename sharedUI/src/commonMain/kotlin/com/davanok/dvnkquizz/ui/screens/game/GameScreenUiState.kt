@@ -71,6 +71,7 @@ sealed interface GameScreenUiState {
         override val participants: List<Participant>,
         override val message: String? = null,
 
+        val buzzButtonActive: Boolean,
         val showQuestionAt: Instant?,
         val question: com.davanok.dvnkquizz.core.domain.game.entities.Question
     ) : GameScreenUiState {

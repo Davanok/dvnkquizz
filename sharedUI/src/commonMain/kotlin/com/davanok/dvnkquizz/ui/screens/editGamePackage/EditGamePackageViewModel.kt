@@ -157,7 +157,7 @@ class EditGamePackageViewModel(
         val draft = repository.getPackageDraft(packageId).getOrNull()
 
         if (draft != null) {
-            _gamePackage.update { draft }
+            _gamePackage.update { FullGamePackageUtils.sortGamePackage(draft) }
             _uiState.update {
                 it.copy(
                     isLoading = false,
@@ -167,9 +167,10 @@ class EditGamePackageViewModel(
                 )
             }
         } else {
-            repository.getGamePackage(packageId).fold(
+            uploaded.fold(
                 onSuccess = { gamePackage ->
-                    _gamePackage.update { gamePackage ?: FullGamePackage.Empty }
+                    val sorted = gamePackage?.let { FullGamePackageUtils.sortGamePackage(gamePackage) }
+                    _gamePackage.update { sorted ?: FullGamePackage.Empty }
                     _uiState.update { state ->
                         state.copy(
                             isLoading = false,

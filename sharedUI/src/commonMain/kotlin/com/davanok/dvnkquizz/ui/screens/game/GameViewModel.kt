@@ -62,6 +62,19 @@ class GameViewModel(
         }
     }
 
+    private inline fun <T> Result<T>.handleFailure(message: (Throwable) -> String?) = onFailure { thr ->
+        message(thr)?.let { msg ->
+            _uiState.update {
+                it.copyState(message = msg)
+            }
+        }
+    }
+    private fun <T> Result<T>.handleFailure() = onFailure { thr ->
+        _uiState.update {
+            it.copyState(message = thr.toString())
+        }
+    }
+
     private fun FullGameSession.toUiState(): GameScreenUiState {
         val participants = participants
             .sortedWith(
@@ -105,6 +118,7 @@ class GameViewModel(
                         inviteCode = session.inviteCode,
                         gamePackage = gamePackage,
                         participants = participants,
+                        buzzButtonActive = true,
                         showQuestionAt = session.showQuestionAt,
                         question = currentQuestion
                     )
@@ -152,11 +166,8 @@ class GameViewModel(
     }
 
     fun eventSink(event: GameScreenUiEvent) = viewModelScope.launch {
-        processEvent(event).onFailure { thr ->
-            _uiState.update {
-                it.copyState(message = thr.toString())
-            }
-        }
+        processEvent(event)
+            .handleFailure { it.toString() }
     }
 
     private suspend fun processEvent(event: GameScreenUiEvent): Result<Any> {
@@ -168,14 +179,18 @@ class GameViewModel(
                     getString(Res.string.only_host_can_start_round)
                 }
 
-                repository.nextRound(sessionId)
+                repository
+                    .nextRound(sessionId)
+                    .handleFailure()
             }
             GameScreenUiEvent.NextQuestion -> {
                 check(currentUiState.isHost) { 
                     getString(Res.string.only_host_can_select_question)
                 }
 
-                repository.nextQuestion(sessionId)
+                repository
+                    .nextQuestion(sessionId)
+                    .handleFailure()
             }
 
             is GameScreenUiEvent.SelectQuestion -> {
@@ -184,7 +199,9 @@ class GameViewModel(
                     getString(Res.string.only_host_can_select_question)
                 }
 
-                repository.selectQuestion(sessionId, event.questionId)
+                repository
+                    .selectQuestion(sessionId, event.questionId)
+                    .handleFailure()
             }
 
             is GameScreenUiEvent.Buzz -> {
@@ -193,7 +210,16 @@ class GameViewModel(
                     getString(Res.string.only_player_can_buzz)
                 }
 
-                repository.buzzIn(sessionId, event.answer)
+                repository
+                    .buzzIn(sessionId, event.answer)
+                    .handleFailure()
+                    .onSuccess { meBuzzed ->
+                        val state = _uiState.value
+                        if (meBuzzed && state is GameScreenUiState.Question)
+                            _uiState.update {
+                                state.copy(buzzButtonActive = false)
+                            }
+                    }
             }
 
             is GameScreenUiEvent.JudgeAnswer -> {
@@ -202,7 +228,9 @@ class GameViewModel(
                     getString(Res.string.only_host_can_judge_answer)
                 }
 
-                repository.judgeAnswer(sessionId, event.answerId, event.isCorrect)
+                repository
+                    .judgeAnswer(sessionId, event.answerId, event.isCorrect)
+                    .handleFailure()
             }
 
             GameScreenUiEvent.Leave -> {

@@ -1,20 +1,21 @@
 package com.davanok.dvnkquizz.core.data.game
 
 import co.touchlab.kermit.Logger
+import com.davanok.dvnkquizz.core.core.filesystem.div
+import com.davanok.dvnkquizz.core.core.id.currentUserId
+import com.davanok.dvnkquizz.core.core.result.toResultFlow
+import com.davanok.dvnkquizz.core.domain.game.entities.BuzzInRequest
 import com.davanok.dvnkquizz.core.domain.game.entities.FullGameSession
 import com.davanok.dvnkquizz.core.domain.game.entities.FullGameSessionDto
 import com.davanok.dvnkquizz.core.domain.game.entities.GameSession
 import com.davanok.dvnkquizz.core.domain.game.entities.JudgeAnswerRequest
 import com.davanok.dvnkquizz.core.domain.game.entities.Question
 import com.davanok.dvnkquizz.core.domain.game.entities.QuestionDto
-import com.davanok.dvnkquizz.core.domain.gamePackage.enums.MediaKind
+import com.davanok.dvnkquizz.core.domain.game.entities.SessionRealtimeDataDto
 import com.davanok.dvnkquizz.core.domain.game.repositories.GameProcessRepository
+import com.davanok.dvnkquizz.core.domain.gamePackage.enums.MediaKind
 import com.davanok.dvnkquizz.core.platform.Platform
 import com.davanok.dvnkquizz.core.platform.currentPlatform
-import com.davanok.dvnkquizz.core.core.id.currentUserId
-import com.davanok.dvnkquizz.core.core.filesystem.div
-import com.davanok.dvnkquizz.core.core.result.toResultFlow
-import com.davanok.dvnkquizz.core.domain.game.entities.BuzzInRequest
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -31,16 +32,22 @@ import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.downloadAuthenticatedAsFlow
 import io.ktor.utils.io.asByteWriteChannel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.shareIn
@@ -50,6 +57,7 @@ import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.Uuid
 
 @Inject
@@ -59,11 +67,10 @@ class GameProcessRepositoryImpl(
     private val realtime: Realtime,
     private val storage: Storage,
     private val auth: Auth,
-    @Named("tempDir")
-    private val tempDir: Path,
+    @Named("tempDir") tempDir: Path,
     logger: Logger
 ) : GameProcessRepository {
-
+    private val tempDirectory = tempDir
     private val logger = logger.withTag(TAG)
 
     override val HEARTBEAT_TIMEOUT_MS: Long = 30_000
@@ -76,8 +83,8 @@ class GameProcessRepositoryImpl(
         val extension = mediaUrl.substringAfterLast('.', "bin")
         val filename = "${question.id}_${mediaUrl.hashCode()}.$extension"
 
-        val localPath = tempDir / filename
-        val tmpPath = tempDir / "$filename.tmp"
+        val localPath = tempDirectory / filename
+        val tmpPath = tempDirectory / "$filename.tmp"
 
         // 1. Check Cache
         if (SystemFileSystem.exists(localPath)) {
@@ -134,46 +141,88 @@ class GameProcessRepositoryImpl(
         markMeAsReady(sessionId)
     }
 
-    @OptIn(SupabaseExperimental::class, ExperimentalCoroutinesApi::class)
+    private suspend fun convertProfileImages(
+        images: Map<Uuid, String?>,
+        cache: MutableMap<String, String>
+    ): Map<Uuid, String?> {
+        val missingPaths = images.values
+            .filterNotNull()
+            .distinct()
+            .filter { it !in cache }
+
+        if (missingPaths.isNotEmpty()) {
+            storage.from("profiles")
+                .createSignedUrls(
+                    PROFILE_IMAGE_URL_EXPIRES_IN,
+                    missingPaths
+                ).forEach { url ->
+                    cache[url.path] = url.signedURL
+                }
+        }
+
+        return images.mapValues { (_, path) ->
+            path?.let { cache[it] }
+        }
+    }
+
+    private suspend fun getSessionRealtimeData(sessionId: Uuid): SessionRealtimeDataDto? = runCatching {
+        postgrest
+            .from("session_realtime_data")
+            .select { filter { SessionRealtimeDataDto::id eq sessionId } }
+            .decodeSingleOrNull<SessionRealtimeDataDto>()
+    }.getOrNull()
+
+    @OptIn(SupabaseExperimental::class, ExperimentalCoroutinesApi::class, FlowPreview::class)
     override fun observeGameSession(sessionId: Uuid): Flow<Result<FullGameSession>> = channelFlow {
         val topic = "game-state-update:${sessionId.toHexDashString()}"
         val channel = realtime.channel(sessionId.toString())
 
         channel.subscribe(blockUntilSubscribed = false)
 
-        val broadcastSharedFlow = channel
-            .broadcastFlow<FullGameSessionDto>(topic)
-            .shareIn(this, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS))
+        val initialFlow = flow {
+            emit(getSessionRealtimeData(sessionId)?.data)
+        }.filterNotNull()
 
-        // Transform the raw DTO stream into a stream that includes hydrated Question data
-        val questionStream: Flow<Question?> = broadcastSharedFlow
-            .distinctUntilChangedBy { it.activeQuestion?.id } // Only trigger download if question ID changes
+        val realtimeFlow: Flow<FullGameSessionDto> = channel
+            .broadcastFlow<FullGameSessionDto>(topic)
+            .shareIn(
+                scope = this,
+                started = SharingStarted.WhileSubscribed(SHARE_STOP_TIMEOUT.inWholeMilliseconds),
+                replay = 1
+            )
+
+        val fallbackFlow: Flow<FullGameSessionDto> = realtimeFlow
+            .debounce(REALTIME_FLOW_DEBOUNCE)
+            .mapLatest { getSessionRealtimeData(sessionId)?.data }
+            .filterNotNull()
+
+        val sessionFlow = merge(
+            initialFlow,
+            realtimeFlow,
+            fallbackFlow,
+        )
+            .distinctUntilChanged()
+            .shareIn(
+                scope = this,
+                started = SharingStarted.WhileSubscribed(SHARE_STOP_TIMEOUT.inWholeMilliseconds),
+                replay = 1
+            )
+
+        val questionStream: Flow<Question?> = sessionFlow
+            .distinctUntilChangedBy { it.activeQuestion?.id }
             .flatMapLatest { session ->
                 session.activeQuestion?.let { getQuestionFlowHelper(sessionId, it) } ?: flowOf(null)
             }
 
         val signedUrlCache = mutableMapOf<String, String>()
-        combine(broadcastSharedFlow, questionStream) { status, question ->
+        combine(
+            sessionFlow,
+            questionStream
+        ) { status, question ->
             status.toDomain(
                 currentUserId = auth.currentUserId,
                 convertProfileImages = { profiles ->
-                    val missingPaths = profiles.values
-                        .filterNotNull()
-                        .distinct()
-                        .filter { it !in signedUrlCache }
-
-                    if (missingPaths.isNotEmpty()) {
-                        storage.from("profiles")
-                            .createSignedUrls(
-                                PROFILE_IMAGE_URL_EXPIRES_IN,
-                                missingPaths
-                            ).forEach { url ->
-                                signedUrlCache[url.path] = url.signedURL
-                            }
-                    }
-                    profiles.mapValues { (_, path) ->
-                        path?.let { signedUrlCache[it] }
-                    }
+                    convertProfileImages(profiles, signedUrlCache)
                 },
                 transformActiveQuestion = { question },
             )
@@ -243,6 +292,7 @@ class GameProcessRepositoryImpl(
         private val MEDIA_URL_EXPIRE_DURATION = 1.hours
         private val PROFILE_IMAGE_URL_EXPIRES_IN = 5.minutes
         private const val DOWNLOAD_MEDIA_RETRIES = 5L
-        private const val STOP_TIMEOUT_MS = 5_000L
+        private val SHARE_STOP_TIMEOUT = 5.seconds
+        private val REALTIME_FLOW_DEBOUNCE = 2.seconds
     }
 }
