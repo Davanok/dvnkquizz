@@ -1,11 +1,9 @@
 package com.davanok.dvnkquizz.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
-import com.davanok.dvnkquizz.ui.platform.NavigatorModifier
 import com.davanok.dvnkquizz.ui.screens.auth.AuthScreen
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.EditGamePackageScreen
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.EditGamePackageViewModel
@@ -23,7 +21,6 @@ fun AppNavDisplay(
     replace: (Route) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    NavigatorModifier(derivedStateOf { backStack.last() }.value)
     NavDisplay(
         modifier = modifier,
         backStack = backStack,

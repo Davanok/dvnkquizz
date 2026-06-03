@@ -341,8 +341,7 @@ private fun JoinGamePage(
             onValueChange = onInviteCodeChange,
             label = { Text(stringResource(Res.string.invite_code_field_label)) },
             placeholder = { Text(stringResource(Res.string.invite_code_field_placeholder)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            modifier = Modifier.fillMaxWidth()
         )
         Button(
             onClick = onJoin,

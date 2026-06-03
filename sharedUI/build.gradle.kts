@@ -78,9 +78,6 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
         }
 
-        webMain.dependencies {
-            implementation(libs.web.navigation)
-        }
     }
 
     targets

@@ -25,7 +25,6 @@ filekit = "0.14.1"
 coil = "3.4.0"
 composeHotReload = "1.1.0"
 app-dirs = "2.0.0"
-web-navigation = "1.1.0"
 
 [libraries]
 # Compose
@@ -51,8 +50,6 @@ androidx-lifecycle-runtime = { module = "org.jetbrains.androidx.lifecycle:lifecy
 
 compose-nav3 = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "androidx-nav3" }
 androidx-lifecycle-viewmodel-nav3 = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "androidx-lifecycle" }
-
-web-navigation = { module = "com.github.terrakok:navigation3-browser", version.ref = "web-navigation" }
 
 # Coroutines
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
