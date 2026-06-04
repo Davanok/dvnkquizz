@@ -3,6 +3,7 @@ package com.davanok.dvnkquizz.ui
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,13 +28,16 @@ class AppClass(
                 uiState.theme,
                 onThemeChanged
             ) {
-                AppNavDisplay(
-                    backStack = uiState.backStack,
-                    modifier = Modifier.fillMaxSize(),
-                    navigate = { viewModel.navigationEventSink(NavigationEvent.Navigate(it)) },
-                    back = { viewModel.navigationEventSink(NavigationEvent.Back) },
-                    replace = { viewModel.navigationEventSink(NavigationEvent.Replace(it)) }
-                )
+                if (uiState.isLoading) {
+                    PlaceholderScreen(Modifier.fillMaxSize())
+                }
+                else {
+                    val isLoggedIn by derivedStateOf { uiState.user != null }
+                    AppNavDisplay(
+                        isLoggedIn = isLoggedIn,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
         }
     }

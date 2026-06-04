@@ -134,8 +134,8 @@ class HomeViewModel(
         }
     }
     fun setAppTheme(theme: AppTheme) = viewModelScope.launch {
-        appSettingsRepository.updateAppSettings(
-            uiState.value.appSettings.copy(theme = theme)
-        )
+        appSettingsRepository.updateAppSettings {
+            it.copy(theme = theme)
+        }
     }
 }

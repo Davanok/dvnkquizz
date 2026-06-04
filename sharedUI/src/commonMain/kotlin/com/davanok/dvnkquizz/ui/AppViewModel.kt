@@ -2,10 +2,8 @@ package com.davanok.dvnkquizz.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.davanok.dvnkquizz.core.domain.auth.entities.User
 import com.davanok.dvnkquizz.core.domain.auth.repositories.AuthRepository
 import com.davanok.dvnkquizz.core.domain.settings.repositories.AppSettingsRepository
-import com.davanok.dvnkquizz.ui.navigation.Route
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -35,17 +33,17 @@ class AppViewModel(
             .observeUser()
             .collect { result ->
                 _uiState.update { state ->
-                    result.onSuccess {
-                        handleAuthNavigation(it)
-                    }.fold(
+                    result.fold(
                         onSuccess = { user ->
                             state.copy(
+                                isLoading = false,
                                 user = user,
                                 errorMessage = null
                             )
                         },
                         onFailure = { thr ->
                             state.copy(
+                                isLoading = false,
                                 user = null,
                                 errorMessage = thr.message
                             )
@@ -53,31 +51,6 @@ class AppViewModel(
                     )
                 }
             }
-    }
-
-    private fun handleAuthNavigation(user: User?) {
-        val currentRoute = _uiState.value.backStack.lastOrNull()
-
-        when {
-            user == null -> {
-                if (currentRoute != Route.Auth) {
-                    navigationEventSink(NavigationEvent.Replace(Route.Auth))
-                }
-            }
-            currentRoute == Route.Auth || currentRoute == Route.PlaceHolder -> {
-                navigationEventSink(NavigationEvent.Replace(Route.Home))
-            }
-        }
-    }
-
-    fun navigationEventSink(event: NavigationEvent) = _uiState.update {
-        val backStack = it.backStack.toMutableList()
-        when (event) {
-            NavigationEvent.Back -> backStack.removeLastOrNull()
-            is NavigationEvent.Navigate -> backStack.add(event.route)
-            is NavigationEvent.Replace -> backStack[backStack.lastIndex] = event.route
-        }
-        it.copy(backStack = backStack)
     }
 
     fun observeSettings() = viewModelScope.launch {

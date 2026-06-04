@@ -13,6 +13,7 @@ import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserInfo
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 
@@ -37,6 +38,7 @@ class AuthRepositoryImpl(
                     SessionStatus.Initializing -> null // Skip emission during startup
                 }
             }
+            .distinctUntilChanged()
 
     override suspend fun signInWithEmail(email: String, password: String): Result<Unit> =
         runCatching {

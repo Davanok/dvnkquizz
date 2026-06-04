@@ -1,9 +1,15 @@
 package com.davanok.dvnkquizz.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
+import com.davanok.dvnkquizz.ui.aboutScreen.AboutScreen
 import com.davanok.dvnkquizz.ui.screens.auth.AuthScreen
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.EditGamePackageScreen
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.EditGamePackageViewModel
@@ -15,20 +21,41 @@ import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 
 @Composable
 fun AppNavDisplay(
-    backStack: List<Route>,
-    navigate: (Route) -> Unit,
-    back: () -> Unit,
-    replace: (Route) -> Unit,
+    isLoggedIn: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val backStack = remember {
+        mutableStateListOf(if (isLoggedIn) Route.Home else Route.About)
+    }
+
+    LaunchedEffect(isLoggedIn) {
+        if (!isLoggedIn) {
+            backStack.removeAll { it is RequiresAuth }
+            if (backStack.isEmpty()) backStack.add(Route.About)
+        }
+    }
+
+    val navigate: (route: Route) -> Unit by rememberUpdatedState {
+        if (isLoggedIn || it !is RequiresAuth)
+            backStack.add(it)
+        else
+            backStack.add(Route.Auth)
+    }
+    val back: () -> Unit by rememberUpdatedState {
+        if (backStack.size > 1) backStack.removeLastOrNull()
+        else backStack[0] = Route.About
+    }
+
     NavDisplay(
         modifier = modifier,
         backStack = backStack,
         onBack = back,
         entryDecorators = navEntryDecorators(),
         entryProvider = entryProvider {
-            entry<Route.PlaceHolder> {
-                PlaceholderScreen()
+            entry<Route.About> {
+                AboutScreen(
+                    navigateNext = { navigate(Route.Home) }
+                )
             }
             entry<Route.Auth> {
                 AuthScreen()

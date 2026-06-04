@@ -2,17 +2,11 @@ package com.davanok.dvnkquizz.ui
 
 import com.davanok.dvnkquizz.core.domain.auth.entities.User
 import com.davanok.dvnkquizz.core.domain.settings.enums.AppTheme
-import com.davanok.dvnkquizz.ui.navigation.Route
 
 data class AppUiState(
+    val isLoading: Boolean = true,
     val user: User? = null,
     val theme: AppTheme = AppTheme.entries.first(),
-    val errorMessage: String? = null,
-    val backStack: List<Route> = listOf(Route.PlaceHolder)
+    val isFirstTime: Boolean = true,
+    val errorMessage: String? = null
 )
-
-sealed interface NavigationEvent {
-    data object Back: NavigationEvent
-    data class Navigate(val route: Route): NavigationEvent
-    data class Replace(val route: Route): NavigationEvent
-}
