@@ -28,7 +28,6 @@ kotlin {
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs { browser() }
 
-    iosX64()
     iosArm64()
     iosSimulatorArm64()
 

@@ -34,6 +34,10 @@ fun AppNavDisplay(
             backStack.removeAll { it is RequiresAuth }
             if (backStack.isEmpty()) backStack.add(Route.About)
         }
+        else {
+            backStack.remove(Route.Auth)
+            backStack.add(Route.Home)
+        }
     }
 
     val navigate: (route: Route) -> Unit by rememberUpdatedState {
