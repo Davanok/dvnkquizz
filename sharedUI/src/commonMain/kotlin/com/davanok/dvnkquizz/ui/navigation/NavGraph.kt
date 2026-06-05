@@ -9,7 +9,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
-import com.davanok.dvnkquizz.ui.aboutScreen.AboutScreen
+import com.davanok.dvnkquizz.ui.screens.aboutScreen.AboutScreen
 import com.davanok.dvnkquizz.ui.screens.auth.AuthScreen
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.EditGamePackageScreen
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.EditGamePackageViewModel

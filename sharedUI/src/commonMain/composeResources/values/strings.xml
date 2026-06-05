@@ -153,4 +153,110 @@
     <string name="error_delete_media_failed">Failed to delete media</string>
     <string name="error_package_upload_failed">Failed to upload game package</string>
     <string name="error_package_download_failed">Failed to download game package</string>
+
+    <string name="landing_title">Real-Time Quiz Competitions</string>
+    <string name="landing_description">
+        DVNKQuizz helps organize modern quiz events, educational games, and team competitions.
+
+        Create game packages, invite participants with a join code, and manage the game flow through an intuitive interface.
+
+        Players can join from a phone, computer, or directly through a web browser.
+    </string>
+    <string name="feature_create_games_title">Game Creation</string>
+    <string name="feature_create_games_description">Prepare your own questions, categories, and rounds.</string>
+    <string name="feature_multiplayer_title">Multiplayer Sessions</string>
+    <string name="feature_multiplayer_description">Invite participants using a short join code.</string>
+    <string name="feature_live_results_title">Live Results</string>
+    <string name="feature_live_results_description">Track game progress and leaderboard updates in real time.</string>
+
+    <!-- Credentials & Identity -->
+    <string name="auth_error_invalid_credentials">Invalid email or password</string>
+    <string name="auth_error_weak_password">Password is too weak. Use at least 8 characters with mixed case and numbers</string>
+    <string name="auth_error_same_password">New password must be different from the current one</string>
+    <string name="auth_error_email_exists">An account with this email already exists</string>
+    <string name="auth_error_phone_exists">An account with this phone number already exists</string>
+    <string name="auth_error_user_already_exists">This account already exists</string>
+    <string name="auth_error_identity_already_exists">This identity is already linked to another account</string>
+    <string name="auth_error_identity_not_found">Identity not found</string>
+    <string name="auth_error_single_identity_not_deletable">Cannot remove your only sign-in method</string>
+    <string name="auth_error_email_conflict_identity_not_deletable">Cannot remove this identity as it would cause an email conflict</string>
+    <string name="auth_error_user_not_found">No account found with these credentials</string>
+    <string name="auth_error_user_banned">Your account has been suspended. Please contact support</string>
+    <string name="auth_error_user_sso_managed">This account is managed by your organisation's SSO provider</string>
+
+    <!-- Email & Phone -->
+    <string name="auth_error_email_not_confirmed">Please confirm your email address before signing in</string>
+    <string name="auth_error_phone_not_confirmed">Please confirm your phone number before signing in</string>
+    <string name="auth_error_provider_email_needs_verification">This email address needs to be verified with your provider</string>
+    <string name="auth_error_email_address_invalid">Please enter a valid email address</string>
+    <string name="auth_error_email_address_not_authorized">This email address is not authorised to sign in</string>
+
+    <!-- OTP / Token / Code -->
+    <string name="auth_error_otp_expired">The verification code has expired. Please request a new one</string>
+    <string name="auth_error_otp_disabled">One-time passwords are not available</string>
+    <string name="auth_error_bad_code_verifier">Invalid verification code</string>
+    <string name="auth_error_bad_jwt">Your session token is invalid. Please sign in again</string>
+    <string name="auth_error_refresh_token_not_found">Session not found. Please sign in again</string>
+    <string name="auth_error_refresh_token_already_used">This session has already been used. Please sign in again</string>
+
+    <!-- Session & Flow -->
+    <string name="auth_error_session_not_found">Session not found. Please sign in again</string>
+    <string name="auth_error_session_expired">Your session has expired. Please sign in again</string>
+    <string name="auth_error_flow_state_not_found">Authentication flow not found. Please try again</string>
+    <string name="auth_error_flow_state_expired">Authentication flow has expired. Please try again</string>
+
+    <!-- MFA -->
+    <string name="auth_error_mfa_verification_failed">Verification code is incorrect</string>
+    <string name="auth_error_mfa_verification_rejected">Verification was rejected. Please try again</string>
+    <string name="auth_error_mfa_challenge_expired">Verification challenge expired. Please try again</string>
+    <string name="auth_error_mfa_ip_address_mismatch">Your IP address changed during verification. Please try again</string>
+    <string name="auth_error_mfa_factor_not_found">Authentication factor not found</string>
+    <string name="auth_error_mfa_factor_name_conflict">An authentication factor with this name already exists</string>
+    <string name="auth_error_too_many_enrolled_mfa_factors">You have reached the maximum number of authentication factors</string>
+    <string name="auth_error_mfa_verified_factor_exists">A verified authentication factor already exists</string>
+
+    <!-- Reauthentication -->
+    <string name="auth_error_reauthentication_needed">Please re-enter your password to continue</string>
+    <string name="auth_error_reauthentication_not_valid">Re-authentication failed. Please try again</string>
+    <string name="auth_error_reauth_nonce_missing">Re-authentication data is missing. Please try again</string>
+    <string name="auth_error_insufficient_aal">A higher level of authentication is required</string>
+
+    <!-- OAuth & SSO -->
+    <string name="auth_error_bad_oauth_state">OAuth state is invalid. Please try signing in again</string>
+    <string name="auth_error_bad_oauth_callback">OAuth callback failed. Please try signing in again</string>
+    <string name="auth_error_saml_relay_state_not_found">SAML session not found. Please try again</string>
+    <string name="auth_error_saml_relay_state_expired">SAML session has expired. Please try again</string>
+    <string name="auth_error_saml_assertion_no_user_id">No user ID found in SAML response</string>
+    <string name="auth_error_saml_assertion_no_email">No email found in SAML response</string>
+    <string name="auth_error_saml_entity_id_mismatch">SAML provider configuration mismatch</string>
+
+    <!-- Rate Limits -->
+    <string name="auth_error_over_request_rate_limit">Too many requests. Please wait a moment and try again</string>
+    <string name="auth_error_over_email_send_rate_limit">Too many emails sent. Please wait before requesting another</string>
+    <string name="auth_error_over_sms_send_rate_limit">Too many SMS messages sent. Please wait before requesting another</string>
+
+    <!-- Disabled Features -->
+    <string name="auth_error_signup_disabled">New account registration is currently disabled</string>
+    <string name="auth_error_email_provider_disabled">Email sign-in is currently unavailable</string>
+    <string name="auth_error_phone_provider_disabled">Phone sign-in is currently unavailable</string>
+    <string name="auth_error_oauth_provider_not_supported">This sign-in provider is not supported</string>
+    <string name="auth_error_provider_disabled">This sign-in provider is currently disabled</string>
+    <string name="auth_error_anonymous_provider_disabled">Anonymous sign-in is currently disabled</string>
+    <string name="auth_error_saml_provider_disabled">SAML sign-in is currently disabled</string>
+    <string name="auth_error_mfa_phone_enroll_disabled">Phone-based two-factor authentication is not available</string>
+    <string name="auth_error_mfa_phone_verify_disabled">Phone-based two-factor verification is not available</string>
+    <string name="auth_error_mfa_totp_enroll_disabled">Authenticator app enrolment is not available</string>
+    <string name="auth_error_mfa_totp_verify_disabled">Authenticator app verification is not available</string>
+    <string name="auth_error_mfa_webauthn_enroll_disabled">Passkey enrolment is not available</string>
+    <string name="auth_error_mfa_webauthn_verify_disabled">Passkey verification is not available</string>
+    <string name="auth_error_manual_linking_disabled">Manual account linking is currently disabled</string>
+    <string name="auth_error_web3_provider_disabled">Web3 sign-in is currently disabled</string>
+    <string name="auth_error_otp_provider_disabled">Otp sign-in is currently disabled</string>
+    <string name="auth_error_web3_unsupported_chain">This blockchain network is not supported</string>
+
+    <!-- Misc -->
+    <string name="auth_error_invite_not_found">Invitation not found or has already been used</string>
+    <string name="auth_error_captcha_failed">CAPTCHA verification failed. Please try again</string>
+    <string name="auth_error_validation_failed">Some fields are invalid. Please check your input</string>
+    <string name="auth_error_unexpected_failure">Something went wrong. Please try again</string>
 </resources>

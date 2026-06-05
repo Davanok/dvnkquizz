@@ -2,13 +2,17 @@ package com.davanok.dvnkquizz.core.data.auth
 
 import co.touchlab.kermit.Logger
 import com.davanok.dvnkquizz.core.core.id.toUuid
+import com.davanok.dvnkquizz.core.core.result.mapFailure
+import com.davanok.dvnkquizz.core.domain.auth.entities.UserAuthException
 import com.davanok.dvnkquizz.core.domain.auth.entities.User
+import com.davanok.dvnkquizz.core.domain.auth.enums.UserAuthErrorCode
 import com.davanok.dvnkquizz.core.domain.auth.repositories.AuthRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.OtpType
+import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserInfo
@@ -46,7 +50,7 @@ class AuthRepositoryImpl(
                 this.email = email
                 this.password = password
             }
-        }
+        }.mapAuthException()
 
     override suspend fun signUpWithEmail(email: String, password: String): Result<Unit> =
         runCatching<Unit> {
@@ -56,17 +60,17 @@ class AuthRepositoryImpl(
             }
         }.onSuccess {
             signInWithEmail(email, password)
-        }
+        }.mapAuthException()
 
     override suspend fun resendEmail(email: String): Result<Unit> =
         runCatching {
             auth.resendEmail(type = OtpType.Email.EMAIL, email = email)
-        }
+        }.mapAuthException()
 
     override suspend fun logOut(): Result<Unit> =
         runCatching {
             auth.signOut()
-        }
+        }.mapAuthException()
 
     private fun UserInfo.toUser() = User(
         id = id.toUuid(),
@@ -75,5 +79,15 @@ class AuthRepositoryImpl(
 
     companion object {
         private const val TAG = "AuthRepository"
+        private fun <T> Result<T>.mapAuthException(): Result<T> = mapFailure { thr ->
+            (thr as? AuthRestException)?.let { thr ->
+                UserAuthException(
+                    errorCode = thr.errorCode?.let { UserAuthErrorCode.fromAuthErrorCode(it) },
+                    errorDescription = thr.errorDescription,
+                    message = thr.message,
+                    cause = thr.cause
+                )
+            } ?: thr
+        }
     }
 }

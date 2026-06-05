@@ -2,6 +2,7 @@ package com.davanok.dvnkquizz.ui.screens.auth
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -9,8 +10,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LoadingIndicator
@@ -25,13 +29,17 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.davanok.dvnkquizz.ui.utils.enumStrings.stringRes
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.after_confirm_sign_in
@@ -40,6 +48,7 @@ import dvnkquizz.sharedui.generated.resources.change_email
 import dvnkquizz.sharedui.generated.resources.check_email
 import dvnkquizz.sharedui.generated.resources.email_field_label
 import dvnkquizz.sharedui.generated.resources.email_sent
+import dvnkquizz.sharedui.generated.resources.ic_launcher_monochrome
 import dvnkquizz.sharedui.generated.resources.password_field_label
 import dvnkquizz.sharedui.generated.resources.resend_email
 import dvnkquizz.sharedui.generated.resources.resend_email_in
@@ -48,6 +57,7 @@ import dvnkquizz.sharedui.generated.resources.sign_up
 import dvnkquizz.sharedui.generated.resources.switch_to_sign_in
 import dvnkquizz.sharedui.generated.resources.switch_to_sign_up
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -73,15 +83,30 @@ fun Content(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Image(
+            painter = painterResource(Res.drawable.ic_launcher_monochrome),
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+                .clip(RoundedCornerShape(16.dp))
+        )
+
+        Spacer(Modifier.height(24.dp))
+
         Text(
             text = stringResource(Res.string.app_name),
-            style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(bottom = 32.dp)
+            style = MaterialTheme.typography.headlineLarge
         )
+
+        Spacer(Modifier.height(32.dp))
 
         Crossfade(targetState = state.isLinkSent, label = "AuthStepTransition") { isLinkSent ->
             if (isLinkSent) {
@@ -103,6 +128,8 @@ fun Content(
                     onSubmitEmail = { onEvent(AuthEvent.SubmitEmail) },
                     isSignUpMode = state.isSignUpMode,
                     onToggleMode = { onEvent(AuthEvent.ToggleMode) },
+                    emailError = state.emailError,
+                    passwordError = state.passwordError,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -112,12 +139,24 @@ fun Content(
         AnimatedVisibility(visible = state.error != null) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = state.error.orEmpty(),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.Center
-                )
+                state.generalError?.let { generalError ->
+                    Text(
+                        text = stringResource(generalError.errorCode.stringRes()),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                state.error?.description
+                    .takeUnless { it.isNullOrBlank() }
+                    ?.let { description ->
+                        Text(
+                            text = description,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center
+                        )
+                    }
             }
         }
     }
@@ -134,6 +173,8 @@ private fun EmailPasswordStep(
     onSubmitEmail: () -> Unit,
     isSignUpMode: Boolean,
     onToggleMode: () -> Unit,
+    emailError: AuthUiError?,
+    passwordError: AuthUiError?,
     modifier: Modifier = Modifier
 ) {
     val enabled = !isLoading
@@ -153,7 +194,11 @@ private fun EmailPasswordStep(
             ),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            enabled = enabled
+            enabled = enabled,
+            isError = emailError != null,
+            supportingText = emailError?.let { {
+                Text(text = stringResource(it.errorCode.stringRes()))
+            } }
         )
 
         OutlinedTextField(
@@ -170,7 +215,11 @@ private fun EmailPasswordStep(
             visualTransformation = remember { PasswordVisualTransformation() },
             modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
             singleLine = true,
-            enabled = enabled
+            enabled = enabled,
+            isError = passwordError != null,
+            supportingText = passwordError?.let { {
+                Text(text = stringResource(it.errorCode.stringRes()))
+            } }
         )
 
         Spacer(modifier = Modifier.height(16.dp))

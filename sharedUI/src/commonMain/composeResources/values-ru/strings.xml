@@ -116,4 +116,110 @@
     <string name="error_delete_media_failed">Ошибка при удалении медиа</string>
     <string name="error_package_upload_failed">Ошибка при публикации игрового пакета</string>
     <string name="error_package_download_failed">Ошибка при загрузке игрового пакета</string>
+
+    <string name="landing_title">Интеллектуальные викторины в реальном времени</string>
+    <string name="landing_description">
+        DVNKQuizz помогает проводить современные квизы, обучающие игры и командные соревнования.
+
+        Создавайте игровые пакеты, приглашайте участников по коду и управляйте ходом игры в удобном интерфейсе.
+
+        Игроки могут подключаться с телефона, компьютера или прямо через браузер.
+    </string>
+    <string name="feature_create_games_title">Создание игр</string>
+    <string name="feature_create_games_description">Подготавливайте собственные вопросы, категории и раунды.</string>
+    <string name="feature_multiplayer_title">Совместная игра</string>
+    <string name="feature_multiplayer_description">Приглашайте участников по короткому коду подключения.</string>
+    <string name="feature_live_results_title">Живые результаты</string>
+    <string name="feature_live_results_description">Следите за ходом игры и таблицей лидеров в режиме реального времени.</string>
+
+    <!-- Credentials & Identity -->
+    <string name="auth_error_invalid_credentials">Неверный email или пароль</string>
+    <string name="auth_error_weak_password">Пароль слишком простой. Используйте минимум 8 символов, заглавные буквы и цифры</string>
+    <string name="auth_error_same_password">Новый пароль должен отличаться от текущего</string>
+    <string name="auth_error_email_exists">Аккаунт с таким email уже существует</string>
+    <string name="auth_error_phone_exists">Аккаунт с таким номером телефона уже существует</string>
+    <string name="auth_error_user_already_exists">Этот аккаунт уже существует</string>
+    <string name="auth_error_identity_already_exists">Эта учётная запись уже привязана к другому аккаунту</string>
+    <string name="auth_error_identity_not_found">Учётная запись не найдена</string>
+    <string name="auth_error_single_identity_not_deletable">Нельзя удалить единственный способ входа</string>
+    <string name="auth_error_email_conflict_identity_not_deletable">Невозможно удалить эту учётную запись — возникнет конфликт email</string>
+    <string name="auth_error_user_not_found">Аккаунт с такими данными не найден</string>
+    <string name="auth_error_user_banned">Ваш аккаунт заблокирован. Обратитесь в поддержку</string>
+    <string name="auth_error_user_sso_managed">Этот аккаунт управляется SSO-провайдером вашей организации</string>
+
+    <!-- Email & Phone -->
+    <string name="auth_error_email_not_confirmed">Подтвердите адрес электронной почты перед входом</string>
+    <string name="auth_error_phone_not_confirmed">Подтвердите номер телефона перед входом</string>
+    <string name="auth_error_provider_email_needs_verification">Этот email необходимо подтвердить через провайдера</string>
+    <string name="auth_error_email_address_invalid">Введите корректный адрес электронной почты</string>
+    <string name="auth_error_email_address_not_authorized">Этот email не разрешён для входа</string>
+
+    <!-- OTP / Token / Code -->
+    <string name="auth_error_otp_expired">Код подтверждения истёк. Запросите новый</string>
+    <string name="auth_error_otp_disabled">Одноразовые пароли недоступны</string>
+    <string name="auth_error_bad_code_verifier">Неверный код подтверждения</string>
+    <string name="auth_error_bad_jwt">Токен сессии недействителен. Войдите снова</string>
+    <string name="auth_error_refresh_token_not_found">Сессия не найдена. Войдите снова</string>
+    <string name="auth_error_refresh_token_already_used">Эта сессия уже была использована. Войдите снова</string>
+
+    <!-- Session & Flow -->
+    <string name="auth_error_session_not_found">Сессия не найдена. Войдите снова</string>
+    <string name="auth_error_session_expired">Сессия истекла. Войдите снова</string>
+    <string name="auth_error_flow_state_not_found">Процесс аутентификации не найден. Попробуйте снова</string>
+    <string name="auth_error_flow_state_expired">Процесс аутентификации истёк. Попробуйте снова</string>
+
+    <!-- MFA -->
+    <string name="auth_error_mfa_verification_failed">Неверный код подтверждения</string>
+    <string name="auth_error_mfa_verification_rejected">Подтверждение отклонено. Попробуйте снова</string>
+    <string name="auth_error_mfa_challenge_expired">Запрос подтверждения истёк. Попробуйте снова</string>
+    <string name="auth_error_mfa_ip_address_mismatch">IP-адрес изменился во время проверки. Попробуйте снова</string>
+    <string name="auth_error_mfa_factor_not_found">Фактор аутентификации не найден</string>
+    <string name="auth_error_mfa_factor_name_conflict">Фактор аутентификации с таким именем уже существует</string>
+    <string name="auth_error_too_many_enrolled_mfa_factors">Достигнуто максимальное количество факторов аутентификации</string>
+    <string name="auth_error_mfa_verified_factor_exists">Подтверждённый фактор аутентификации уже существует</string>
+
+    <!-- Reauthentication -->
+    <string name="auth_error_reauthentication_needed">Введите пароль повторно для продолжения</string>
+    <string name="auth_error_reauthentication_not_valid">Повторная аутентификация не удалась. Попробуйте снова</string>
+    <string name="auth_error_reauth_nonce_missing">Данные повторной аутентификации отсутствуют. Попробуйте снова</string>
+    <string name="auth_error_insufficient_aal">Требуется более высокий уровень аутентификации</string>
+
+    <!-- OAuth & SSO -->
+    <string name="auth_error_bad_oauth_state">Недействительное состояние OAuth. Попробуйте войти снова</string>
+    <string name="auth_error_bad_oauth_callback">Ошибка обратного вызова OAuth. Попробуйте войти снова</string>
+    <string name="auth_error_saml_relay_state_not_found">SAML-сессия не найдена. Попробуйте снова</string>
+    <string name="auth_error_saml_relay_state_expired">SAML-сессия истекла. Попробуйте снова</string>
+    <string name="auth_error_saml_assertion_no_user_id">В ответе SAML не найден идентификатор пользователя</string>
+    <string name="auth_error_saml_assertion_no_email">В ответе SAML не найден email</string>
+    <string name="auth_error_saml_entity_id_mismatch">Несоответствие конфигурации SAML-провайдера</string>
+
+    <!-- Rate Limits -->
+    <string name="auth_error_over_request_rate_limit">Слишком много запросов. Подождите немного и попробуйте снова</string>
+    <string name="auth_error_over_email_send_rate_limit">Превышен лимит отправки писем. Подождите перед повторным запросом</string>
+    <string name="auth_error_over_sms_send_rate_limit">Превышен лимит отправки SMS. Подождите перед повторным запросом</string>
+
+    <!-- Disabled Features -->
+    <string name="auth_error_signup_disabled">Регистрация новых аккаунтов временно недоступна</string>
+    <string name="auth_error_email_provider_disabled">Вход по email временно недоступен</string>
+    <string name="auth_error_phone_provider_disabled">Вход по телефону временно недоступен</string>
+    <string name="auth_error_oauth_provider_not_supported">Этот способ входа не поддерживается</string>
+    <string name="auth_error_provider_disabled">Этот способ входа временно отключён</string>
+    <string name="auth_error_anonymous_provider_disabled">Анонимный вход временно отключён</string>
+    <string name="auth_error_saml_provider_disabled">Вход через SAML временно отключён</string>
+    <string name="auth_error_mfa_phone_enroll_disabled">Двухфакторная аутентификация по телефону недоступна</string>
+    <string name="auth_error_mfa_phone_verify_disabled">Проверка по телефону недоступна</string>
+    <string name="auth_error_mfa_totp_enroll_disabled">Подключение приложения-аутентификатора недоступно</string>
+    <string name="auth_error_mfa_totp_verify_disabled">Проверка через приложение-аутентификатор недоступна</string>
+    <string name="auth_error_mfa_webauthn_enroll_disabled">Подключение ключа доступа недоступно</string>
+    <string name="auth_error_mfa_webauthn_verify_disabled">Проверка ключа доступа недоступна</string>
+    <string name="auth_error_manual_linking_disabled">Ручная привязка аккаунтов временно отключена</string>
+    <string name="auth_error_web3_provider_disabled">Вход через Web3 временно отключён</string>
+    <string name="auth_error_web3_unsupported_chain">Эта блокчейн-сеть не поддерживается</string>
+    <string name="auth_error_otp_provider_disabled">Вход через OTP временно отключен</string>
+
+    <!-- Misc -->
+    <string name="auth_error_invite_not_found">Приглашение не найдено или уже было использовано</string>
+    <string name="auth_error_captcha_failed">Проверка CAPTCHA не пройдена. Попробуйте снова</string>
+    <string name="auth_error_validation_failed">Некоторые поля заполнены неверно. Проверьте введённые данные</string>
+    <string name="auth_error_unexpected_failure">Что-то пошло не так. Попробуйте снова</string>
 </resources>

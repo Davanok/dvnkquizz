@@ -4,18 +4,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.davanok.dvnkquizz.core.domain.auth.repositories.AuthRepository
 import com.davanok.dvnkquizz.core.core.regex.EmailPattern
+import com.davanok.dvnkquizz.core.domain.auth.entities.UserAuthException
+import com.davanok.dvnkquizz.core.domain.auth.enums.UserAuthErrorCode
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
-import dvnkquizz.sharedui.generated.resources.Res
-import dvnkquizz.sharedui.generated.resources.invalid_email
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.getString
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 
@@ -74,7 +73,7 @@ class AuthViewModel(
 
         if (!Regex.EmailPattern.matches(currentState.email)) {
             viewModelScope.launch {
-                _state.update { it.copy(error = getString(Res.string.invalid_email)) }
+                _state.update { it.copy(error = AuthUiError(UserAuthErrorCode.EmailAddressInvalid, "")) }
             }
             return
         }
@@ -93,7 +92,12 @@ class AuthViewModel(
                     _state.update { it.copy(isLoading = false, isLinkSent = true) }
                 },
                 onFailure = { error ->
-                    _state.update { it.copy(isLoading = false, error = error.message) }
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = error.toUiError()
+                        )
+                    }
                 }
             )
         }
@@ -117,7 +121,12 @@ class AuthViewModel(
                         }
                     },
                     onFailure = { error ->
-                        _state.update { it.copy(isLoading = false, error = error.message) }
+                        _state.update {
+                            it.copy(
+                                isLoading = false,
+                                error = error.toUiError()
+                            )
+                        }
                     }
                 )
         }
@@ -125,5 +134,10 @@ class AuthViewModel(
 
     companion object {
         private val RESEND_TOKEN_TIMEOUT = 1.minutes
+        private fun Throwable.toUiError() =
+            when(this) {
+                is UserAuthException -> AuthUiError(errorCode ?: UserAuthErrorCode.UnexpectedFailure, errorDescription)
+                else -> AuthUiError(UserAuthErrorCode.UnexpectedFailure, message.orEmpty())
+            }
     }
 }
