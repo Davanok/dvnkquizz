@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
@@ -24,7 +25,7 @@ fun AppNavDisplay(
     isLoggedIn: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val backStack = remember {
+    val backStack: SnapshotStateList<Route> = remember {
         mutableStateListOf(if (isLoggedIn) Route.Home else Route.About)
     }
 
