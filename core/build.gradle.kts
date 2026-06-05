@@ -43,7 +43,6 @@ kotlin {
 
             implementation(libs.bundles.supabase)
             implementation(libs.ktor.core)
-            implementation(libs.ktor.client.cio)
 
             implementation(libs.androidx.paging.common)
 
