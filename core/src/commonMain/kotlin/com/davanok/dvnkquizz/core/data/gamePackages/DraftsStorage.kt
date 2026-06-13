@@ -5,10 +5,12 @@ import com.davanok.dvnkquizz.core.domain.gamePackage.entities.GamePackage
 import com.davanok.dvnkquizz.core.domain.game.mappers.toGamePackage
 import com.davanok.dvnkquizz.core.data.storage.Storage
 import com.davanok.dvnkquizz.core.data.storage.get
+import com.davanok.dvnkquizz.core.data.storage.observe
 import com.davanok.dvnkquizz.core.data.storage.set
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import kotlinx.coroutines.flow.Flow
 import kotlin.uuid.Uuid
 
 @Inject
@@ -16,7 +18,6 @@ import kotlin.uuid.Uuid
 internal class DraftsStorage(
     private val storage: Storage
 ) {
-
     fun setDraft(draft: FullGamePackageDto) {
         val key = buildKey(draft.id)
         val gamePackage = draft.toGamePackage()
@@ -42,8 +43,8 @@ internal class DraftsStorage(
     fun getDraft(draftId: Uuid): FullGamePackageDto? =
         storage.get(buildKey(draftId))
 
-    fun getSavedDrafts(): List<GamePackage> =
-        storage.get<List<GamePackage>>(PACKAGES_LIST_KEY).orEmpty()
+    fun observeSavedDrafts(): Flow<List<GamePackage>> =
+        storage.observe<List<GamePackage>>(PACKAGES_LIST_KEY)
 
     fun deleteDraft(draftId: Uuid) {
         storage.delete(buildKey(draftId))

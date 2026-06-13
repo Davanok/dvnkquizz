@@ -233,11 +233,8 @@ class GamePackagesRepositoryImpl internal constructor(
     }
 
     @OptIn(ExperimentalSettingsApi::class)
-    override suspend fun getAllPackageDrafts(): Result<List<GamePackage>> = runCatching {
-        draftsStorage.getSavedDrafts()
-    }.onFailure {
-        logger.e(it) { "failed to get all package drafts" }
-    }
+    override fun observeAllPackageDrafts(): Flow<Result<List<GamePackage>>> =
+        draftsStorage.observeSavedDrafts().toResultFlow()
 
 
     companion object {

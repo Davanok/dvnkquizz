@@ -7,9 +7,10 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -26,32 +27,47 @@ class UserGamePackagesViewModel(
 
     init {
         loadData()
+        observeDrafts()
     }
 
     fun loadData() {
         viewModelScope.launch {
-            val draftsDeferred = async { repository.getAllPackageDrafts() }
-            val externalDeferred = async { repository.getUserGamePackages() }
-
-            val draftsResult = draftsDeferred.await()
-            val externalResult = externalDeferred.await()
+            val externalResult = repository.getUserGamePackages()
 
             _uiState.update { state ->
                 val externalValue = externalResult.getOrElse { emptyList() }
                 val externalException = externalResult.exceptionOrNull()
 
-                val draftValue = draftsResult.getOrElse { emptyList() }
-                val draftException = draftsResult.exceptionOrNull()
-
                 state.copy(
                     isExternalLoading = false,
                     isDraftsLoading = false,
                     externalError = externalException?.message,
-                    draftsError = draftException?.message,
                     external = externalValue,
-                    drafts = draftValue
                 )
             }
         }
     }
+
+    private fun observeDrafts() =
+        repository
+            .observeAllPackageDrafts()
+            .onEach { result ->
+                result.fold(
+                    onSuccess = { drafts ->
+                        _uiState.update {
+                            it.copy(
+                                drafts = drafts,
+                                draftsError = null
+                            )
+                        }
+                    },
+                    onFailure = { thr ->
+                        _uiState.update {
+                            it.copy(
+                                draftsError = thr.toString()
+                            )
+                        }
+                    }
+                )
+            }.launchIn(viewModelScope)
 }
