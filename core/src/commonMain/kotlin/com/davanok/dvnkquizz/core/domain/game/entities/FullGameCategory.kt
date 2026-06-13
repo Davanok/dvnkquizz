@@ -17,6 +17,7 @@ internal data class FullGameCategoryDto(
 
 data class FullGameCategory(
     val id: Uuid,
+    val roundId: Uuid,
     val name: String,
     val ordinal: Int,
 

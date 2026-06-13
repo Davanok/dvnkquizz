@@ -1,12 +1,21 @@
 package com.davanok.dvnkquizz.ui.screens.editGamePackage
 
-import com.davanok.dvnkquizz.core.domain.game.entities.FullGameCategory
-import com.davanok.dvnkquizz.core.domain.gamePackage.entities.FullGamePackage
-import com.davanok.dvnkquizz.core.domain.game.entities.FullGameRound
+import com.davanok.dvnkquizz.core.domain.game.entities.GameCategory
+import com.davanok.dvnkquizz.core.domain.game.entities.GameRound
 import com.davanok.dvnkquizz.core.domain.game.entities.Question
-import kotlin.uuid.Uuid
+import com.davanok.dvnkquizz.core.domain.game.mappers.toFullGameCategory
+import com.davanok.dvnkquizz.core.domain.game.mappers.toFullGameRound
+import com.davanok.dvnkquizz.core.domain.gamePackage.entities.FullGamePackage
 
 object FullGamePackageUtils {
+    fun findQuestion(gamePackage: FullGamePackage, question: Question): Question? {
+        val category = gamePackage.rounds.firstNotNullOfOrNull { round ->
+            round.categories.firstOrNull { it.id == question.id }
+        } ?: return null
+
+        return category.questions.firstOrNull { it.id == question.id }
+    }
+
     fun sortGamePackage(gamePackage: FullGamePackage): FullGamePackage {
         val rounds = gamePackage.rounds.sortedBy { it.ordinal }.map { round ->
             val categories = round.categories.sortedBy { it.ordinal }.map { category ->
@@ -18,116 +27,74 @@ object FullGamePackageUtils {
         return gamePackage.copy(rounds = rounds)
     }
 
-    inline fun updateQuestion(gamePackage: FullGamePackage, questionId: Uuid, transform: (Question) -> Question): FullGamePackage {
-        val rounds = gamePackage.rounds
-
-        rounds.forEachIndexed { rIndex, round ->
-            round.categories.forEachIndexed { cIndex, category ->
-                category.questions.forEachIndexed questions@ { qIndex, question ->
-                    if (question.id != questionId) return@questions
-
-                    val updatedQuestion = transform(question)
-
-                    val updatedQuestions = category.questions.toMutableList()
-                    updatedQuestions[qIndex] = updatedQuestion
-                    updatedQuestions.sortBy { it.price }
-                    val updatedCategory = category.copy(questions = updatedQuestions)
-
-                    val updatedCategories = round.categories.toMutableList()
-                    updatedCategories[cIndex] = updatedCategory
-                    val updatedRound = round.copy(categories = updatedCategories)
-
-                    val updatedRounds = rounds.toMutableList()
-                    updatedRounds[rIndex] = updatedRound
-
-                    return gamePackage.copy(rounds = updatedRounds)
-                }
-            }
-        }
-
-        error("Question with id $questionId not found")
-    }
-
-    inline fun updateCategory(gamePackage: FullGamePackage, categoryId: Uuid, transform: (FullGameCategory) -> FullGameCategory): FullGamePackage {
-        val rounds = gamePackage.rounds
-
-        rounds.forEachIndexed { rIndex, round ->
+    fun upsertQuestion(gamePackage: FullGamePackage, question: Question): FullGamePackage {
+        gamePackage.rounds.forEachIndexed { rIndex, round ->
             round.categories.forEachIndexed categories@ { cIndex, category ->
-                if (category.id != categoryId) return@categories
+                if (category.id != question.categoryId) return@categories
 
-                val updatedCategory = transform(category)
+                val updatedQuestions = category.questions.toMutableList()
 
-                val updatedCategories = round.categories.toMutableList()
-                updatedCategories[cIndex] = updatedCategory
-                updatedCategories.sortBy { it.ordinal }
-                val updatedRound = round.copy(categories = updatedCategories)
+                val qIndex = updatedQuestions.indexOfFirst { it.id == question.id }
 
-                val updatedRounds = rounds.toMutableList()
-                updatedRounds[rIndex] = updatedRound
+                if (qIndex < 0) updatedQuestions.add(question)
+                else updatedQuestions[qIndex] = question
 
-                return gamePackage.copy(rounds = updatedRounds)
-            }
-        }
-
-        error("Category with id $categoryId not found")
-    }
-
-    inline fun updateRound(gamePackage: FullGamePackage, roundId: Uuid, transform: (FullGameRound) -> FullGameRound): FullGamePackage {
-        val rounds = gamePackage.rounds.toMutableList()
-
-        val index = rounds.indexOfFirst { it.id == roundId }
-        check(index >= 0) { "Round with id $roundId not found" }
-
-        val updatedRound = transform(rounds[index])
-        rounds[index] = updatedRound
-        rounds.sortBy { it.ordinal }
-
-        return gamePackage.copy(rounds = rounds)
-    }
-
-    fun addQuestion(gamePackage: FullGamePackage, categoryId: Uuid, question: Question): FullGamePackage {
-        val rounds = gamePackage.rounds
-
-        rounds.forEachIndexed { rIndex, round ->
-            round.categories.forEachIndexed categories@ { cIndex, category ->
-                if (category.id != categoryId) return@categories
-
-                val updatedQuestions = (category.questions + question).sortedBy { it.price }
-
+                updatedQuestions.sortBy { it.price }
                 val updatedCategory = category.copy(questions = updatedQuestions)
 
                 val updatedCategories = round.categories.toMutableList()
                 updatedCategories[cIndex] = updatedCategory
                 val updatedRound = round.copy(categories = updatedCategories)
 
-                val updatedRounds = rounds.toMutableList()
+                val updatedRounds = gamePackage.rounds.toMutableList()
                 updatedRounds[rIndex] = updatedRound
 
                 return gamePackage.copy(rounds = updatedRounds)
             }
         }
 
-        error("Category with id $categoryId not found")
+        error("Category with id ${question.categoryId} not found")
     }
 
-    fun addCategory(gamePackage: FullGamePackage, roundId: Uuid, category: FullGameCategory): FullGamePackage {
-        val rounds = gamePackage.rounds
+    fun upsertCategory(gamePackage: FullGamePackage, category: GameCategory): FullGamePackage {
+        gamePackage.rounds.forEachIndexed rounds@ { rIndex, round ->
+            if (round.id != category.roundId) return@rounds
 
-        val roundIndex = rounds.indexOfFirst { it.id == roundId }
-        check(roundIndex >= 0) { "Round with id $roundId not found" }
+            val updatedCategories = round.categories.toMutableList()
 
-        val round = rounds[roundIndex]
-        val updatedCategories = (round.categories + category).sortedBy { it.ordinal }
+            val cIndex = updatedCategories.indexOfFirst { it.id == category.id }
 
-        val updatedRound = round.copy(categories = updatedCategories)
-        val updatedRounds = rounds.toMutableList()
-        updatedRounds[roundIndex] = updatedRound
+            if (cIndex < 0) updatedCategories.add(category.toFullGameCategory())
+            else updatedCategories[cIndex] = updatedCategories[cIndex].copy(
+                name = category.name,
+                ordinal = category.ordinal
+            )
 
-        return gamePackage.copy(rounds = updatedRounds)
+            updatedCategories.sortBy { it.ordinal }
+            val updatedRound = round.copy(categories = updatedCategories)
+
+            val updatedRounds = gamePackage.rounds.toMutableList()
+            updatedRounds[rIndex] = updatedRound
+
+            return gamePackage.copy(rounds = updatedRounds)
+        }
+
+        error("Round with id ${category.roundId} not found")
     }
 
-    fun addRound(gamePackage: FullGamePackage, round: FullGameRound): FullGamePackage {
-        val updatedRounds = (gamePackage.rounds + round).sortedBy { it.ordinal }
+    fun upsertRound(gamePackage: FullGamePackage, round: GameRound): FullGamePackage {
+        val updatedRounds = gamePackage.rounds.toMutableList()
+
+        val rIndex = updatedRounds.indexOfFirst { it.id == round.id }
+
+        if (rIndex < 0) updatedRounds.add(round.toFullGameRound())
+        else updatedRounds[rIndex] = updatedRounds[rIndex].copy(
+            name = round.name,
+            ordinal = round.ordinal
+        )
+
+        updatedRounds.sortBy { it.ordinal }
+
         return gamePackage.copy(rounds = updatedRounds)
     }
 }

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -32,11 +33,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,8 +56,10 @@ import com.davanok.dvnkquizz.core.domain.gamePackage.enums.QuestionType
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.GamePackageLimits
 import com.davanok.dvnkquizz.ui.utils.enumStrings.stringRes
 import dvnkquizz.sharedui.generated.resources.Res
+import dvnkquizz.sharedui.generated.resources.add_question_dialog_title
 import dvnkquizz.sharedui.generated.resources.cancel
 import dvnkquizz.sharedui.generated.resources.change_question_media
+import dvnkquizz.sharedui.generated.resources.edit_question_dialog_title
 import dvnkquizz.sharedui.generated.resources.ic_delete
 import dvnkquizz.sharedui.generated.resources.ic_edit
 import dvnkquizz.sharedui.generated.resources.ic_error
@@ -65,14 +71,19 @@ import dvnkquizz.sharedui.generated.resources.question_text_label
 import dvnkquizz.sharedui.generated.resources.question_type_label
 import dvnkquizz.sharedui.generated.resources.remove_question_media
 import dvnkquizz.sharedui.generated.resources.save
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.mimeType
+import io.github.vinceglb.filekit.readBytes
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun EditGamePackageQuestionDialog(
     question: Question,
+    isEdit: Boolean,
     questionMediaErrorMessage: String?,
-    openMediaSelector: () -> Unit,
+    setQuestionMedia: (String, ByteArray) -> Unit,
     removeMedia: () -> Unit,
     onSave: (Question) -> Unit,
     onDismissRequest: () -> Unit
@@ -84,8 +95,17 @@ fun EditGamePackageQuestionDialog(
         ) {
             Content(
                 question = question,
+                title = {
+                    Text(
+                        text = stringResource(
+                            if (isEdit) Res.string.edit_question_dialog_title
+                            else Res.string.add_question_dialog_title
+                        ),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                },
                 questionMediaErrorMessage = questionMediaErrorMessage,
-                openMediaSelector = openMediaSelector,
+                setQuestionMedia = setQuestionMedia,
                 removeMedia = removeMedia,
                 onSave = onSave,
                 onDismissRequest = onDismissRequest,
@@ -99,8 +119,9 @@ fun EditGamePackageQuestionDialog(
 @Composable
 private fun Content(
     question: Question,
+    title: @Composable () -> Unit,
     questionMediaErrorMessage: String?,
-    openMediaSelector: () -> Unit,
+    setQuestionMedia: (String, ByteArray) -> Unit,
     removeMedia: () -> Unit,
     onSave: (Question) -> Unit,
     onDismissRequest: () -> Unit,
@@ -111,12 +132,20 @@ private fun Content(
     var price by remember { mutableIntStateOf(question.price) }
     var type by remember { mutableStateOf(question.type) }
 
+    val initialMedia by remember { mutableStateOf(question.media) }
+    var currentMedia by remember { mutableStateOf(question.media) }
+
+    LaunchedEffect(question.media) {
+        currentMedia = question.media
+    }
+
     val changed by remember {
         derivedStateOf {
             questionText != question.questionText ||
                     answerText != question.answerText ||
                     price != question.price ||
-                    type != question.type
+                    type != question.type ||
+                    currentMedia?.filename != initialMedia?.filename
         }
     }
 
@@ -126,6 +155,8 @@ private fun Content(
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            title()
+
             OutlinedTextField(
                 value = questionText,
                 onValueChange = { text ->
@@ -151,8 +182,8 @@ private fun Content(
             MediaSelectorCard(
                 media = question.media,
                 errorMessage = questionMediaErrorMessage,
-                onChangeMedia = openMediaSelector,
-                onRemoveMedia = removeMedia,
+                setQuestionMedia = setQuestionMedia,
+                removeMedia = removeMedia,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -259,12 +290,25 @@ private fun QuestionTypeSelector(
 private fun MediaSelectorCard(
     media: QuestionMedia?,
     errorMessage: String?,
-    onChangeMedia: () -> Unit,
-    onRemoveMedia: () -> Unit,
+    setQuestionMedia: (String, ByteArray) -> Unit,
+    removeMedia: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    val filePickerLauncher = rememberFilePickerLauncher { file ->
+        if (file != null)
+            coroutineScope.launch {
+                val bytes = file.readBytes()
+                setQuestionMedia(
+                    file.mimeType().toString(),
+                    bytes
+                )
+            }
+    }
+
     Card(
-        modifier = modifier.clickable(enabled = media == null, onClick = onChangeMedia)
+        modifier = modifier
+            .clickable(enabled = media == null, onClick = { filePickerLauncher.launch() })
     ) {
         val modifier = Modifier
             .align(Alignment.CenterHorizontally)
@@ -294,11 +338,10 @@ private fun MediaSelectorCard(
 
             else -> QuestionMediaContent(
                 media = media,
-                onChangeClick = onChangeMedia,
-                onRemoveClick = onRemoveMedia,
+                onChangeClick = { filePickerLauncher.launch() },
+                onRemoveClick = removeMedia,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(CardDefaults.shape)
             )
         }
     }
@@ -344,24 +387,26 @@ private fun QuestionMediaContent(
             MediaKind.NONE -> error("MediaKind.None not allowed there")
         }
 
-        Row(
+        Surface(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .background(MaterialTheme.colorScheme.primary),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            IconButton(onClick = onRemoveClick) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_delete),
-                    contentDescription = stringResource(Res.string.remove_question_media),
-                    tint = MaterialTheme.colorScheme.error
-                )
-            }
-            IconButton(onClick = onChangeClick) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_edit),
-                    contentDescription = stringResource(Res.string.change_question_media)
-                )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                IconButton(onClick = onRemoveClick) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_delete),
+                        contentDescription = stringResource(Res.string.remove_question_media),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+                IconButton(onClick = onChangeClick) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_edit),
+                        contentDescription = stringResource(Res.string.change_question_media)
+                    )
+                }
             }
         }
     }

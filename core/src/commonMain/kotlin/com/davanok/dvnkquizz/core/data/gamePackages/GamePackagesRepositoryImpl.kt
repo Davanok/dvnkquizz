@@ -31,6 +31,7 @@ import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.UploadStatus
 import io.github.jan.supabase.storage.uploadAsFlow
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlin.time.Duration.Companion.hours
@@ -115,6 +116,7 @@ class GamePackagesRepositoryImpl internal constructor(
         bytes: ByteArray,
         mimeType: String
     ): Flow<Result<QuestionMedia>> = flow {
+        logger.d { "uploadMedia - start: $mimeType" }
         val currentUserId =
             checkNotNull(auth.currentUserId) { "Unauthorized user cannot upload question media" }
 
@@ -123,30 +125,41 @@ class GamePackagesRepositoryImpl internal constructor(
 
         val mediaKind = mediaKindForMimeType(mimeType)
 
-        runCatching {
-            val packageExists = postgrest
-                .from("game_packages")
-                .select(Columns.list("id")) {
-                    single()
-                }.decodeSingleOrNull<Uuid>() != null
+        emit(
+            QuestionMedia(
+                filename = path,
+                url = "",
+                kind = mediaKind,
+                progress = 0.01f
+            )
+        )
 
-            if (!packageExists) {
-                val gamePackage = GamePackageDto(
-                    id = packageId,
-                    title = "[Draft]",
-                    description = "",
-                    authorId = currentUserId
-                )
-                postgrest.from("game_packages")
-                    .insert(gamePackage)
-            }
-        }.onFailure { thr ->
-            throw thr
+        val packageExists = postgrest
+            .from("game_packages")
+            .select(Columns.list("id")) {
+                filter { GamePackageDto::id eq packageId }
+            }.decodeSingleOrNull<Map<String, Uuid>>() != null
+
+        logger.d { "uploadMedia - packageExists: $packageExists" }
+
+        if (!packageExists) {
+            val gamePackage = GamePackageDto(
+                id = packageId,
+                title = "[Draft]",
+                description = "",
+                authorId = currentUserId
+            )
+            postgrest.from("game_packages")
+                .insert(gamePackage)
+
+            logger.d { "uploadMedia - insertedPackage" }
         }
 
         storage.from("questions")
             .uploadAsFlow(path, bytes)
             .map { status ->
+                logger.d { "uploadMedia - uploadFile: $status" }
+
                 when (status) {
                     is UploadStatus.Progress -> QuestionMedia(
                         filename = path,
@@ -166,6 +179,7 @@ class GamePackagesRepositoryImpl internal constructor(
 
         val mediaUrl = storage.from("questions")
             .createSignedUrl(path, MEDIA_URL_EXPIRE_DURATION)
+        logger.d { "uploadMedia - createdSignedUrl: $mediaUrl" }
         emit(
             QuestionMedia(
                 filename = path,
@@ -174,24 +188,19 @@ class GamePackagesRepositoryImpl internal constructor(
                 progress = 1f
             )
         )
+    }.catch {
+        logger.e(it) { "upload mediaFailed" }
+        throw it
     }.toResultFlow()
 
     override suspend fun deleteQuestionMedia(
-        questionId: Uuid
+        packageId: Uuid,
+        filename: String
     ): Result<Unit> = runCatching {
-        val question = postgrest
-            .from("questions")
-            .select {
-                filter { QuestionDto::id eq questionId }
-                single()
-            }
-            .decodeSingleOrNull<QuestionDto>()
-
-        checkNotNull(question) { "Question with id '$questionId' not found" }
-        checkNotNull(question.mediaUrl) { "Question with id '$questionId' have not media" }
+        val path = "$packageId/$filename"
 
         storage.from("questions")
-            .delete(question.mediaUrl)
+            .delete(path)
     }.onFailure {
         logger.e(it) { "failed to delete question media" }
     }

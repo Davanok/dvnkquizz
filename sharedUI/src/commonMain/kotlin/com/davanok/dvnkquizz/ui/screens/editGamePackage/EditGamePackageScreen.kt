@@ -56,6 +56,13 @@ fun EditGamePackageScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val snackbarHostState = LocalSnackBarHostState.current
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     Content(
         uiState = uiState,
         onNavigateBack = navigateBack,
@@ -151,39 +158,23 @@ private fun Content(
 
                 is EditGamePackageDialog.EditRound -> EditRoundDialog(
                     round = dialog.round,
+                    isEdit = dialog.isEdit,
                     onSave = { eventSink(EditGamePackageUiEvent.UpdateRound(it)) },
                     onDismissRequest = { eventSink(EditGamePackageUiEvent.CloseDialog) }
                 )
                 is EditGamePackageDialog.EditCategory -> EditCategoryDialog(
                     category = dialog.category,
+                    isEdit = dialog.isEdit,
                     onSave = { eventSink(EditGamePackageUiEvent.UpdateCategory(it)) },
                     onDismissRequest = { eventSink(EditGamePackageUiEvent.CloseDialog) }
                 )
                 is EditGamePackageDialog.EditQuestion -> EditGamePackageQuestionDialog(
                     question = dialog.question,
+                    isEdit = dialog.isEdit,
                     questionMediaErrorMessage = dialog.mediaErrorMessage,
-                    openMediaSelector = { eventSink(EditGamePackageUiEvent.OpenQuestionMediaSelector) },
+                    setQuestionMedia = { m, b -> eventSink(EditGamePackageUiEvent.SetQuestionMedia(m, b)) },
                     removeMedia = { eventSink(EditGamePackageUiEvent.RemoveQuestionMedia) },
                     onSave = { eventSink(EditGamePackageUiEvent.UpdateQuestion(it)) },
-                    onDismissRequest = { eventSink(EditGamePackageUiEvent.CloseDialog) }
-                )
-
-                is EditGamePackageDialog.AddRound -> EditRoundDialog(
-                    round = GameRound(),
-                    onSave = { eventSink(EditGamePackageUiEvent.AddRound(it)) },
-                    onDismissRequest = { eventSink(EditGamePackageUiEvent.CloseDialog) }
-                )
-                is EditGamePackageDialog.AddCategory -> EditCategoryDialog(
-                    category = GameCategory(),
-                    onSave = { eventSink(EditGamePackageUiEvent.AddCategory(dialog.roundId, it)) },
-                    onDismissRequest = { eventSink(EditGamePackageUiEvent.CloseDialog) }
-                )
-                is EditGamePackageDialog.AddQuestion -> EditGamePackageQuestionDialog(
-                    question = Question(),
-                    questionMediaErrorMessage = dialog.mediaErrorMessage,
-                    openMediaSelector = { eventSink(EditGamePackageUiEvent.OpenQuestionMediaSelector) },
-                    removeMedia = { eventSink(EditGamePackageUiEvent.RemoveQuestionMedia) },
-                    onSave = { eventSink(EditGamePackageUiEvent.AddQuestion(dialog.categoryId, it)) },
                     onDismissRequest = { eventSink(EditGamePackageUiEvent.CloseDialog) }
                 )
             }

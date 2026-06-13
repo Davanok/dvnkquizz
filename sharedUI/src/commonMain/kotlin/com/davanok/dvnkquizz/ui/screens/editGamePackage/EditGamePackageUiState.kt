@@ -1,13 +1,12 @@
 package com.davanok.dvnkquizz.ui.screens.editGamePackage
 
 import androidx.compose.runtime.Immutable
-import com.davanok.dvnkquizz.core.domain.gamePackage.entities.FullGamePackage
+import com.davanok.dvnkquizz.core.core.media.AllowedExtensions
+import com.davanok.dvnkquizz.core.core.media.AllowedMimeTypes
 import com.davanok.dvnkquizz.core.domain.game.entities.GameCategory
 import com.davanok.dvnkquizz.core.domain.game.entities.GameRound
 import com.davanok.dvnkquizz.core.domain.game.entities.Question
-import com.davanok.dvnkquizz.core.core.media.AllowedExtensions
-import com.davanok.dvnkquizz.core.core.media.AllowedMimeTypes
-import io.github.vinceglb.filekit.mimeType.MimeType
+import com.davanok.dvnkquizz.core.domain.gamePackage.entities.FullGamePackage
 import kotlin.uuid.Uuid
 
 @Immutable
@@ -41,11 +40,26 @@ sealed interface EditGamePackageUiEvent {
     data class UpdateCategory(val category: GameCategory): EditGamePackageUiEvent
     data class UpdateQuestion(val question: Question): EditGamePackageUiEvent
 
-    data class AddRound(val round: GameRound) : EditGamePackageUiEvent
-    data class AddCategory(val roundId: Uuid, val category: GameCategory) : EditGamePackageUiEvent
-    data class AddQuestion(val categoryId: Uuid, val question: Question) : EditGamePackageUiEvent
+    data class SetQuestionMedia(val mimeType: String, val media: ByteArray): EditGamePackageUiEvent {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other == null || this::class != other::class) return false
 
-    data object OpenQuestionMediaSelector: EditGamePackageUiEvent
+            other as SetQuestionMedia
+
+            if (mimeType != other.mimeType) return false
+            if (!media.contentEquals(other.media)) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = mimeType.hashCode()
+            result = 31 * result + media.contentHashCode()
+            return result
+        }
+    }
+
     data object RemoveQuestionMedia: EditGamePackageUiEvent
 }
 
@@ -62,13 +76,9 @@ sealed interface EditGamePackageDialogRequest {
 
 @Immutable
 sealed interface EditGamePackageDialog {
-    data class EditRound(val round: GameRound): EditGamePackageDialog
-    data class EditCategory(val category: GameCategory): EditGamePackageDialog
-    data class EditQuestion(val question: Question, val mediaErrorMessage: String?): EditGamePackageDialog
-
-    data object AddRound: EditGamePackageDialog
-    data class AddCategory(val roundId: Uuid): EditGamePackageDialog
-    data class AddQuestion(val categoryId: Uuid, val mediaErrorMessage: String?): EditGamePackageDialog
+    data class EditRound(val round: GameRound, val isEdit: Boolean): EditGamePackageDialog
+    data class EditCategory(val category: GameCategory, val isEdit: Boolean): EditGamePackageDialog
+    data class EditQuestion(val question: Question, val mediaErrorMessage: String?, val isEdit: Boolean): EditGamePackageDialog
 }
 
 object GamePackageLimits {
@@ -89,5 +99,5 @@ object GamePackageLimits {
     const val QUESTION_MEDIA_MAX_SIZE = 200L * 1024 * 1024 // 200 Mib in bytes
 
     val allowedMediaFileExtensions = AllowedExtensions.All
-    val allowedMediaFileMimeTypes = AllowedMimeTypes.All.map { MimeType.parse(it) }.toSet()
+    val allowedMediaFileMimeTypes = AllowedMimeTypes.All
 }

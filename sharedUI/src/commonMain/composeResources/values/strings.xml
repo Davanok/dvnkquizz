@@ -106,6 +106,11 @@
 
     <string name="add_round_dialog_title">Add round</string>
     <string name="add_category_dialog_title">Add category</string>
+    <string name="add_question_dialog_title">Add question</string>
+
+    <string name="edit_round_dialog_title">Edit round</string>
+    <string name="edit_category_dialog_title">Edit category</string>
+    <string name="edit_question_dialog_title">Edit question</string>
 
     <string name="no_user_game_packages">You haven’t created packages yet</string>
 

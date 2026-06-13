@@ -11,6 +11,7 @@ internal inline fun FullGameCategoryDto.toFullGameCategory(
     transformQuestion: (QuestionDto) -> Question
 ) = FullGameCategory(
     id = id,
+    roundId = roundId,
     name = name,
     ordinal = ordinal,
     questions = questions.map(transformQuestion)
@@ -26,12 +27,14 @@ internal fun FullGameCategory.toFullGameCategoryDto(roundId: Uuid) = FullGameCat
 
 fun FullGameCategory.toGameCategory() = GameCategory(
     id = id,
+    roundId = roundId,
     name = name,
     ordinal = ordinal
 )
 
 fun GameCategory.toFullGameCategory(questions: List<Question> = emptyList()) = FullGameCategory(
     id = id,
+    roundId = roundId,
     name = name,
     ordinal = ordinal,
     questions = questions

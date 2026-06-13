@@ -1,7 +1,6 @@
 package com.davanok.dvnkquizz.core.data.user
 
 import co.touchlab.kermit.Logger
-import com.davanok.dvnkquizz.core.core.filesystem.div
 import com.davanok.dvnkquizz.core.core.id.currentUserId
 import com.davanok.dvnkquizz.core.core.result.toResultFlow
 import com.davanok.dvnkquizz.core.domain.auth.entities.UserProfile
@@ -18,7 +17,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.io.files.Path
 import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.Uuid
 
@@ -67,14 +65,14 @@ class UserProfileRepositoryImpl(
     override suspend fun setImage(image: ByteArray?): Result<Unit> = runCatching<Unit> {
         val currentUser = checkNotNull(auth.currentUserOrNull())
 
-        val profileImagePath = Path(currentUser.id, "profileImage")
+        val profileImagePath = currentUser.id + "/profileImage/"
 
         val filename = image
-            ?.let { profileImagePath / (Uuid.random().toString() + ".image") }
+            ?.let { profileImagePath + Uuid.random().toString() + ".image" }
 
         if (image != null && filename != null)
             storage.from("profiles")
-                .upload(filename.toString(), image)
+                .upload(filename, image)
 
         postgrest.from("users")
             .update({

@@ -5,9 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.davanok.dvnkquizz.core.domain.game.entities.FullGameCategory
 import com.davanok.dvnkquizz.core.domain.gamePackage.entities.FullGamePackage
 import com.davanok.dvnkquizz.core.domain.game.entities.FullGameRound
+import com.davanok.dvnkquizz.core.domain.game.entities.GameCategory
+import com.davanok.dvnkquizz.core.domain.game.entities.GameRound
 import com.davanok.dvnkquizz.core.domain.game.entities.Question
-import com.davanok.dvnkquizz.core.domain.game.mappers.toFullGameCategory
-import com.davanok.dvnkquizz.core.domain.game.mappers.toFullGameRound
+import com.davanok.dvnkquizz.core.domain.game.entities.QuestionMedia
 import com.davanok.dvnkquizz.core.domain.game.mappers.toGameCategory
 import com.davanok.dvnkquizz.core.domain.game.mappers.toGameRound
 import com.davanok.dvnkquizz.core.domain.gamePackage.repositories.GamePackagesRepository
@@ -29,19 +30,16 @@ import dvnkquizz.sharedui.generated.resources.error_package_upload_failed
 import dvnkquizz.sharedui.generated.resources.error_upload_failed
 import dvnkquizz.sharedui.generated.resources.filetype_not_supported
 import dvnkquizz.sharedui.generated.resources.max_question_media_size
-import io.github.vinceglb.filekit.FileKit
-import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.dialogs.FileKitType
-import io.github.vinceglb.filekit.dialogs.openFilePicker
-import io.github.vinceglb.filekit.extension
-import io.github.vinceglb.filekit.mimeType
-import io.github.vinceglb.filekit.readBytes
-import io.github.vinceglb.filekit.size
-import io.github.vinceglb.filekit.withScopedAccess
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
@@ -111,21 +109,11 @@ class EditGamePackageViewModel(
                     is EditGamePackageUiEvent.ShowDialog -> showDialog(event.dialogRequest)
                     EditGamePackageUiEvent.CloseDialog -> _uiState.update { it.copy(dialog = null) }
 
-                    is EditGamePackageUiEvent.UpdateRound -> updateGamePackageRound(event.round.id) {
-                        it.copy(name = event.round.name, ordinal = event.round.ordinal)
-                    }
-                    is EditGamePackageUiEvent.UpdateCategory -> updateGamePackageCategory(event.category.id) {
-                        it.copy(name = event.category.name, ordinal = event.category.ordinal)
-                    }
-                    is EditGamePackageUiEvent.UpdateQuestion -> updateGamePackageQuestion(event.question.id) {
-                        event.question
-                    }
+                    is EditGamePackageUiEvent.UpdateRound -> upsertGamePackageRound(event.round)
+                    is EditGamePackageUiEvent.UpdateCategory -> upsertGamePackageCategory(event.category)
+                    is EditGamePackageUiEvent.UpdateQuestion -> upsertGamePackageQuestion(event.question)
 
-                    is EditGamePackageUiEvent.AddRound -> addGamePackageRound(event.round.toFullGameRound())
-                    is EditGamePackageUiEvent.AddCategory -> addGamePackageCategory(event.roundId, event.category.toFullGameCategory())
-                    is EditGamePackageUiEvent.AddQuestion -> addGamePackageQuestion(event.categoryId, event.question)
-
-                    EditGamePackageUiEvent.OpenQuestionMediaSelector -> openMediaSelector()
+                    is EditGamePackageUiEvent.SetQuestionMedia -> setQuestionMedia(event.mimeType, event.media)
                     EditGamePackageUiEvent.RemoveQuestionMedia -> deleteQuestionMedia()
                 }
             }.handleFailure {
@@ -197,181 +185,141 @@ class EditGamePackageViewModel(
     private fun showDialog(dialogRequest: EditGamePackageDialogRequest) {
         val dialog = when (dialogRequest) {
             EditGamePackageDialogRequest.AddRound ->
-                EditGamePackageDialog.AddRound
+                EditGamePackageDialog.EditRound(GameRound(), false)
 
             is EditGamePackageDialogRequest.EditRound -> {
                 val round = getRoundOrNull(dialogRequest.roundId) ?: return
-                EditGamePackageDialog.EditRound(round.toGameRound())
+                EditGamePackageDialog.EditRound(round.toGameRound(), true)
             }
 
             is EditGamePackageDialogRequest.AddCategory ->
-                EditGamePackageDialog.AddCategory(dialogRequest.roundId)
+                EditGamePackageDialog.EditCategory(GameCategory(roundId = dialogRequest.roundId), false)
 
             is EditGamePackageDialogRequest.EditCategory -> {
                 val category = getCategoryOrNull(dialogRequest.categoryId) ?: return
-                EditGamePackageDialog.EditCategory(category.toGameCategory())
+                EditGamePackageDialog.EditCategory(category.toGameCategory(), true)
             }
 
             is EditGamePackageDialogRequest.AddQuestion -> {
-                EditGamePackageDialog.AddQuestion(dialogRequest.categoryId, null)
+                EditGamePackageDialog.EditQuestion(Question(categoryId = dialogRequest.categoryId), null, false)
             }
 
             is EditGamePackageDialogRequest.EditQuestion -> {
                 val question = getQuestionOrNull(dialogRequest.questionId) ?: return
-                EditGamePackageDialog.EditQuestion(question, null)
+                EditGamePackageDialog.EditQuestion(question, null, true)
             }
         }
 
         _uiState.update { it.copy(dialog = dialog) }
     }
 
-    private suspend fun validateMedia(file: PlatformFile): String? {
-        if (file.size() > GamePackageLimits.QUESTION_MEDIA_MAX_SIZE) {
+    private suspend fun validateMedia(mimeType: String, bytes: ByteArray): String? {
+        if (bytes.size > GamePackageLimits.QUESTION_MEDIA_MAX_SIZE) {
             return getString(Res.string.max_question_media_size, GamePackageLimits.QUESTION_MEDIA_MAX_SIZE)
         }
-        if (file.extension.lowercase() !in GamePackageLimits.allowedMediaFileExtensions) {
-            return getString(Res.string.filetype_not_supported, file.extension, GamePackageLimits.allowedMediaFileExtensions)
-        }
-        val mimeType = file.mimeType()
-        if (mimeType == null || mimeType !in GamePackageLimits.allowedMediaFileMimeTypes) {
-            return getString(Res.string.filetype_not_supported, mimeType.toString(), GamePackageLimits.allowedMediaFileMimeTypes.map { it.toString() })
+        if (mimeType !in GamePackageLimits.allowedMediaFileMimeTypes) {
+            return getString(Res.string.filetype_not_supported, mimeType, GamePackageLimits.allowedMediaFileMimeTypes)
         }
         return null
     }
 
-    private fun updateGamePackageQuestion(questionId: Uuid, block: (Question) -> Question) = viewModelScope.launch {
+    private fun upsertGamePackageQuestion(question: Question) = viewModelScope.launch {
         runCatching {
-            _gamePackage.update { FullGamePackageUtils.updateQuestion(it, questionId, block) }
+            _gamePackage.update { FullGamePackageUtils.upsertQuestion(it, question) }
         }.handleFailure {
             getString(Res.string.error_failed_to_update_question)
         }
     }
-    private fun updateGamePackageCategory(categoryId: Uuid, block: (FullGameCategory) -> FullGameCategory) = viewModelScope.launch {
+    private fun upsertGamePackageCategory(category: GameCategory) = viewModelScope.launch {
         runCatching {
-            _gamePackage.update { FullGamePackageUtils.updateCategory(it, categoryId, block) }
+            _gamePackage.update { FullGamePackageUtils.upsertCategory(it, category) }
         }.handleFailure {
             getString(Res.string.error_failed_to_update_category)
         }
     }
-    private fun updateGamePackageRound(roundId: Uuid, block: (FullGameRound) -> FullGameRound) = viewModelScope.launch {
+    private fun upsertGamePackageRound(round: GameRound) = viewModelScope.launch {
         runCatching {
-            _gamePackage.update { FullGamePackageUtils.updateRound(it, roundId, block) }
+            _gamePackage.update { FullGamePackageUtils.upsertRound(it, round) }
         }.handleFailure {
             getString(Res.string.error_failed_to_update_round)
         }
     }
 
-    private fun addGamePackageQuestion(categoryId: Uuid, question: Question) = viewModelScope.launch {
-        runCatching {
-            _gamePackage.update { FullGamePackageUtils.addQuestion(it, categoryId, question) }
-        }.handleFailure {
-            getString(Res.string.error_failed_to_update_question)
-        }
-    }
-    private fun addGamePackageCategory(roundId: Uuid, category: FullGameCategory) = viewModelScope.launch {
-        runCatching {
-            _gamePackage.update { FullGamePackageUtils.addCategory(it, roundId, category) }
-        }.handleFailure {
-            getString(Res.string.error_failed_to_update_category)
-        }
-    }
-    private fun addGamePackageRound(round: FullGameRound) = viewModelScope.launch {
-        runCatching {
-            _gamePackage.update { FullGamePackageUtils.addRound(it, round) }
-        }.handleFailure {
-            getString(Res.string.error_failed_to_update_round)
-        }
-    }
-
-    private fun openMediaSelector() {
-        val dialog = uiState.value.dialog as? EditGamePackageDialog.EditQuestion ?: return
-        val question = dialog.question
-
-        viewModelScope.launch {
-            val file = FileKit.openFilePicker(
-                type = FileKitType.File(GamePackageLimits.allowedMediaFileExtensions)
-            ) ?: return@launch
-
-            file.withScopedAccess {
-                val errorMessage = validateMedia(file)
-                if (errorMessage != null) {
-                    _uiState.update { it.copy(errorMessage = errorMessage) }
-                    return@launch
-                }
-
-                repository.uploadQuestionMedia(
-                    packageId = packageId,
-                    bytes = file.readBytes(),
-                    mimeType = file.mimeType().toString(),
-                ).collect { uploadResult ->
-                    uploadResult.fold(
-                        onFailure = {
-                            setErrorMessage(getString(Res.string.error_upload_failed))
-                        },
-                        onSuccess = { media ->
-                            val currentDialog = uiState.value.dialog
-                            if (currentDialog is EditGamePackageDialog.EditQuestion) {
-                                _uiState.update {
-                                    it.copy(
-                                        dialog = currentDialog.copy(question = currentDialog.question.copy(media = media))
-                                    )
-                                }
-                            }
-
-                            if (media.progress >= 1f)
-                                updateGamePackageQuestion(question.id) { it.copy(media = media) }
-                        }
+    private fun updateEditQuestionDialogMedia(oldMedia: QuestionMedia?, newMedia: QuestionMedia?) {
+        _uiState.update { state ->
+            val currentDialog = state.dialog
+            if (
+                currentDialog is EditGamePackageDialog.EditQuestion &&
+                currentDialog.question.media?.filename == oldMedia?.filename
+            ) {
+                state.copy(
+                    dialog = currentDialog.copy(
+                        question = currentDialog.question.copy(media = newMedia)
                     )
-                }
+                )
             }
+            else state
+        }
+    }
+
+    private fun setQuestionMedia(mimeType: String, media: ByteArray) = viewModelScope.launch {
+        val errorMessage = validateMedia(mimeType, media)
+        if (errorMessage != null) {
+            setErrorMessage(errorMessage)
+            return@launch
+        }
+
+        val dialog = uiState.value.dialog as? EditGamePackageDialog.EditQuestion ?: return@launch
+        var oldMedia = dialog.question.media
+
+        repository.uploadQuestionMedia(
+            packageId = packageId,
+            bytes = media,
+            mimeType = mimeType,
+        ).onEach { uploadResult ->
+            uploadResult.fold(
+                onFailure = { setErrorMessage(getString(Res.string.error_upload_failed)) },
+                onSuccess = { media ->
+                    updateEditQuestionDialogMedia(
+                        oldMedia = oldMedia,
+                        newMedia = media
+                    )
+                    oldMedia = media
+                }
+            )
+        }.collect()
+
+        FullGamePackageUtils.findQuestion(_gamePackage.value, dialog.question)?.let {
+            if (it.media?.filename == dialog.question.media?.filename) // check if while upload user changed media again
+                upsertGamePackageQuestion(it.copy(media = oldMedia))
         }
     }
 
     private fun deleteQuestionMedia() {
         val dialog = uiState.value.dialog as? EditGamePackageDialog.EditQuestion ?: return
-        val media = dialog.question.media ?: return
+        val oldMedia = dialog.question.media ?: return
 
         _uiState.update { state ->
             state.copy(
                 dialog = dialog.copy(
-                    question = dialog.question.copy(media = media.copy(progress = 0.5f))
+                    question = dialog.question.copy(media = oldMedia.copy(progress = 0.5f))
                 )
             )
         }
 
         viewModelScope.launch {
-            repository.deleteQuestionMedia(dialog.question.id)
+            repository.deleteQuestionMedia(_gamePackage.value.id, oldMedia.filename)
                 .handleFailure { getString(Res.string.error_delete_media_failed) }
                 .fold(
                     onSuccess = {
-                        val currentDialog = uiState.value.dialog
-
-                        if (currentDialog is EditGamePackageDialog.EditQuestion && currentDialog.question.media?.url == media.url) {
-                            _uiState.update {
-                                it.copy(
-                                    dialog = currentDialog.copy(
-                                        question = currentDialog.question.copy(
-                                            media = null
-                                        )
-                                    )
-                                )
-                            }
+                        updateEditQuestionDialogMedia(oldMedia, null)
+                        FullGamePackageUtils.findQuestion(_gamePackage.value, dialog.question)?.let {
+                            if (it.media?.filename == oldMedia.filename) // check if while upload user changed media
+                                upsertGamePackageQuestion(it.copy(media = null))
                         }
-                        updateGamePackageQuestion(dialog.question.id) { it.copy(media = null) }
                     },
                     onFailure = {
-                        val currentDialog = uiState.value.dialog
-                        if (currentDialog is EditGamePackageDialog.EditQuestion && currentDialog.question.media?.url == media.url) {
-                            _uiState.update {
-                                it.copy(
-                                    dialog = currentDialog.copy(
-                                        question = currentDialog.question.copy(
-                                            media = media
-                                        )
-                                    )
-                                )
-                            }
-                        }
+                        updateEditQuestionDialogMedia(oldMedia, oldMedia)
                     }
                 )
         }

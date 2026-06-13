@@ -48,6 +48,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.shareIn
@@ -121,25 +122,22 @@ class GameProcessRepositoryImpl(
         }
     }.retry(DOWNLOAD_MEDIA_RETRIES)
 
-    private fun getQuestionFlowHelper(sessionId: Uuid, question: QuestionDto): Flow<Question> = flow {
-        runCatching {
-            when {
-                question.mediaKind == MediaKind.NONE || question.mediaUrl == null ->
-                    emit(question.toDomain())
+    private fun getQuestionFlowHelper(sessionId: Uuid, question: QuestionDto): Flow<Question> = when {
+        question.mediaKind == MediaKind.NONE || question.mediaUrl == null -> flowOf(question.toDomain())
 
-                Platform.currentPlatform() is Platform.Web ->
-                    emit(question.toDomain(
-                        mediaUrl = storage.from("questions")
-                            .createSignedUrl(question.mediaUrl, MEDIA_URL_EXPIRE_DURATION),
-                        progress = 1f
-                    ))
+        Platform.currentPlatform() is Platform.Web -> flow {
+            val signedUrl = storage.from("questions")
+                .createSignedUrl(question.mediaUrl, MEDIA_URL_EXPIRE_DURATION)
 
-                else -> emitAll(downloadMediaAsFlow(question))
-            }
+            emit(
+                question.toDomain(
+                    mediaUrl = signedUrl,
+                    progress = 1f
+                )
+            )
         }
-        // Notify server that this client has loaded assets and is ready to display
-        markMeAsReady(sessionId)
-    }
+        else -> downloadMediaAsFlow(question)
+    }.onCompletion { markMeAsReady(sessionId) }
 
     private suspend fun convertProfileImages(
         images: Map<Uuid, String?>,

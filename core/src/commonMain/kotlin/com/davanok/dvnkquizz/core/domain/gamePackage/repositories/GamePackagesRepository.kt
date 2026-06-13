@@ -14,7 +14,7 @@ interface GamePackagesRepository {
     suspend fun getGamePackage(packageId: Uuid): Result<FullGamePackage?>
 
     fun uploadQuestionMedia(packageId: Uuid, bytes: ByteArray, mimeType: String): Flow<Result<QuestionMedia>>
-    suspend fun deleteQuestionMedia(questionId: Uuid): Result<Unit>
+    suspend fun deleteQuestionMedia(packageId: Uuid, filename: String): Result<Unit>
 
     suspend fun updateGamePackage(gamePackage: FullGamePackage): Result<Unit>
 

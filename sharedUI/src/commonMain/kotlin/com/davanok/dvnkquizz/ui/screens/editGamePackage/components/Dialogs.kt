@@ -21,6 +21,8 @@ import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.add_category_dialog_title
 import dvnkquizz.sharedui.generated.resources.add_round_dialog_title
 import dvnkquizz.sharedui.generated.resources.cancel
+import dvnkquizz.sharedui.generated.resources.edit_category_dialog_title
+import dvnkquizz.sharedui.generated.resources.edit_round_dialog_title
 import dvnkquizz.sharedui.generated.resources.save
 import dvnkquizz.sharedui.generated.resources.title_cannot_be_empty
 import dvnkquizz.sharedui.generated.resources.title_text_field_label
@@ -29,11 +31,19 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun EditRoundDialog(
     round: GameRound,
+    isEdit: Boolean,
     onSave: (GameRound) -> Unit,
     onDismissRequest: () -> Unit
 ) {
     EditDialog(
-        title = { Text(stringResource(Res.string.add_round_dialog_title)) },
+        title = {
+            Text(
+                stringResource(
+                    if (isEdit) Res.string.edit_round_dialog_title
+                    else Res.string.add_round_dialog_title
+                )
+            )
+                },
         oldName = round.name,
         onSave = { onSave(round.copy(name = it)) },
         onDismissRequest = onDismissRequest
@@ -42,11 +52,19 @@ fun EditRoundDialog(
 @Composable
 fun EditCategoryDialog(
     category: GameCategory,
+    isEdit: Boolean,
     onSave: (GameCategory) -> Unit,
     onDismissRequest: () -> Unit
 ) {
     EditDialog(
-        title = { Text(stringResource(Res.string.add_category_dialog_title)) },
+        title = {
+            Text(
+                stringResource(
+                    if (isEdit) Res.string.edit_category_dialog_title
+                    else Res.string.add_category_dialog_title
+                )
+            )
+                },
         oldName = category.name,
         onSave = { onSave(category.copy(name = it)) },
         onDismissRequest = onDismissRequest
