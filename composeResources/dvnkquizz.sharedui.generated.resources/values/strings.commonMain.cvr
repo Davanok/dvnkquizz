@@ -1,6 +1,7 @@
 version:0
 string|add_category_dialog_title|QWRkIGNhdGVnb3J5
 string|add_category|QWRkIGNhdGVnb3J5
+string|add_question_dialog_title|QWRkIHF1ZXN0aW9u
 string|add_question|QWRkIHF1ZXN0aW9u
 string|add_round_dialog_title|QWRkIHJvdW5k
 string|add_round|QWRkIHJvdW5k
@@ -93,12 +94,16 @@ string|copied_to_clipboard|JyUxJHMnIGNvcGllZCB0byBjbGlwYm9hcmQ=
 string|copy_invite_code|Q29weSBpbnZpdGUgY29kZQ==
 string|correct_answer|Q29ycmVjdA==
 string|create_new_game_package|Q3JlYXRlIG5ldyBnYW1lIHBhY2thZ2U=
+string|delete_package|RGVsZXRlIHBhY2thZ2U=
 string|delete_profile_image|RGVsZXRlIHByb2ZpbGUgaW1hZ2U=
 string|download_game_package|RG93bmxvYWQgZ2FtZSBwYWNrYWdl
 string|draft_saved|RHJhZnQgc2F2ZWQ=
 string|drafts_section_title|RHJhZnRz
+string|edit_category_dialog_title|RWRpdCBjYXRlZ29yeQ==
 string|edit_category|RWRpdCBjYXRlZ29yeQ==
+string|edit_question_dialog_title|RWRpdCBxdWVzdGlvbg==
 string|edit_question|RWRpdCBxdWVzdGlvbg==
+string|edit_round_dialog_title|RWRpdCByb3VuZA==
 string|edit_round|RWRpdCByb3VuZA==
 string|email_field_label|RW1haWw=
 string|email_sent|V2Ugc2VudCBhIHNpZ24taW4gbGluayB0byAlMSRzLiBDbGljayB0aGUgbGluayB0byBzZWN1cmVseSBhY2Nlc3MgeW91ciBhY2NvdW50Lg==
@@ -115,6 +120,7 @@ string|error_package_download_failed|RmFpbGVkIHRvIGRvd25sb2FkIGdhbWUgcGFja2FnZQ=
 string|error_package_upload_failed|RmFpbGVkIHRvIHVwbG9hZCBnYW1lIHBhY2thZ2U=
 string|error_upload_failed|VXBsb2FkIGZhaWxlZA==
 string|external_section_title|UHVzaGVk
+string|failed_to_delete_package|RmFpbGVkIHRvIGRlbGV0ZSBwYWNrYWdl
 string|feature_create_games_description|UHJlcGFyZSB5b3VyIG93biBxdWVzdGlvbnMsIGNhdGVnb3JpZXMsIGFuZCByb3VuZHMu
 string|feature_create_games_title|R2FtZSBDcmVhdGlvbg==
 string|feature_live_results_description|VHJhY2sgZ2FtZSBwcm9ncmVzcyBhbmQgbGVhZGVyYm9hcmQgdXBkYXRlcyBpbiByZWFsIHRpbWUu
@@ -149,6 +155,7 @@ string|only_host_can_judge_answer|T25seSBob3N0IGNhbiBqdWRnZSBhbnN3ZXI=
 string|only_host_can_select_question|T25seSBob3N0IGNhbiBzZWxlY3QgcXVlc3Rpb24=
 string|only_host_can_start_round|T25seSBob3N0IGNhbiBzdGFydCByb3VuZA==
 string|only_player_can_buzz|T25seSBwbGF5ZXIgY2FuIGJ1eno=
+string|open_menu|T3BlbiBtZW51
 string|package_author|Qnk6ICUxJHM=
 string|package_description_text_field_label|RGVzY3JpcHRpb24=
 string|package_details|UGFja2FnZSBkZXRhaWxz
