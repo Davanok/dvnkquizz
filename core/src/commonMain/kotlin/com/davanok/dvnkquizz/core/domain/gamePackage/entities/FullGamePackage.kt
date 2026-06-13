@@ -5,6 +5,7 @@ import com.davanok.dvnkquizz.core.domain.game.entities.FullGameRound
 import com.davanok.dvnkquizz.core.domain.game.entities.FullGameRoundDto
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -12,7 +13,7 @@ import kotlin.uuid.Uuid
 internal data class FullGamePackageDto(
     val id: Uuid,
     @SerialName("created_at")
-    val createdAt: Instant?,
+    val createdAt: Instant,
     val title: String,
     val description: String,
     @SerialName("author_id")
@@ -21,7 +22,7 @@ internal data class FullGamePackageDto(
     @SerialName("is_public")
     val isPublic: Boolean,
     @SerialName("updated_at")
-    val updatedAt: Instant?,
+    val updatedAt: Instant,
 
     val author: UserProfile?,
     val rounds: List<FullGameRoundDto>
@@ -30,8 +31,8 @@ internal data class FullGamePackageDto(
 
 data class FullGamePackage(
     val id: Uuid,
-    val createdAt: Instant? = null,
-    val updatedAt: Instant? = null,
+    val createdAt: Instant,
+    val updatedAt: Instant,
     val title: String,
     val description: String,
     val authorId: Uuid?,
@@ -44,8 +45,8 @@ data class FullGamePackage(
     companion object {
         val Empty = FullGamePackage(
             id = Uuid.random(),
-            createdAt = null,
-            updatedAt = null,
+            createdAt = Clock.System.now(),
+            updatedAt = Clock.System.now(),
             title = "",
             description = "",
             authorId = null,

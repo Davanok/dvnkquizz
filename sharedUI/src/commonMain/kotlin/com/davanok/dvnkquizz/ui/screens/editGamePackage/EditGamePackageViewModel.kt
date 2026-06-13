@@ -3,7 +3,6 @@ package com.davanok.dvnkquizz.ui.screens.editGamePackage
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.davanok.dvnkquizz.core.domain.game.entities.FullGameCategory
-import com.davanok.dvnkquizz.core.domain.gamePackage.entities.FullGamePackage
 import com.davanok.dvnkquizz.core.domain.game.entities.FullGameRound
 import com.davanok.dvnkquizz.core.domain.game.entities.GameCategory
 import com.davanok.dvnkquizz.core.domain.game.entities.GameRound
@@ -11,6 +10,7 @@ import com.davanok.dvnkquizz.core.domain.game.entities.Question
 import com.davanok.dvnkquizz.core.domain.game.entities.QuestionMedia
 import com.davanok.dvnkquizz.core.domain.game.mappers.toGameCategory
 import com.davanok.dvnkquizz.core.domain.game.mappers.toGameRound
+import com.davanok.dvnkquizz.core.domain.gamePackage.entities.FullGamePackage
 import com.davanok.dvnkquizz.core.domain.gamePackage.repositories.GamePackagesRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
@@ -30,15 +30,12 @@ import dvnkquizz.sharedui.generated.resources.error_package_upload_failed
 import dvnkquizz.sharedui.generated.resources.error_upload_failed
 import dvnkquizz.sharedui.generated.resources.filetype_not_supported
 import dvnkquizz.sharedui.generated.resources.max_question_media_size
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -126,60 +123,64 @@ class EditGamePackageViewModel(
     }
 
     private fun loadGamePackage() = viewModelScope.launch {
-        _uiState.update { it.copy(isLoading = true) }
-
         if (isNew) {
             _gamePackage.update { FullGamePackage.Empty }
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    criticalError = null,
-                    isUploaded = false
-                )
-            }
+            _uiState.update { it.copy(isLoading = false, criticalError = null, isUploaded = false) }
             return@launch
         }
 
-        val uploaded = repository.getGamePackage(packageId)
-        val downloadAvailable = uploaded.getOrNull() != null
-        val draft = repository.getPackageDraft(packageId).getOrNull()
+        _uiState.update { it.copy(isLoading = true) }
 
-        if (draft != null) {
+        val uploadedDeferred = async { repository.getGamePackage(packageId) }
+        val draftDeferred = async { repository.getPackageDraft(packageId) }
+
+        val uploaded = uploadedDeferred.await()
+        val draft = draftDeferred.await().getOrNull()
+
+        val uploadedPackage = uploaded.getOrNull()
+        val isDownloadAvailable = uploadedPackage != null
+
+        val preferDraft =
+            draft != null && (uploadedPackage == null || draft.updatedAt > uploadedPackage.updatedAt)
+
+        if (preferDraft) {
             _gamePackage.update { FullGamePackageUtils.sortGamePackage(draft) }
             _uiState.update {
                 it.copy(
                     isLoading = false,
                     criticalError = null,
                     isUploaded = false,
-                    isDownloadAvailable = downloadAvailable
+                    isDownloadAvailable = isDownloadAvailable
                 )
             }
-        } else {
-            uploaded.fold(
-                onSuccess = { gamePackage ->
-                    val sorted = gamePackage?.let { FullGamePackageUtils.sortGamePackage(gamePackage) }
-                    _gamePackage.update { sorted ?: FullGamePackage.Empty }
-                    _uiState.update { state ->
-                        state.copy(
-                            isLoading = false,
-                            criticalError = null,
-                            isUploaded = true,
-                            isDownloadAvailable = downloadAvailable
-                        )
-                    }
-                },
-                onFailure = { thr ->
-                    _uiState.update { state ->
-                        state.copy(
-                            isLoading = false,
-                            criticalError = thr.message,
-                            isUploaded = false,
-                            isDownloadAvailable = downloadAvailable
-                        )
-                    }
-                }
-            )
+            return@launch
         }
+
+        uploaded.fold(
+            onSuccess = { gamePackage ->
+                _gamePackage.update {
+                    gamePackage?.let { FullGamePackageUtils.sortGamePackage(it) } ?: FullGamePackage.Empty
+                }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        criticalError = null,
+                        isUploaded = true,
+                        isDownloadAvailable = isDownloadAvailable
+                    )
+                }
+            },
+            onFailure = { thr ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        criticalError = thr.message,
+                        isUploaded = false,
+                        isDownloadAvailable = isDownloadAvailable
+                    )
+                }
+            }
+        )
     }
 
     private fun showDialog(dialogRequest: EditGamePackageDialogRequest) {

@@ -11,6 +11,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
+import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 @Inject
@@ -19,11 +20,11 @@ internal class DraftsStorage(
     private val storage: Storage
 ) {
     fun setDraft(draft: FullGamePackageDto) {
+        val draft = draft.copy(updatedAt = Clock.System.now())
         val key = buildKey(draft.id)
-        val gamePackage = draft.toGamePackage()
-
         storage.set(key, draft)
 
+        val gamePackage = draft.toGamePackage()
         val updatedList = storage
             .get<List<GamePackage>>(PACKAGES_LIST_KEY)
             .orEmpty()

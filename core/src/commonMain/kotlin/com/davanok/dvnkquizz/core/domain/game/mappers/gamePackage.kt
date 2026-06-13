@@ -11,6 +11,7 @@ internal inline fun FullGamePackageDto.toFullGamePackage(
 ) = FullGamePackage(
     id = id,
     createdAt = createdAt,
+    updatedAt = updatedAt,
     title = title,
     description = description,
     authorId = authorId,
@@ -36,6 +37,7 @@ internal fun FullGamePackage.toFullGamePackageDto() = FullGamePackageDto(
 internal fun FullGamePackageDto.toGamePackage() = GamePackage(
     id = id,
     createdAt = createdAt,
+    updatedAt = updatedAt,
     title = title,
     description = description,
     authorId = authorId,

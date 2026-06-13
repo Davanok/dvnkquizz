@@ -31,7 +31,6 @@ import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.UploadStatus
 import io.github.jan.supabase.storage.uploadAsFlow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlin.time.Duration.Companion.hours
@@ -116,7 +115,6 @@ class GamePackagesRepositoryImpl internal constructor(
         bytes: ByteArray,
         mimeType: String
     ): Flow<Result<QuestionMedia>> = flow {
-        logger.d { "uploadMedia - start: $mimeType" }
         val currentUserId =
             checkNotNull(auth.currentUserId) { "Unauthorized user cannot upload question media" }
 
@@ -140,26 +138,20 @@ class GamePackagesRepositoryImpl internal constructor(
                 filter { GamePackageDto::id eq packageId }
             }.decodeSingleOrNull<Map<String, Uuid>>() != null
 
-        logger.d { "uploadMedia - packageExists: $packageExists" }
-
         if (!packageExists) {
             val gamePackage = GamePackageDto(
                 id = packageId,
-                title = "[Draft]",
+                title = "[__Draft__]",
                 description = "",
                 authorId = currentUserId
             )
             postgrest.from("game_packages")
                 .insert(gamePackage)
-
-            logger.d { "uploadMedia - insertedPackage" }
         }
 
         storage.from("questions")
             .uploadAsFlow(path, bytes)
             .map { status ->
-                logger.d { "uploadMedia - uploadFile: $status" }
-
                 when (status) {
                     is UploadStatus.Progress -> QuestionMedia(
                         filename = path,
@@ -179,7 +171,6 @@ class GamePackagesRepositoryImpl internal constructor(
 
         val mediaUrl = storage.from("questions")
             .createSignedUrl(path, MEDIA_URL_EXPIRE_DURATION)
-        logger.d { "uploadMedia - createdSignedUrl: $mediaUrl" }
         emit(
             QuestionMedia(
                 filename = path,
@@ -188,9 +179,6 @@ class GamePackagesRepositoryImpl internal constructor(
                 progress = 1f
             )
         )
-    }.catch {
-        logger.e(it) { "upload mediaFailed" }
-        throw it
     }.toResultFlow()
 
     override suspend fun deleteQuestionMedia(

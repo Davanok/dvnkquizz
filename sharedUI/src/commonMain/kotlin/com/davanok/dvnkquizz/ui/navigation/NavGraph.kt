@@ -81,7 +81,7 @@ fun AppNavDisplay(
             entry<Route.UserGamePackages> {
                 UserGamePackagesScreen(
                     onBackClick = back,
-                    navigateToPackage = { packageId -> navigate(Route.EditUserGamePackage(packageId)) },
+                    navigateToPackage = { navigate(Route.EditUserGamePackage(it)) },
                     navigateToNewPackage = { navigate(Route.EditUserGamePackage(null)) }
                 )
             }
