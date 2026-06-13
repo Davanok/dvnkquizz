@@ -206,6 +206,18 @@ class GamePackagesRepositoryImpl internal constructor(
         }
     }
 
+    override suspend fun deleteGamePackage(packageId: Uuid): Result<Unit> = runCatching {
+        logger.d { "delete user game package: packageId=${packageId}" }
+
+        draftsStorage.deleteDraft(packageId)
+        postgrest.from("game_packages")
+            .delete { filter { GamePackageDto::id eq packageId } }
+        storage.from("questions")
+            .delete(packageId.toString())
+    }.onFailure {
+        logger.e(it) { "failed to delete package" }
+    }
+
     @OptIn(ExperimentalSettingsApi::class)
     override suspend fun updatePackageDraft(draft: FullGamePackage): Result<Unit> = runCatching {
         draftsStorage.setDraft(draft.toFullGamePackageDto())

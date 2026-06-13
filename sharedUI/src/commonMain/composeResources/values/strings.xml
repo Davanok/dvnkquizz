@@ -104,6 +104,10 @@
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
 
+    <string name="open_menu">Open menu</string>
+    <string name="delete_package">Delete package</string>
+    <string name="failed_to_delete_package">Failed to delete package</string>
+
     <string name="add_round_dialog_title">Add round</string>
     <string name="add_category_dialog_title">Add category</string>
     <string name="add_question_dialog_title">Add question</string>

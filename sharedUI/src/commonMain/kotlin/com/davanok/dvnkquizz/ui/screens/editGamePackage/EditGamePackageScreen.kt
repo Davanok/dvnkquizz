@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -26,9 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.davanok.dvnkquizz.core.domain.game.entities.GameCategory
-import com.davanok.dvnkquizz.core.domain.game.entities.GameRound
-import com.davanok.dvnkquizz.core.domain.game.entities.Question
 import com.davanok.dvnkquizz.ui.theme.LocalSnackBarHostState
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditCategoryDialog
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditGamePackageContent
@@ -36,12 +35,16 @@ import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditGamePacka
 import com.davanok.dvnkquizz.ui.screens.editGamePackage.components.EditRoundDialog
 import dvnkquizz.sharedui.generated.resources.Res
 import dvnkquizz.sharedui.generated.resources.back
+import dvnkquizz.sharedui.generated.resources.delete_package
 import dvnkquizz.sharedui.generated.resources.download_game_package
 import dvnkquizz.sharedui.generated.resources.draft_saved
 import dvnkquizz.sharedui.generated.resources.ic_arrow_back
 import dvnkquizz.sharedui.generated.resources.ic_check
+import dvnkquizz.sharedui.generated.resources.ic_delete
 import dvnkquizz.sharedui.generated.resources.ic_download
+import dvnkquizz.sharedui.generated.resources.ic_more_vert
 import dvnkquizz.sharedui.generated.resources.ic_upload
+import dvnkquizz.sharedui.generated.resources.open_menu
 import dvnkquizz.sharedui.generated.resources.saving_draft
 import dvnkquizz.sharedui.generated.resources.unnamed_game_package
 import dvnkquizz.sharedui.generated.resources.upload_game_package
@@ -103,14 +106,6 @@ private fun Content(
             }
         }
     } else {
-        val snackbarState = LocalSnackBarHostState.current
-
-        LaunchedEffect(uiState.errorMessage) {
-            if (uiState.errorMessage != null) {
-                snackbarState.showSnackbar(uiState.errorMessage)
-            }
-        }
-
         Scaffold(
             modifier = modifier,
             topBar = {
@@ -126,7 +121,12 @@ private fun Content(
                     onUploadClick = { eventSink(EditGamePackageUiEvent.UploadPackage) },
                     isDownloadAvailable = uiState.isUploaded,
                     isDownloadInProgress = uiState.isDownloadInProgress,
-                    onDownloadClick = { eventSink(EditGamePackageUiEvent.DownloadPackage) }
+                    onDownloadClick = { eventSink(EditGamePackageUiEvent.DownloadPackage) },
+                    onDeletePackageClick = {
+                        eventSink(EditGamePackageUiEvent.DeletePackage {
+                            onNavigateBack()
+                        })
+                    }
                 )
             }
         ) { paddingValues ->
@@ -194,8 +194,10 @@ private fun EditPackageTopBar(
     isDownloadAvailable: Boolean,
     isDownloadInProgress: Boolean,
     onDownloadClick: () -> Unit,
+    onDeletePackageClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
     TopAppBar(
         modifier = modifier,
         title = {
@@ -249,6 +251,25 @@ private fun EditPackageTopBar(
                         contentDescription = stringResource(Res.string.upload_game_package)
                     )
                 }
+
+            IconButton(
+                onClick = { menuExpanded = !menuExpanded }
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_more_vert),
+                    contentDescription = stringResource(Res.string.open_menu)
+                )
+            }
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.delete_package)) },
+                    leadingIcon = { Icon(painter = painterResource(Res.drawable.ic_delete), contentDescription = null) },
+                    onClick = onDeletePackageClick
+                )
+            }
         }
     )
 }

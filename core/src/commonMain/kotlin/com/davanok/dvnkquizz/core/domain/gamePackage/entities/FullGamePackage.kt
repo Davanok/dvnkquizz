@@ -50,7 +50,7 @@ data class FullGamePackage(
             title = "",
             description = "",
             authorId = null,
-            difficulty = 0,
+            difficulty = 1,
             isPublic = false,
             author = null,
             rounds = emptyList()

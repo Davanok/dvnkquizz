@@ -28,6 +28,7 @@ import dvnkquizz.sharedui.generated.resources.error_failed_to_update_round
 import dvnkquizz.sharedui.generated.resources.error_package_download_failed
 import dvnkquizz.sharedui.generated.resources.error_package_upload_failed
 import dvnkquizz.sharedui.generated.resources.error_upload_failed
+import dvnkquizz.sharedui.generated.resources.failed_to_delete_package
 import dvnkquizz.sharedui.generated.resources.filetype_not_supported
 import dvnkquizz.sharedui.generated.resources.max_question_media_size
 import kotlinx.coroutines.async
@@ -110,8 +111,13 @@ class EditGamePackageViewModel(
                     is EditGamePackageUiEvent.UpdateCategory -> upsertGamePackageCategory(event.category)
                     is EditGamePackageUiEvent.UpdateQuestion -> upsertGamePackageQuestion(event.question)
 
-                    is EditGamePackageUiEvent.SetQuestionMedia -> setQuestionMedia(event.mimeType, event.media)
+                    is EditGamePackageUiEvent.SetQuestionMedia -> setQuestionMedia(
+                        event.mimeType,
+                        event.media
+                    )
+
                     EditGamePackageUiEvent.RemoveQuestionMedia -> deleteQuestionMedia()
+                    is EditGamePackageUiEvent.DeletePackage -> deleteGamePackage(event.onSuccess)
                 }
             }.handleFailure {
                 getString(
@@ -159,7 +165,8 @@ class EditGamePackageViewModel(
         uploaded.fold(
             onSuccess = { gamePackage ->
                 _gamePackage.update {
-                    gamePackage?.let { FullGamePackageUtils.sortGamePackage(it) } ?: FullGamePackage.Empty
+                    gamePackage?.let { FullGamePackageUtils.sortGamePackage(it) }
+                        ?: FullGamePackage.Empty
                 }
                 _uiState.update {
                     it.copy(
@@ -185,16 +192,34 @@ class EditGamePackageViewModel(
 
     private fun showDialog(dialogRequest: EditGamePackageDialogRequest) {
         val dialog = when (dialogRequest) {
-            EditGamePackageDialogRequest.AddRound ->
-                EditGamePackageDialog.EditRound(GameRound(), false)
+            EditGamePackageDialogRequest.AddRound -> {
+                val ordinal = _gamePackage.value.rounds.maxOfOrNull { it.ordinal }?.plus(1) ?: 1
+                EditGamePackageDialog.EditRound(
+                    GameRound(ordinal = ordinal),
+                    false
+                )
+            }
 
             is EditGamePackageDialogRequest.EditRound -> {
                 val round = getRoundOrNull(dialogRequest.roundId) ?: return
                 EditGamePackageDialog.EditRound(round.toGameRound(), true)
             }
 
-            is EditGamePackageDialogRequest.AddCategory ->
-                EditGamePackageDialog.EditCategory(GameCategory(roundId = dialogRequest.roundId), false)
+            is EditGamePackageDialogRequest.AddCategory -> {
+                val ordinal = _gamePackage.value.rounds
+                    .firstOrNull { it.id == dialogRequest.roundId }
+                    ?.categories
+                    ?.maxOfOrNull { it.ordinal }
+                    ?.plus(1)
+                    ?: 1
+                EditGamePackageDialog.EditCategory(
+                    GameCategory(
+                        roundId = dialogRequest.roundId,
+                        ordinal = ordinal
+                    ),
+                    false
+                )
+            }
 
             is EditGamePackageDialogRequest.EditCategory -> {
                 val category = getCategoryOrNull(dialogRequest.categoryId) ?: return
@@ -202,7 +227,11 @@ class EditGamePackageViewModel(
             }
 
             is EditGamePackageDialogRequest.AddQuestion -> {
-                EditGamePackageDialog.EditQuestion(Question(categoryId = dialogRequest.categoryId), null, false)
+                EditGamePackageDialog.EditQuestion(
+                    Question(categoryId = dialogRequest.categoryId),
+                    null,
+                    false
+                )
             }
 
             is EditGamePackageDialogRequest.EditQuestion -> {
@@ -216,10 +245,17 @@ class EditGamePackageViewModel(
 
     private suspend fun validateMedia(mimeType: String, bytes: ByteArray): String? {
         if (bytes.size > GamePackageLimits.QUESTION_MEDIA_MAX_SIZE) {
-            return getString(Res.string.max_question_media_size, GamePackageLimits.QUESTION_MEDIA_MAX_SIZE)
+            return getString(
+                Res.string.max_question_media_size,
+                GamePackageLimits.QUESTION_MEDIA_MAX_SIZE
+            )
         }
         if (mimeType !in GamePackageLimits.allowedMediaFileMimeTypes) {
-            return getString(Res.string.filetype_not_supported, mimeType, GamePackageLimits.allowedMediaFileMimeTypes)
+            return getString(
+                Res.string.filetype_not_supported,
+                mimeType,
+                GamePackageLimits.allowedMediaFileMimeTypes
+            )
         }
         return null
     }
@@ -231,6 +267,7 @@ class EditGamePackageViewModel(
             getString(Res.string.error_failed_to_update_question)
         }
     }
+
     private fun upsertGamePackageCategory(category: GameCategory) = viewModelScope.launch {
         runCatching {
             _gamePackage.update { FullGamePackageUtils.upsertCategory(it, category) }
@@ -238,6 +275,7 @@ class EditGamePackageViewModel(
             getString(Res.string.error_failed_to_update_category)
         }
     }
+
     private fun upsertGamePackageRound(round: GameRound) = viewModelScope.launch {
         runCatching {
             _gamePackage.update { FullGamePackageUtils.upsertRound(it, round) }
@@ -258,8 +296,7 @@ class EditGamePackageViewModel(
                         question = currentDialog.question.copy(media = newMedia)
                     )
                 )
-            }
-            else state
+            } else state
         }
     }
 
@@ -314,10 +351,11 @@ class EditGamePackageViewModel(
                 .fold(
                     onSuccess = {
                         updateEditQuestionDialogMedia(oldMedia, null)
-                        FullGamePackageUtils.findQuestion(_gamePackage.value, dialog.question)?.let {
-                            if (it.media?.filename == oldMedia.filename) // check if while upload user changed media
-                                upsertGamePackageQuestion(it.copy(media = null))
-                        }
+                        FullGamePackageUtils.findQuestion(_gamePackage.value, dialog.question)
+                            ?.let {
+                                if (it.media?.filename == oldMedia.filename) // check if while upload user changed media
+                                    upsertGamePackageQuestion(it.copy(media = null))
+                            }
                     },
                     onFailure = {
                         updateEditQuestionDialogMedia(oldMedia, oldMedia)
@@ -378,9 +416,17 @@ class EditGamePackageViewModel(
             }
         }
 
+    private fun deleteGamePackage(onSuccess: () -> Unit) = viewModelScope.launch {
+        repository
+            .deleteGamePackage(_gamePackage.value.id)
+            .handleFailure { getString(Res.string.failed_to_delete_package) }
+            .onSuccess { onSuccess() }
+    }
+
     private fun setErrorMessage(message: String) {
         _uiState.update { it.copy(errorMessage = message) }
     }
+
     private inline fun Result<*>.handleFailure(message: (Throwable) -> String?) = onFailure { thr ->
         message(thr)?.let { setErrorMessage(it) }
     }

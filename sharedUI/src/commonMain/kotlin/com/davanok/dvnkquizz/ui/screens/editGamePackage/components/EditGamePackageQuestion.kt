@@ -1,6 +1,5 @@
 package com.davanok.dvnkquizz.ui.screens.editGamePackage.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,11 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,13 +35,11 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -139,13 +134,17 @@ private fun Content(
         currentMedia = question.media
     }
 
-    val changed by remember {
+    val saveAvailable by remember {
         derivedStateOf {
-            questionText != question.questionText ||
+            val changed = questionText != question.questionText ||
                     answerText != question.answerText ||
                     price != question.price ||
                     type != question.type ||
                     currentMedia?.filename != initialMedia?.filename
+
+            val valid = questionText.isNotBlank() && answerText.isNotBlank()
+
+            changed && valid
         }
     }
 
@@ -161,16 +160,19 @@ private fun Content(
                 value = questionText,
                 onValueChange = { text ->
                     questionText = text.take(GamePackageLimits.QUESTION_TEXT_MAX_LENGTH)
-                                },
+                },
                 label = { Text(stringResource(Res.string.question_text_label)) },
-                supportingText = textLengthLimitText(questionText.length, GamePackageLimits.QUESTION_TEXT_MAX_LENGTH),
+                supportingText = textLengthLimitText(
+                    questionText.length,
+                    GamePackageLimits.QUESTION_TEXT_MAX_LENGTH
+                ),
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = answerText,
-                onValueChange = {  text ->
+                onValueChange = { text ->
                     answerText = text.take(GamePackageLimits.QUESTION_ANSWER_MAX_LENGTH)
-                                },
+                },
                 label = { Text(stringResource(Res.string.question_answer_label)) },
                 supportingText = textLengthLimitText(
                     answerText.length,
@@ -203,7 +205,7 @@ private fun Content(
                             text = stringResource(Res.string.question_price_label),
                             maxLines = 1
                         )
-                            },
+                    },
                     modifier = Modifier.weight(0.5f)
                 )
                 QuestionTypeSelector(
@@ -223,7 +225,7 @@ private fun Content(
         ) {
             TextButton(
                 onClick = {
-                    if (changed) {
+                    if (saveAvailable) {
                         val q = question.copy(
                             questionText = questionText,
                             answerText = answerText,
@@ -234,7 +236,7 @@ private fun Content(
                     }
                     onDismissRequest()
                 },
-                enabled = changed
+                enabled = saveAvailable
             ) {
                 Text(stringResource(Res.string.save))
             }

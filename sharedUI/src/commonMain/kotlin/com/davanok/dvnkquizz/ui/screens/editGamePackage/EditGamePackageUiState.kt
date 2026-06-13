@@ -24,6 +24,8 @@ data class EditGamePackageUiState(
 )
 
 sealed interface EditGamePackageUiEvent {
+    data class DeletePackage(val onSuccess: () -> Unit): EditGamePackageUiEvent
+
     data object SaveDraft: EditGamePackageUiEvent
     data object UploadPackage: EditGamePackageUiEvent
     data object DownloadPackage: EditGamePackageUiEvent

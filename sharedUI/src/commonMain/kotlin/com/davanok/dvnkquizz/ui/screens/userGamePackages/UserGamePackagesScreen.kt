@@ -317,15 +317,11 @@ private fun PackageItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val createdAt = gamePackage.createdAt
-                if (createdAt != null) {
-                    Text(
-                        text = createdAt.format(dateTimeFormat),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                } else {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
+                Text(
+                    text = createdAt.format(dateTimeFormat),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
 
                 Text(
                     text = gamePackage.difficulty.toString(),

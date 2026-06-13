@@ -17,6 +17,7 @@ interface GamePackagesRepository {
     suspend fun deleteQuestionMedia(packageId: Uuid, filename: String): Result<Unit>
 
     suspend fun updateGamePackage(gamePackage: FullGamePackage): Result<Unit>
+    suspend fun deleteGamePackage(packageId: Uuid): Result<Unit>
 
     suspend fun updatePackageDraft(draft: FullGamePackage): Result<Unit>
     suspend fun getPackageDraft(draftId: Uuid): Result<FullGamePackage?>
